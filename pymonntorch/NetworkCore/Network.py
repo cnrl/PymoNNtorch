@@ -99,7 +99,7 @@ class Network(NetworkObjectBase):
         self.set_synapses_to_neuron_groups()
 
         for obj in self.all_objects():
-            obj.behavior = dict(sorted(obj.behavior.items()))
+            obj.behavior = torch.nn.ModuleDict(dict(sorted(obj.behavior.items())))
 
         self.set_variables()
 
@@ -179,18 +179,19 @@ class Network(NetworkObjectBase):
         self.iteration += 1
 
         for timestep in self.behavior_timesteps:
-            self.all_objects().apply(lambda obj: obj.set_iteration(self.iteration))
+            objects = self.all_objects()
+            objects.apply(lambda obj: obj.set_iteration(self.iteration))
             if measure_behavior_execution_time:
                 start_time = time.time()
 
-                self.all_objects().apply(
+                objects.apply(
                     lambda obj: obj.behavior[timestep].new_iteration(obj) \
                         if obj.behavior[timestep].behavior_enabled else Behavior.new_iteration(obj)
                         )
 
                 time_measures[timestep] = (time() - start_time) * 1000
             else:
-                self.all_objects().apply(
+                objects.apply(
                     lambda obj: obj.behavior[timestep].new_iteration(obj) \
                         if obj.behavior[timestep].behavior_enabled else Behavior.new_iteration(obj)
                         )

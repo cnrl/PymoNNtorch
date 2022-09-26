@@ -80,3 +80,7 @@ class TaggableObjectBase(torch.nn.Module):
         for subtag in tag.split(','):
             self.tags.append(subtag)
         return self
+
+    @property
+    def device(self):
+        return next(self.parameters()).device

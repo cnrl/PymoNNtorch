@@ -122,7 +122,7 @@ class NetworkObjectBase(TaggableObjectBase):
     def register_analysis_module(self, module):
         module._attach_and_initialize_(self)
 
-    def get_all_analysis_module_results(self, tag, return_modules=False):  # TODO: check it after AnalysisModule is implemented
+    def get_all_analysis_module_results(self, tag, return_modules=False):
         result = {}
         modules = torch.nn.ModuleDict()
         for module in self[tag]:
@@ -145,7 +145,7 @@ class NetworkObjectBase(TaggableObjectBase):
         return mat
 
     def get_torch_tensor(self, dim):
-        return torch.zeros(dim).to(def_dtype)
+        return torch.zeros(dim, device=self.device).to(def_dtype)
 
     def _get_mat(self, mode, dim, scale=None, density=None, plot=False, kwargs={}): # mode in ['zeros', 'zeros()', 'ones', 'ones()', 'uniform(...)', 'lognormal(...)', 'normal(...)']
         prefix = 'torch.'
@@ -160,7 +160,7 @@ class NetworkObjectBase(TaggableObjectBase):
             mode += '()'
 
         if mode not in self._mat_eval_dict:
-            a1 = 'size=dim'
+            a1 = 'size=dim,device='+self.device
             if '()' in mode:#no arguments => no comma
                 ev_str = mode.replace(')', a1+',**kwargs)')
             else:
@@ -172,16 +172,16 @@ class NetworkObjectBase(TaggableObjectBase):
 
         if density is not None:
             if type(density) == int or type(density) == float:
-                result = (result * (torch.rand(dim) <= density))
+                result = (result * (torch.rand(dim, device=self.device) <= density))
             elif type(density) is torch.tensor:
-                result = (result * (torch.rand(dim) <= density[:, None]))
+                result = (result * (torch.rand(dim, device=self.device) <= density[:, None]))
 
         if scale is not None:
             result *= scale
 
         if plot:
             import matplotlib.pyplot as plt
-            plt.hist(result.flatten(), bins=30)
+            plt.hist(result.flatten().to('cpu'), bins=30)
             plt.show()
 
         return result.to(def_dtype)
@@ -189,31 +189,31 @@ class NetworkObjectBase(TaggableObjectBase):
 
     def get_random_tensor(self, dim, density=None, clone_along_first_axis=False, rnd_code=None):#rnd_code=torch.rand(dim)
         if rnd_code is None:
-            result = torch.rand(dim)
+            result = torch.rand(dim, device=self.device)
         else:
             if 'dim' not in rnd_code:
                 if rnd_code[-1] == ')':
-                    rnd_code = rnd_code[:-1]+',size=dim)'
+                    rnd_code = rnd_code[:-1]+',size=dim,device='+self.device+')'
                 else:
-                    rnd_code = rnd_code+'(size=dim)'
+                    rnd_code = rnd_code+'(size=dim,device='+self.device+')'
             result = eval(rnd_code)
 
         if density is None:
             result = result.to(def_dtype)
         elif type(density) == int or type(density) == float:
-            result = (result * (torch.rand(dim) <= density)).to(def_dtype)
+            result = (result * (torch.rand(dim, device=self.device) <= density)).to(def_dtype)
         elif type(density) is torch.tensor:
-            result = (result * (torch.rand(dim) <= density[:, None])).to(def_dtype)
+            result = (result * (torch.rand(dim, device=self.device) <= density[:, None])).to(def_dtype)
 
 
         if not clone_along_first_axis:
             return result
         else:
-            return torch.cat([result[0] for _ in range(dim[0])])
+            return torch.cat([result[0] for _ in range(dim[0])]).to(self.device)
 
 
     def get_buffer_mat(self, dim, size):
-        return torch.cat([self.get_torch_tensor(dim) for _ in range(size)]).reshape(size, *dim)
+        return torch.cat([self.get_torch_tensor(dim) for _ in range(size)]).reshape(size, *dim).to(self.device)
 
     def set_iteration(self, iteration):
         self.iteration = iteration

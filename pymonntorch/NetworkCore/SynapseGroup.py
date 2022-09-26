@@ -48,18 +48,20 @@ class SynapseGroup(NetworkObjectBase):
 
     def get_random_synapse_mat_fixed(self, min_number_of_synapses=0):
         dim = self.get_synapse_mat_dim()
-        result = torch.zeros(dim)
+        result = torch.zeros(dim, device=self.device)
         if min_number_of_synapses != 0:
             for i in range(dim[0]):
-                synapses = torch.randperm(dim[1])[:min_number_of_synapses]
-                result[i, synapses] = torch.rand(len(synapses))
-        return result#*np.random.rand(dim)
+                synapses = torch.randperm(dim[1], device=self.device)[:min_number_of_synapses]
+                result[i, synapses] = torch.rand(len(synapses), device=self.device)
+        return result
 
     def get_synapse_mat(self, mode='zeros()', scale=None, density=None, only_enabled=True, clone_along_first_axis=False, plot=False, kwargs={}):# mode in ['zeros', 'zeros()', 'ones', 'ones()', 'uniform(...)', 'lognormal(...)', 'normal(...)']
         result = self._get_mat(mode=mode, dim=(self.get_synapse_mat_dim()), scale=scale, density=density, plot=plot, kwargs=kwargs)
 
         if clone_along_first_axis:
-            result = torch.cat([result[0] for _ in range(self.get_synapse_mat_dim()[0])]).reshape(self.get_synapse_mat_dim()[0], *result[0].shape)
+            result = torch.cat([
+                result[0] for _ in range(self.get_synapse_mat_dim()[0])
+                ]).reshape(self.get_synapse_mat_dim()[0], *result[0].shape).to(self.device)
 
         if only_enabled:
             result *= self.enabled
@@ -84,7 +86,7 @@ class SynapseGroup(NetworkObjectBase):
         if dst_x is None: dst_x = self.dst.x
         if dst_y is None: dst_y = self.dst.y
 
-        result_syn_mat = torch.zeros((len(dst_x), len(src_x)))
+        result_syn_mat = torch.zeros((len(dst_x), len(src_x)), device=self.device)
 
         for d_n in range(len(dst_x)):
             dx = torch.abs(src_x - dst_x[d_n])

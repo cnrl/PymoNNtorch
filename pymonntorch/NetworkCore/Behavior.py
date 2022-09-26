@@ -49,7 +49,7 @@ class Behavior(TaggableObjectBase):
         if plot:
             if type(result) == torch.tensor:
                 import matplotlib.pyplot as plt
-                plt.hist(result, bins=30)
+                plt.hist(result.to('cpu'), bins=30)
                 plt.show()
 
         return result

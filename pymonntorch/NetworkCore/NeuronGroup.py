@@ -35,12 +35,12 @@ class NeuronGroup(NetworkObjectBase):
         self.afferent_synapses = {} #set by Network
         self.efferent_synapses = {}
 
-        self.mask = True#np.array([True for _ in range(size)]).astype(np.bool)#True#used for subgroup reconstruction
+        self.mask = True
 
         self.learning = True
         self.recording = True
 
-        self.id = torch.arange(self.size)
+        self.id = torch.arange(self.size, device=self.device)
 
     def require_synapses(self, name, afferent=True, efferent=True, warning=True):
         if afferent and not name in self.afferent_synapses:
