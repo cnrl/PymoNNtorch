@@ -12,4 +12,7 @@ def is_number(s):
 
 def check_is_torch_tensor(x, device='cpu', dtype=torch.float32):
     if not torch.is_tensor(x):
-        return torch.tensor(x, device=device, dtype=dtype)
+        try:
+            return torch.tensor(x, device=device, dtype=dtype)
+        except RuntimeError:
+            raise RuntimeError('Could not convert NoneTpe to torch tensor: ' + str(x))
