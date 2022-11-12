@@ -16,7 +16,7 @@ class SynapseGroup(NetworkObjectBase):
         if tag is None and net is not None:
             tag = 'SynapseGroup_'+str(len(net.SynapseGroups)+1)
 
-        super().__init__(tag, net, behavior)
+        super().__init__(tag, net, behavior, net.device)
         self.add_tag('syn')
 
         if len(src.tags) > 0 and len(dst.tags) > 0:

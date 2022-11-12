@@ -1,5 +1,5 @@
 from pymonntorch.NetworkCore.Behavior import Behavior
-from pymonntorch.NetworkBehaviour.EulerEquationModules.Helper import (
+from pymonntorch.NetworkBehavior.EulerEquationModules.Helper import (
     eq_split,
     remove_units,
 )
@@ -7,6 +7,8 @@ from pymonntorch.NetworkBehaviour.EulerEquationModules.Helper import (
 
 class Variable(Behavior):
     def set_variables(self, neurons):
+        super().set_variables(neurons)
+        
         n = neurons
 
         eq_parts = eq_split(self.get_init_attr("eq", None))

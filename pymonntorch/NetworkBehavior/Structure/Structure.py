@@ -37,11 +37,11 @@ def get_squared_dim(n_neurons, depth=1):
         divider -= 1
 
     width = divider
-    height = n_neurons // divider if divider > 0 else 0
+    height = torch.div(n_neurons, divider, rounding_mode='floor') if divider > 0 else 0
 
     print(f"Set population size to {depth}x{height}x{width}.")
 
-    return NeuronDimension(width, height, depth)
+    return NeuronDimension(width=width, height=height, depth=depth)
 
 
 class NeuronDimension(Behavior):
@@ -49,9 +49,13 @@ class NeuronDimension(Behavior):
     set_variables_on_init = True
 
     def set_position(self, width, height, depth):
-        self.neurons.x = torch.arange(0, self.neurons.size) % width
-        self.neurons.y = torch.arange(0, self.neurons.size) // width % height
-        self.neurons.z = torch.arange(0, self.neurons.size) // (width * height) % depth
+        self.neurons.x = torch.arange(0, self.neurons.size, dtype=torch.float32, device=self.neurons.device) % width
+        self.neurons.y = torch.div(
+            torch.arange(0, self.neurons.size, dtype=torch.float32, device=self.neurons.device),
+             width, rounding_mode='floor') % height
+        self.neurons.z = torch.div(
+            torch.arange(0, self.neurons.size, dtype=torch.float32, device=self.neurons.device),
+            (width * height), rounding_mode='floor') % depth
 
     def get_area_mask(self, xmin=0, xmax=-1, ymin=0, ymax=-1, zmin=0, zmax=-1):
         if xmax < 1:
@@ -66,10 +70,10 @@ class NeuronDimension(Behavior):
         return result.flatten()
 
     def apply_pattern_transformation_function(self, transform_mat, hup, wup, depth):
-        big_x_mat = torch.stack([torch.arange(wup)] * hup, dim=0)
+        big_x_mat = torch.stack([torch.arange(wup)] * hup, dim=0, dtype=torch.float, device=self.neurons.device)
         big_x_mat = big_x_mat.repeat(depth, 1).flatten()
 
-        big_y_mat = torch.repeat_interleave(torch.arange(wup), hup * depth)
+        big_y_mat = torch.repeat_interleave(torch.arange(wup, dtype=torch.float, device=self.neurons.device), hup * depth)
 
         self.neurons.x = big_x_mat[transform_mat]
         self.neurons.y = big_y_mat[transform_mat]
@@ -110,12 +114,14 @@ class NeuronDimension(Behavior):
             z_stretch = target_neurons.depth / self.neurons.depth
             self.neurons.z *= z_stretch
 
-    def set_variables(self, object):
-        self.width = self.get_init_attr("width", 1, object)
-        self.height = self.get_init_attr("height", 1, object)
-        self.depth = self.get_init_attr("depth", 1, object)
+    def set_variables(self, neurons):
+        super().set_variables(neurons)
 
-        for pg in self.get_init_attr('input_patterns', torch.tensor([]), object):
+        self.width = self.get_init_attr("width", 1, neurons)
+        self.height = self.get_init_attr("height", 1, neurons)
+        self.depth = self.get_init_attr("depth", 1, neurons)
+
+        for pg in self.get_init_attr('input_patterns', torch.tensor([]), neurons):
             dim = pg.size()
             if len(dim) > 0:
                 self.height = max(self.height, dim[0])
@@ -126,19 +132,19 @@ class NeuronDimension(Behavior):
                 self.height = max(self.height, dim[1])
                 self.width = max(self.width, dim[2])
 
-        self.neurons = object
+        self.neurons = neurons
 
-        object.shape = self
-        object.width = self.width
-        object.height = self.height
-        object.depth = self.depth
+        neurons.shape = self
+        neurons.width = self.width
+        neurons.height = self.height
+        neurons.depth = self.depth
 
-        object.size=self.width*self.height*self.depth
+        neurons.size=self.width*self.height*self.depth
 
-        self.set_positions(self.width, self.height, self.depth)
+        self.set_position(self.width, self.height, self.depth)
 
-        if self.get_init_attr('centered', True, object):
+        if self.get_init_attr('centered', True, neurons):
             self.move(-(self.width-1)/2,-(self.height-1)/2,-(self.depth-1)/2)
 
-    def new_iteration(self, object):
+    def new_iteration(self, neurons):
         return

@@ -10,8 +10,8 @@ def get_Recorder(variable):
 class Recorder(Behavior):
     visualization_module_outputs = []
 
-    def __init__(self, variables, gap_width=0, tag=None, max_length=None):
-        super().__init__(tag=tag, variables=variables, gap_width=gap_width, max_length=max_length)
+    def __init__(self, variables, gap_width=0, tag=None, max_length=None, device='cpu'):
+        super().__init__(tag=tag, variables=variables, gap_width=gap_width, max_length=max_length, device=device)
         
         self.add_tag('recorder')
 
@@ -29,7 +29,8 @@ class Recorder(Behavior):
         self.reset()
         self.max_length = self.get_init_attr('max_length', None)
 
-    def set_variables(self, neurons):
+    def set_variables(self, object):
+        assert self.device == object.device, "Recorder and object must be on the same device"
         self.reset()
 
     def add_variable(self, v):
@@ -112,8 +113,8 @@ class Recorder(Behavior):
 
 class EventRecorder(Recorder):
 
-    def __init__(self, variables, tag=None):
-        super().__init__(variables, gap_width=0, tag=tag, max_length=None)
+    def __init__(self, variables, tag=None, device='cpu'):
+        super().__init__(variables, gap_width=0, tag=tag, max_length=None, device=device)
 
     def find_objects(self, key):
 

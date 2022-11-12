@@ -1,5 +1,4 @@
 import time
-from time import time
 
 import torch
 
@@ -10,22 +9,22 @@ from pymonntorch.NetworkCore.SynapseGroup import *
 
 class Network(NetworkObjectBase):
 
-    def __init__(self, tag=None, behavior={}):
-        super().__init__(tag, self, behavior)
+    def __init__(self, tag=None, behavior={}, device='cpu'):
+        super().__init__(tag, self, behavior, device=device)
 
-        self.NeuronGroups = torch.nn.ModuleList()
-        self.SynapseGroups = torch.nn.ModuleList()
+        self.NeuronGroups = []
+        self.SynapseGroups = []
 
         self.iteration = 0
 
-    def set_behaviors(self, tag, enabeled):
-        if enabeled:
+    def set_behaviors(self, tag, enabled):
+        if enabled:
             print('activating', tag)
         else:
             print('deactivating', tag)
         for obj in self.all_objects():
             for b in obj[tag]:
-                b.behavior_enabled = enabeled
+                b.behavior_enabled = enabled
 
     def recording_off(self):
         for obj in self.all_objects():
@@ -36,10 +35,13 @@ class Network(NetworkObjectBase):
             obj.recording = True
 
     def all_objects(self):
-        return torch.nn.ModuleList([self]).extend(self.NeuronGroups).extend(self.SynapseGroups)
+        l = [self]
+        l.extend(self.NeuronGroups)
+        l.extend(self.SynapseGroups)
+        return l
 
     def all_behaviors(self):
-        result = torch.nn.ModuleList()
+        result = []
         for obj in self.all_objects():
             for beh in obj.behavior.values():
                 result.append(beh)
@@ -97,13 +99,20 @@ class Network(NetworkObjectBase):
                 storage_manager.save_param('info', desc)
 
         self.set_synapses_to_neuron_groups()
+        self.behavior_timesteps = []
 
         for obj in self.all_objects():
-            obj.behavior = torch.nn.ModuleDict(dict(sorted(obj.behavior.items())))
+            for ind in obj.behavior:
+                self._add_key_to_behavior_timesteps(ind)
 
         self.set_variables()
 
         self.check_unique_tags(warnings)
+
+    def _add_key_to_behavior_timesteps(self, ind):
+        if ind not in self.behavior_timesteps:
+            self.behavior_timesteps.append(ind)
+            self.behavior_timesteps.sort()
 
     def check_unique_tags(self,warnings=True):
         unique_tags=[]
@@ -180,21 +189,15 @@ class Network(NetworkObjectBase):
 
         for timestep in self.behavior_timesteps:
             objects = self.all_objects()
-            objects.apply(lambda obj: obj.set_iteration(self.iteration))
-            if measure_behavior_execution_time:
-                start_time = time.time()
-
-                objects.apply(
-                    lambda obj: obj.behavior[timestep].new_iteration(obj) \
-                        if obj.behavior[timestep].behavior_enabled else Behavior.new_iteration(obj)
-                        )
-
-                time_measures[timestep] = (time() - start_time) * 1000
-            else:
-                objects.apply(
-                    lambda obj: obj.behavior[timestep].new_iteration(obj) \
-                        if obj.behavior[timestep].behavior_enabled else Behavior.new_iteration(obj)
-                        )
+            for obj in objects:
+                obj.set_iteration(self.iteration)
+                if timestep in obj.behavior and obj.behavior[timestep].behavior_enabled:
+                    if measure_behavior_execution_time:
+                        start_time = time.time()
+                        obj.behavior[timestep].new_iteration(obj)
+                        time_measures[timestep] = (time() - start_time) * 1000
+                    else:
+                        obj.behavior[timestep].new_iteration(obj)
 
         if measure_behavior_execution_time:
             return time_measures

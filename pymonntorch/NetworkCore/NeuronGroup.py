@@ -23,7 +23,7 @@ class NeuronGroup(NetworkObjectBase):
 
         self.size = size
 
-        super().__init__(tag, net, behavior)
+        super().__init__(tag, net, behavior, net.device)
         self.add_tag('ng')
 
         self.BaseNeuronGroup = self#used for subgroup reconstruction
@@ -82,7 +82,7 @@ class NeuronGroup(NetworkObjectBase):
         return getattr(self, dict_name)[key]
 
     def connected_NG_param_list(self, param_name, syn_tag='All', afferent_NGs=False, efferent_NGs=False, same_NG=False, search_behaviors=False):
-        result = torch.nn.ParameterList()
+        result = []
 
         def search_NG(NG):
             if hasattr(NG, param_name):

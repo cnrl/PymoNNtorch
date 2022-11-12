@@ -1,5 +1,5 @@
 from pymonntorch.NetworkCore.Behavior import Behavior
-from pymonntorch.NetworkBehaviour.EulerEquationModules.Helper import (
+from pymonntorch.NetworkBehavior.EulerEquationModules.Helper import (
     eq_split,
     remove_units,
 )
@@ -9,6 +9,7 @@ import torch
 
 class Equation(Behavior):
     def set_variables(self, neurons):
+        super().set_variables(neurons)
         n = neurons
         self.add_tag("EquationModule")
         self.step_size = self.get_init_attr("step_size", "1*ms", neurons)

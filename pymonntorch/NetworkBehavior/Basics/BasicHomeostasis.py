@@ -62,6 +62,8 @@ class InstantHomeostasis(Behavior):
         setattr(object, self.adjustment_param, val)
 
     def set_variables(self, object):
+        super().set_variables(object)
+        
         self.compiled_mp = None
 
         self.min_th = self.get_init_attr('min_th', None, object)                           #minumum threshold for measurement param

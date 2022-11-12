@@ -4,17 +4,17 @@ from pymonntorch.NetworkCore.TaggableObject import *
 
 
 class NetworkObjectBase(TaggableObjectBase):
-    def __init__(self, tag, network, behavior):
-        super().__init__(tag)
+    def __init__(self, tag, network, behavior, device='cpu'):
+        super().__init__(tag, device)
 
         self.network = network
         self.behavior = behavior
         if type(behavior) == list:
             self.behavior = dict(zip(range(len(behavior)), behavior))
-        self.behavior = torch.nn.ModuleDict(self.behavior)
+        # self.behavior = torch.nn.ModuleDict(self.behavior)
 
-        for k in sorted(list(self.behaviour.keys())):
-            if self.behaviour[k].set_variables_on_init:
+        for k in sorted(list(self.behavior.keys())):
+            if self.behavior[k].set_variables_on_init:
                 network._set_variables_check(self, k)
 
         self.analysis_modules = torch.nn.ModuleList()
@@ -70,7 +70,7 @@ class NetworkObjectBase(TaggableObjectBase):
         for key in remove_keys:
             self.behavior.pop(key)
 
-    def set_behaviors(self, tag, enabeled):
+    def set_behaviors(self, tag, enabled):
         """
         :param tag: tag of behaviors to be set
         :param enabeled: if true, behaviors will be enabeled
@@ -78,12 +78,12 @@ class NetworkObjectBase(TaggableObjectBase):
         
         set enabeled state of behaviors
         """
-        if enabeled:
+        if enabled:
             print('activating', tag)
         else:
             print('deactivating', tag)
         for b in self[tag]:
-            b.behavior_enabled = enabeled
+            b.behavior_enabled = enabled
 
     def deactivate_behaviors(self, tag):
         """
@@ -160,7 +160,7 @@ class NetworkObjectBase(TaggableObjectBase):
             mode += '()'
 
         if mode not in self._mat_eval_dict:
-            a1 = 'size=dim,device='+self.device
+            a1 = 'dim,device='+f'\'{self.device}\''
             if '()' in mode:#no arguments => no comma
                 ev_str = mode.replace(')', a1+',**kwargs)')
             else:

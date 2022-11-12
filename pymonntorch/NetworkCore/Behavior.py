@@ -9,11 +9,13 @@ class Behavior(TaggableObjectBase):
 
     def __init__(self, **kwargs):
         self.init_kwargs = kwargs
-        self.used_attr_keys = torch.nn.ParameterList()
+        self.used_attr_keys = []
         self.behavior_enabled = self.get_init_attr('behavior_enabled', True, None)
-        super().__init__(tag=self.get_init_attr('tag', None, None))
+        super().__init__(tag=self.get_init_attr('tag', None, None), device=self.get_init_attr('device', None, None))
+        self.used_attr_keys = torch.nn.ParameterList(self.used_attr_keys)
 
     def set_variables(self, object):
+        self.device = object.device
         return
 
     def new_iteration(self, object):

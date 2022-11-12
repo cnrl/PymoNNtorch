@@ -3,7 +3,8 @@ import torch
 def_dtype = torch.float64
 
 class TaggableObjectBase(torch.nn.Module):
-    def __init__(self, tag):
+    def __init__(self, tag, device='cpu'):
+        self.device = device
         super().__init__()
 
         self.requires_grad_(False)
@@ -80,7 +81,3 @@ class TaggableObjectBase(torch.nn.Module):
         for subtag in tag.split(','):
             self.tags.append(subtag)
         return self
-
-    @property
-    def device(self):
-        return next(self.parameters()).device
