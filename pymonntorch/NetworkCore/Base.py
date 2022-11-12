@@ -4,7 +4,7 @@ from pymonntorch.NetworkCore.TaggableObject import *
 
 
 class NetworkObjectBase(TaggableObjectBase):
-    def __init__(self, tag, network, behavior, device='cpu'):
+    def __init__(self, tag, network, behavior, device="cpu"):
         super().__init__(tag, device)
 
         self.network = network
@@ -42,7 +42,7 @@ class NetworkObjectBase(TaggableObjectBase):
         """
         :param behavior_dict: dictionary of behaviors to be registered
         :return: the behavior_dict
-        
+
         register multiple behaviors to network object
         """
         for key, behavior in behavior_dict.items():
@@ -53,17 +53,17 @@ class NetworkObjectBase(TaggableObjectBase):
         """
         :param key_tag_behavior_or_type: key, tag, behavior or type of behavior to be removed
         :return:
-        
+
         remove behavior from network object
         """
         remove_keys = []
         for key in self.behavior:
             b = self.behavior[key]
             if (
-                key_tag_behavior_or_type == key or 
-                key_tag_behavior_or_type in b.tags or 
-                key_tag_behavior_or_type == b or 
-                key_tag_behavior_or_type == type(b)
+                key_tag_behavior_or_type == key
+                or key_tag_behavior_or_type in b.tags
+                or key_tag_behavior_or_type == b
+                or key_tag_behavior_or_type == type(b)
             ):
                 remove_keys.append(key)
 
@@ -73,15 +73,15 @@ class NetworkObjectBase(TaggableObjectBase):
     def set_behaviors(self, tag, enabled):
         """
         :param tag: tag of behaviors to be set
-        :param enabeled: if true, behaviors will be enabeled
+        :param enabled: if true, behaviors will be enabled
         :return:
-        
-        set enabeled state of behaviors
+
+        set enabled state of behaviors
         """
         if enabled:
-            print('activating', tag)
+            print("activating", tag)
         else:
-            print('deactivating', tag)
+            print("deactivating", tag)
         for b in self[tag]:
             b.behavior_enabled = enabled
 
@@ -89,7 +89,7 @@ class NetworkObjectBase(TaggableObjectBase):
         """
         :param tag: tag of behaviors to be deactivated
         :return:
-        
+
         deactivate behaviors
         """
         self.set_behaviors(tag, False)
@@ -98,11 +98,10 @@ class NetworkObjectBase(TaggableObjectBase):
         """
         :param tag: tag of behaviors to be activated
         :return:
-        
+
         activate behaviors
         """
         self.set_behaviors(tag, True)
-
 
     def find_objects(self, key):
         result = []
@@ -137,83 +136,95 @@ class NetworkObjectBase(TaggableObjectBase):
             return result
 
     def buffer_roll(self, mat, new=None):
-        mat[1:len(mat)] = mat[0:len(mat) - 1]
+        mat[1 : len(mat)] = mat[0 : len(mat) - 1]
 
         if new is not None:
-            mat[0]=new
+            mat[0] = new
 
         return mat
 
     def get_torch_tensor(self, dim):
         return torch.zeros(dim, device=self.device).to(def_dtype)
 
-    def _get_mat(self, mode, dim, scale=None, density=None, plot=False, kwargs={}): # mode in ['zeros', 'zeros()', 'ones', 'ones()', 'uniform(...)', 'lognormal(...)', 'normal(...)']
-        prefix = 'torch.'
-        if mode == 'random' or mode == 'rand' or mode == 'rnd' or mode == 'uniform':
-            mode = 'rand'
+    def _get_mat(
+        self, mode, dim, scale=None, density=None, plot=False, kwargs={}
+    ):  # mode in ['zeros', 'zeros()', 'ones', 'ones()', 'uniform(...)', 'lognormal(...)', 'normal(...)']
+        prefix = "torch."
+        if mode == "random" or mode == "rand" or mode == "rnd" or mode == "uniform":
+            mode = "rand"
 
         if type(mode) == int or type(mode) == float:
-            mode = 'ones()*'+str(mode)
+            mode = "ones()*" + str(mode)
 
         mode = prefix + mode
-        if '(' not in mode and ')' not in mode:
-            mode += '()'
+        if "(" not in mode and ")" not in mode:
+            mode += "()"
 
         if mode not in self._mat_eval_dict:
-            a1 = 'dim,device='+f'\'{self.device}\''
-            if '()' in mode:#no arguments => no comma
-                ev_str = mode.replace(')', a1+',**kwargs)')
+            a1 = "dim,device=" + f"'{self.device}'"
+            if "()" in mode:  # no arguments => no comma
+                ev_str = mode.replace(")", a1 + ",**kwargs)")
             else:
-                ev_str = mode.replace(')', ','+a1+',**kwargs)')
+                ev_str = mode.replace(")", "," + a1 + ",**kwargs)")
 
-            self._mat_eval_dict[mode] = compile(ev_str, '<string>', 'eval')
+            self._mat_eval_dict[mode] = compile(ev_str, "<string>", "eval")
 
         result = eval(self._mat_eval_dict[mode])
 
         if density is not None:
             if type(density) == int or type(density) == float:
-                result = (result * (torch.rand(dim, device=self.device) <= density))
+                result = result * (torch.rand(dim, device=self.device) <= density)
             elif type(density) is torch.tensor:
-                result = (result * (torch.rand(dim, device=self.device) <= density[:, None]))
+                result = result * (
+                    torch.rand(dim, device=self.device) <= density[:, None]
+                )
 
         if scale is not None:
             result *= scale
 
         if plot:
             import matplotlib.pyplot as plt
-            plt.hist(result.flatten().to('cpu'), bins=30)
+
+            plt.hist(result.flatten().to("cpu"), bins=30)
             plt.show()
 
         return result.to(def_dtype)
 
-
-    def get_random_tensor(self, dim, density=None, clone_along_first_axis=False, rnd_code=None):#rnd_code=torch.rand(dim)
+    def get_random_tensor(
+        self, dim, density=None, clone_along_first_axis=False, rnd_code=None
+    ):  # rnd_code=torch.rand(dim)
         if rnd_code is None:
             result = torch.rand(dim, device=self.device)
         else:
-            if 'dim' not in rnd_code:
-                if rnd_code[-1] == ')':
-                    rnd_code = rnd_code[:-1]+',size=dim,device='+self.device+')'
+            if "dim" not in rnd_code:
+                if rnd_code[-1] == ")":
+                    rnd_code = rnd_code[:-1] + ",size=dim,device=" + self.device + ")"
                 else:
-                    rnd_code = rnd_code+'(size=dim,device='+self.device+')'
+                    rnd_code = rnd_code + "(size=dim,device=" + self.device + ")"
             result = eval(rnd_code)
 
         if density is None:
             result = result.to(def_dtype)
         elif type(density) == int or type(density) == float:
-            result = (result * (torch.rand(dim, device=self.device) <= density)).to(def_dtype)
+            result = (result * (torch.rand(dim, device=self.device) <= density)).to(
+                def_dtype
+            )
         elif type(density) is torch.tensor:
-            result = (result * (torch.rand(dim, device=self.device) <= density[:, None])).to(def_dtype)
-
+            result = (
+                result * (torch.rand(dim, device=self.device) <= density[:, None])
+            ).to(def_dtype)
 
         if not clone_along_first_axis:
             return result
         else:
             return torch.cat([result[0] for _ in range(dim[0])]).to(self.device)
 
-
     def get_buffer_mat(self, dim, size):
-        return torch.cat([self.get_torch_tensor(dim) for _ in range(size)]).reshape(size, *dim).to(self.device)
+        return (
+            torch.cat([self.get_torch_tensor(dim) for _ in range(size)])
+            .reshape(size, *dim)
+            .to(self.device)
+        )
 
     def set_iteration(self, iteration):
         self.iteration = iteration

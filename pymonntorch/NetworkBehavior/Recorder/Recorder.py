@@ -10,27 +10,35 @@ def get_Recorder(variable):
 class Recorder(Behavior):
     visualization_module_outputs = []
 
-    def __init__(self, variables, gap_width=0, tag=None, max_length=None, device='cpu'):
-        super().__init__(tag=tag, variables=variables, gap_width=gap_width, max_length=max_length, device=device)
-        
-        self.add_tag('recorder')
+    def __init__(self, variables, gap_width=0, tag=None, max_length=None, device="cpu"):
+        super().__init__(
+            tag=tag,
+            variables=variables,
+            gap_width=gap_width,
+            max_length=max_length,
+            device=device,
+        )
 
-        self.gap_width = self.get_init_attr('gap_width', 0)
+        self.add_tag("recorder")
+
+        self.gap_width = self.get_init_attr("gap_width", 0)
         self.counter = 0
         self.new_data_available = False
 
         if type(variables) is str:
-            variables = list(map(str.strip, variables.split(',')))
+            variables = list(map(str.strip, variables.split(",")))
 
         self.variables = {}
         self.compiled = {}
 
-        self.add_variables(self.get_init_attr('variables', []))
+        self.add_variables(self.get_init_attr("variables", []))
         self.reset()
-        self.max_length = self.get_init_attr('max_length', None)
+        self.max_length = self.get_init_attr("max_length", None)
 
     def set_variables(self, object):
-        assert self.device == object.device, "Recorder and object must be on the same device"
+        assert (
+            self.device == object.device
+        ), "Recorder and object must be on the same device"
         self.reset()
 
     def add_variable(self, v):
@@ -68,7 +76,9 @@ class Recorder(Behavior):
 
     def save_data_v(self, data, variable):
         device = self.variables[variable].device
-        self.variables[variable] = torch.concat([self.variables[variable], torch.tensor(data, device=device)])
+        self.variables[variable] = torch.concat(
+            [self.variables[variable], torch.tensor(data, device=device)]
+        )
 
     def new_iteration(self, parent_obj):
         if parent_obj.recording:
@@ -80,7 +90,7 @@ class Recorder(Behavior):
 
                 for v in self.variables:
                     if self.compiled[v] is None:
-                        self.compiled[v] = compile(v, '<string>', 'eval')
+                        self.compiled[v] = compile(v, "<string>", "eval")
 
                     data = self.get_data_v(v, parent_obj)
                     if data is not None:
@@ -102,19 +112,21 @@ class Recorder(Behavior):
         return torch.swapaxes(x, 1, 0)
 
     def clear_recorder(self):
-        print('clear')
+        print("clear")
 
         for v in self.variables:
             device = self.variables[v].device
             del self.variables[v]
-            if device.type == 'cuda':
+            if device.type == "cuda":
                 torch.cuda.empty_cache()
             self.variables[v] = torch.tensor([], dtype=torch.float32, device=device)
 
-class EventRecorder(Recorder):
 
-    def __init__(self, variables, tag=None, device='cpu'):
-        super().__init__(variables, gap_width=0, tag=tag, max_length=None, device=device)
+class EventRecorder(Recorder):
+    def __init__(self, variables, tag=None, device="cpu"):
+        super().__init__(
+            variables, gap_width=0, tag=tag, max_length=None, device=device
+        )
 
     def find_objects(self, key):
 
@@ -122,10 +134,10 @@ class EventRecorder(Recorder):
         if key in self.variables:
             result.append(self.variables[key])
 
-        if type(key) is str and key[-2:] == '.t' and key[:-2] in self.variables:
+        if type(key) is str and key[-2:] == ".t" and key[:-2] in self.variables:
             result.append(self.variables[key[:-2]][:, 0])
 
-        if type(key) is str and key[-2:] == '.i' and key[:-2] in self.variables:
+        if type(key) is str and key[-2:] == ".i" and key[:-2] in self.variables:
             result.append(self.variables[key[:-2]][:, 1])
 
         return torch.tensor(result, device=self.device)

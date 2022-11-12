@@ -2,8 +2,9 @@ import torch
 
 def_dtype = torch.float64
 
+
 class TaggableObjectBase(torch.nn.Module):
-    def __init__(self, tag, device='cpu'):
+    def __init__(self, tag, device="cpu"):
         self.device = device
         super().__init__()
 
@@ -15,7 +16,7 @@ class TaggableObjectBase(torch.nn.Module):
         if tag is not None:
             self.add_tag(tag)
         self.add_tag(self.__class__.__name__)
-        
+
         self._searching = False
 
     def has_module(self, tag):
@@ -78,6 +79,6 @@ class TaggableObjectBase(torch.nn.Module):
         return result
 
     def add_tag(self, tag):
-        for subtag in tag.split(','):
+        for subtag in tag.split(","):
             self.tags.append(subtag)
         return self

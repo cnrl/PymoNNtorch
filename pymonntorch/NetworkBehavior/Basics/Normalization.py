@@ -8,19 +8,17 @@ class SynapticNormalization(Behavior):
     def set_variables(self, neurons):
         super().set_variables(neurons)
 
-        self.synapse_type = self.get_init_attr('synapse_type', 'glutamate', neurons)
+        self.synapse_type = self.get_init_attr("synapse_type", "glutamate", neurons)
 
         neurons.require_synapses(self.synapse_type)
 
         self.norm_factor = check_is_torch_tensor(
-            self.get_init_attr('norm_factor', 1.0, neurons),
+            self.get_init_attr("norm_factor", 1.0, neurons),
             device=neurons.device,
-            dtype=torch.float32
+            dtype=torch.float32,
         )
 
-        neurons.sum_w = neurons.get_neuron_vec(
-            kwargs={"dtype": torch.float32}
-        )
+        neurons.sum_w = neurons.get_neuron_vec(kwargs={"dtype": torch.float32})
 
     def new_iteration(self, neurons):
         neurons.sum_w.zero_()

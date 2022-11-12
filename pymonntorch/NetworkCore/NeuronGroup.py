@@ -6,33 +6,34 @@ from pymonntorch.NetworkCore.Behavior import *
 
 
 class NeuronGroup(NetworkObjectBase):
-
     def __init__(self, size, behavior, net, tag=None):
 
         if tag is None and net is not None:
-            tag = 'NeuronGroup_'+str(len(net.NeuronGroups)+1)
+            tag = "NeuronGroup_" + str(len(net.NeuronGroups) + 1)
 
         if isinstance(size, Behavior):
             if type(behavior) is dict:
                 if 0 in behavior:
-                    print('warning: 0 index behavior will be overwritten by size behavior')
+                    print(
+                        "warning: 0 index behavior will be overwritten by size behavior"
+                    )
                 behavior[0] = size
             if type(behavior) is list:
                 behavior.insert(0, size)
-            size = -1#will be overwritten by size-behavior
+            size = -1  # will be overwritten by size-behavior
 
         self.size = size
 
         super().__init__(tag, net, behavior, net.device)
-        self.add_tag('ng')
+        self.add_tag("ng")
 
-        self.BaseNeuronGroup = self#used for subgroup reconstruction
+        self.BaseNeuronGroup = self  # used for subgroup reconstruction
 
         if net is not None:
             net.NeuronGroups.append(self)
             setattr(net, self.tags[0], self)
 
-        self.afferent_synapses = {} #set by Network
+        self.afferent_synapses = {}  # set by Network
         self.efferent_synapses = {}
 
         self.mask = True
@@ -45,16 +46,25 @@ class NeuronGroup(NetworkObjectBase):
     def require_synapses(self, name, afferent=True, efferent=True, warning=True):
         if afferent and not name in self.afferent_synapses:
             if warning:
-                print('warning: no afferent {} synapses found'.format(name))
+                print("warning: no afferent {} synapses found".format(name))
             self.afferent_synapses[name] = torch.nn.ModuleList()
 
         if efferent and not name in self.efferent_synapses:
             if warning:
-                print('warning: no efferent {} synapses found'.format(name))
+                print("warning: no efferent {} synapses found".format(name))
             self.efferent_synapses[name] = torch.nn.ModuleList()
 
-    def get_neuron_vec(self, mode='zeros()', scale=None, density=None, plot=False, kwargs={}):# mode in ['zeros', 'zeros()', 'ones', 'ones()', 'uniform(...)', 'lognormal(...)', 'normal(...)', ...]
-        return self._get_mat(mode=mode, dim=(self.size), scale=scale, density=density, plot=plot, kwargs=kwargs)
+    def get_neuron_vec(
+        self, mode="zeros()", scale=None, density=None, plot=False, kwargs={}
+    ):  # mode in ['zeros', 'zeros()', 'ones', 'ones()', 'uniform(...)', 'lognormal(...)', 'normal(...)', ...]
+        return self._get_mat(
+            mode=mode,
+            dim=(self.size),
+            scale=scale,
+            density=density,
+            plot=plot,
+            kwargs=kwargs,
+        )
 
     def get_neuron_vec_buffer(self, buffer_size):
         return self.get_buffer_mat((self.size), buffer_size)
@@ -67,10 +77,10 @@ class NeuronGroup(NetworkObjectBase):
         return self.size, source_num
 
     def __str__(self):
-        result = 'NeuronGroup'+str(self.tags)+'('+str(self.size)+'){'
+        result = "NeuronGroup" + str(self.tags) + "(" + str(self.size) + "){"
         for k in sorted(list(self.behavior.keys())):
-            result += str(k) + ':' + str(self.behavior[k])
-        return result+'}'
+            result += str(k) + ":" + str(self.behavior[k])
+        return result + "}"
 
     def subGroup(self, mask=None):
         return NeuronSubGroup(self, mask)
@@ -81,7 +91,15 @@ class NeuronGroup(NetworkObjectBase):
     def get_masked_dict(self, dict_name, key):
         return getattr(self, dict_name)[key]
 
-    def connected_NG_param_list(self, param_name, syn_tag='All', afferent_NGs=False, efferent_NGs=False, same_NG=False, search_behaviors=False):
+    def connected_NG_param_list(
+        self,
+        param_name,
+        syn_tag="All",
+        afferent_NGs=False,
+        efferent_NGs=False,
+        same_NG=False,
+        search_behaviors=False,
+    ):
         result = []
 
         def search_NG(NG):
@@ -114,11 +132,11 @@ class NeuronGroup(NetworkObjectBase):
         return result
 
     def partition_size(self, block_size=7):
-        w = block_size#int((self.src.width/block_size+self.dst.width/block_size)/2)
-        h = block_size#int((self.src.height/block_size+self.dst.height/block_size)/2)
-        d = block_size#int((self.src.depth / block_size + self.dst.depth / block_size) / 2)
+        w = block_size  # int((self.src.width/block_size+self.dst.width/block_size)/2)
+        h = block_size  # int((self.src.height/block_size+self.dst.height/block_size)/2)
+        d = block_size  # int((self.src.depth / block_size + self.dst.depth / block_size) / 2)
         split_size = [np.maximum(w, 1), np.maximum(h, 1), np.maximum(d, 1)]
-        if split_size[0]<2 and split_size[1]<2 and split_size[2]<2:
+        if split_size[0] < 2 and split_size[1] < 2 and split_size[2] < 2:
             return [self]
         else:
             return self.split_grid_into_sub_group_blocks(split_size)
@@ -129,23 +147,30 @@ class NeuronGroup(NetworkObjectBase):
         dst_max = [np.max(p) for p in [self.x, self.y, self.z]]
 
         def get_start_end(step, dim):
-            start=dst_min[dim]+(dst_max[dim]-dst_min[dim])/steps[dim]*step
-            end=dst_min[dim]+(dst_max[dim]-dst_min[dim])/steps[dim]*(step+1)
+            start = dst_min[dim] + (dst_max[dim] - dst_min[dim]) / steps[dim] * step
+            end = dst_min[dim] + (dst_max[dim] - dst_min[dim]) / steps[dim] * (step + 1)
             return start, end
 
         results = []
 
         masks = []
-        for w_step in range(steps[0]):          #x_steps
+        for w_step in range(steps[0]):  # x_steps
             dst_x_start, dst_x_end = get_start_end(w_step, 0)
-            for h_step in range(steps[1]):      #y_steps
+            for h_step in range(steps[1]):  # y_steps
                 dst_y_start, dst_y_end = get_start_end(h_step, 1)
-                for d_step in range(steps[2]):  #z_steps
+                for d_step in range(steps[2]):  # z_steps
                     dst_z_start, dst_z_end = get_start_end(d_step, 2)
 
-                    sub_group_mask = (self.x >= dst_x_start) * (self.x <= dst_x_end) * (self.y >= dst_y_start) * (self.y <= dst_y_end) * (self.z >= dst_z_start) * (self.z <= dst_z_end)
+                    sub_group_mask = (
+                        (self.x >= dst_x_start)
+                        * (self.x <= dst_x_end)
+                        * (self.y >= dst_y_start)
+                        * (self.y <= dst_y_end)
+                        * (self.z >= dst_z_start)
+                        * (self.z <= dst_z_end)
+                    )
 
-                    #remove redundancies
+                    # remove redundancies
                     for old_dst_mask in masks:
                         sub_group_mask[old_dst_mask] *= False
                     masks.append(sub_group_mask)
@@ -157,8 +182,7 @@ class NeuronGroup(NetworkObjectBase):
     def split_grid_into_sub_group_blocks(self, steps=[1, 1, 1]):
         return [self.subGroup(mask) for mask in self.partition_masks(steps)]
 
-
-    def get_subgroup_receptive_field_mask(self, subgroup, xyz_rf=[1,1,1]):
+    def get_subgroup_receptive_field_mask(self, subgroup, xyz_rf=[1, 1, 1]):
         rf_x, rf_y, rf_z = xyz_rf
 
         src_x_start = np.min(subgroup.x) - rf_x
@@ -170,7 +194,14 @@ class NeuronGroup(NetworkObjectBase):
         src_z_start = np.min(subgroup.z) - rf_z
         src_z_end = np.max(subgroup.z) + rf_z
 
-        mask = (self.x >= src_x_start) * (self.x <= src_x_end) * (self.y >= src_y_start) * (self.y <= src_y_end) * (self.z >= src_z_start) * (self.z <= src_z_end)
+        mask = (
+            (self.x >= src_x_start)
+            * (self.x <= src_x_end)
+            * (self.y >= src_y_start)
+            * (self.y <= src_y_end)
+            * (self.z >= src_z_start)
+            * (self.z <= src_z_end)
+        )
 
         return mask
 
@@ -179,7 +210,6 @@ class NeuronGroup(NetworkObjectBase):
 
 
 class NeuronSubGroup:
-
     def __init__(self, BaseNeuronGroup, mask):
         self.cache = {}
         self.key_id_cache = {}
@@ -194,10 +224,10 @@ class NeuronSubGroup:
             return var[self.mask]
 
     def __getattr__(self, attr_name):
-        if attr_name in ['BaseNeuronGroup', 'mask', 'cache', 'key_id_cache', 'id_mask']:
-            return super().__getattr__(attr_name)#setattr
+        if attr_name in ["BaseNeuronGroup", "mask", "cache", "key_id_cache", "id_mask"]:
+            return super().__getattr__(attr_name)  # setattr
 
-        if attr_name == 'size':
+        if attr_name == "size":
             return torch.sum(self.mask)
 
         attr = getattr(self.BaseNeuronGroup, attr_name)
@@ -211,7 +241,7 @@ class NeuronSubGroup:
             return attr
 
     def __setattr__(self, attr_name, value):
-        if attr_name in ['BaseNeuronGroup', 'mask', 'cache', 'key_id_cache', 'id_mask']:
+        if attr_name in ["BaseNeuronGroup", "mask", "cache", "key_id_cache", "id_mask"]:
             super().__setattr__(attr_name, value)
             return
 
