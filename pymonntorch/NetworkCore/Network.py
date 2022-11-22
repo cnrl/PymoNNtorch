@@ -54,7 +54,7 @@ class Network(NetworkObjectBase):
                 ):
                     obj.behavior[key].clear_recorder()
 
-    def __str__(self):
+    def __repr__(self):
         neuron_count = torch.sum(torch.tensor([ng.size for ng in self.NeuronGroups]))
         synapse_count = torch.sum(
             torch.tensor([sg.src.size * sg.dst.size for sg in self.SynapseGroups])

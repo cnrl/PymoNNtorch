@@ -24,7 +24,7 @@ class Behavior(TaggableObjectBase):
     def new_iteration(self, object):
         return
 
-    def __str__(self):
+    def __repr__(self):
         result = self.__class__.__name__ + "("
         for k in self.init_kwargs:
             result += str(k) + "=" + str(self.init_kwargs[k]) + ","

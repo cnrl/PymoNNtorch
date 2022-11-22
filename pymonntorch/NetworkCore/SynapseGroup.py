@@ -32,7 +32,7 @@ class SynapseGroup(NetworkObjectBase):
         self.enabled = True
         self.group_weighting = 1
 
-    def __str__(self):
+    def __repr__(self):
         result = (
             "SynapseGroup"
             + str(self.tags)
