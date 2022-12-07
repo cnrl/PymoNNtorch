@@ -7,7 +7,7 @@ from pymonntorch.NetworkCore.Behavior import Behavior
 from pymonntorch.NetworkCore.SynapseGroup import *
 
 
-class Network(NetworkObjectBase):
+class Network(NetworkObject):
     def __init__(self, tag=None, behavior={}, device="cpu"):
         super().__init__(tag, self, behavior, device=device)
 

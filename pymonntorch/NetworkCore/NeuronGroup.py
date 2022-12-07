@@ -5,7 +5,7 @@ from pymonntorch.NetworkCore.Base import *
 from pymonntorch.NetworkCore.Behavior import *
 
 
-class NeuronGroup(NetworkObjectBase):
+class NeuronGroup(NetworkObject):
     def __init__(self, size, behavior, net, tag=None):
 
         if tag is None and net is not None:

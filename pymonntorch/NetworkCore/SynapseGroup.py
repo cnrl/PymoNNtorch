@@ -3,7 +3,7 @@ import copy
 from pymonntorch.NetworkCore.Base import *
 
 
-class SynapseGroup(NetworkObjectBase):
+class SynapseGroup(NetworkObject):
     def __init__(self, src, dst, net, tag=None, behavior={}):
 
         if type(src) is str:
