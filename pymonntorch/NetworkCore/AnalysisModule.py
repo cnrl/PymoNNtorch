@@ -8,7 +8,7 @@ from pymonntorch.NetworkCore.Base import *
 # Via the add_tag function, the modules can be categorized into groups
 
 
-class AnalysisModule(TaggableObjectBase):
+class AnalysisModule(TaggableObject):
     def __init__(self, parent=None, **kwargs):
         self.init_kwargs = kwargs
         super().__init__(tag=self.get_init_attr("tag", None))

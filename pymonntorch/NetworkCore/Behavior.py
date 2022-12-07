@@ -1,10 +1,10 @@
 import torch
 
-from pymonntorch.NetworkCore.Base import TaggableObjectBase
+from pymonntorch.NetworkCore.Base import TaggableObject
 from pymonntorch.utils import is_number
 
 
-class Behavior(TaggableObjectBase):
+class Behavior(TaggableObject):
     set_variables_on_init = False
 
     def __init__(self, **kwargs):

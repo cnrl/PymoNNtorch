@@ -3,7 +3,7 @@ import torch
 from pymonntorch.NetworkCore.TaggableObject import *
 
 
-class NetworkObjectBase(TaggableObjectBase):
+class NetworkObjectBase(TaggableObject):
     def __init__(self, tag, network, behavior, device="cpu"):
         super().__init__(tag, device)
 
