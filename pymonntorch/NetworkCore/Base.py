@@ -4,7 +4,25 @@ from pymonntorch.NetworkCore.TaggableObject import *
 
 
 class NetworkObject(TaggableObject):
+    """This is the base class for all network objects.
+
+    This class is used to treat network objects' behaviors and is a subclass of TaggableObject.
+
+    Attributes:
+        network (Network): The parent network object.
+        behavior (list or dict): List or dictionary of behaviors.
+        analysis_modules (list): List of analysis modules.
+    """
+
     def __init__(self, tag, network, behavior, device="cpu"):
+        """Initialize the object.
+
+        Args:
+            tag (str): Tag to add to the object. It can also be a comma-separated string of multiple tags.
+            network (Network): The parent network object.
+            behavior (list or dict): List or dictionary of behaviors. If a dictionary is used, the keys must be integers.
+            device (str): Device on which the object is located. The default is "cpu".
+        """
         super().__init__(tag, device)
 
         self.network = network
@@ -17,16 +35,18 @@ class NetworkObject(TaggableObject):
             if self.behavior[k].set_variables_on_init:
                 network._set_variables_check(self, k)
 
-        self.analysis_modules = torch.nn.ModuleList()
+        self.analysis_modules = []
 
     def register_behavior(self, key, behavior, initialize=True):
-        """
-        :param key: key to be used to access behavior
-        :param behavior: behavior to be registered
-        :param initialize: if true, behavior will be initialized
-        :return: the behavior
+        """Register a single behavior to the network object.
 
-        register behavior to network object
+        Args:
+            key (str): Key to be used to access behavior.
+            behavior (Behavior): Behavior to be registered.
+            initialize (bool): If true, behavior will be initialized. The default is True.
+
+        Returns:
+            Behavior: The behavior.
         """
         self.behavior[key] = behavior
         self.network._add_key_to_sorted_behavior_timesteps(key)
@@ -39,22 +59,23 @@ class NetworkObject(TaggableObject):
         return behavior
 
     def register_behaviors(self, behavior_dict):
-        """
-        :param behavior_dict: dictionary of behaviors to be registered
-        :return: the behavior_dict
+        """Register multiple behaviors to the network object.
 
-        register multiple behaviors to network object
+        Args:
+            behavior_dict (dict): Dictionary of behaviors to be registered. The keys must be integers.
+
+        Returns:
+            dict: The dictionary of behaviors.
         """
         for key, behavior in behavior_dict.items():
             self.register_behavior(key, behavior)
         return behavior_dict
 
     def remove_behavior(self, key_tag_behavior_or_type):
-        """
-        :param key_tag_behavior_or_type: key, tag, behavior or type of behavior to be removed
-        :return:
+        """Remove behavior(s) from the network object.
 
-        remove behavior from network object
+        Args:
+            key_tag_behavior_or_type (str, Behavior, or type): Key, tag, behavior object, or type of behavior to be removed.
         """
         remove_keys = []
         for key in self.behavior:
@@ -71,12 +92,11 @@ class NetworkObject(TaggableObject):
             self.behavior.pop(key)
 
     def set_behaviors(self, tag, enabled):
-        """
-        :param tag: tag of behaviors to be set
-        :param enabled: if true, behaviors will be enabled
-        :return:
+        """Set behaviors to be enabled or disabled.
 
-        set enabled state of behaviors
+        Args:
+            tag (str): Tag of behaviors to be enabled or disabled.
+            enabled (bool): If true, behaviors will be enabled. If false, behaviors will be disabled.
         """
         if enabled:
             print("activating", tag)
@@ -86,24 +106,30 @@ class NetworkObject(TaggableObject):
             b.behavior_enabled = enabled
 
     def deactivate_behaviors(self, tag):
-        """
-        :param tag: tag of behaviors to be deactivated
-        :return:
+        """Disable behaviors.
 
-        deactivate behaviors
+        Args:
+            tag (str): Tag of behaviors to be disabled.
         """
         self.set_behaviors(tag, False)
 
     def activate_behaviors(self, tag):
-        """
-        :param tag: tag of behaviors to be activated
-        :return:
+        """Enable behaviors.
 
-        activate behaviors
+        Args:
+            tag (str): Tag of behaviors to be enabled.
         """
         self.set_behaviors(tag, True)
 
     def find_objects(self, key):
+        """Find behaviors and analysis modules in the network object by key.
+
+        Args:
+            key (str): Key to be used to access behavior or analysis module.
+
+        Returns:
+            list: List of behaviors and analysis modules.
+        """
         result = []
 
         if key in self.behavior:
@@ -119,9 +145,23 @@ class NetworkObject(TaggableObject):
         return result
 
     def register_analysis_module(self, module):
+        """Register an analysis module to the network object.
+
+        Args:
+            module (AnalysisModule): Analysis module to be registered.
+        """
         module._attach_and_initialize_(self)
 
     def get_all_analysis_module_results(self, tag, return_modules=False):
+        """Get results from all analysis modules in the network object.
+
+        Args:
+            tag (str): Tag of analysis modules to be used.
+            return_modules (bool): If true, the analysis modules will be returned. The default is False.
+
+        Returns:
+            dict: Dictionary of results.
+        """
         result = {}
         modules = torch.nn.ModuleDict()
         for module in self[tag]:
@@ -136,6 +176,15 @@ class NetworkObject(TaggableObject):
             return result
 
     def buffer_roll(self, mat, new=None):
+        """Shift the elements of a tensor to the right.
+
+        Args:
+            mat (torch.Tensor): Tensor to be shifted.
+            new (int or float or bool or torch.Tensor): New element to be inserted at the beginning of the tensor. The default is None (i.e. Nothing is added).
+
+        Returns:
+            torch.Tensor: The shifted tensor.
+        """
         mat[1 : len(mat)] = mat[0 : len(mat) - 1]
 
         if new is not None:
@@ -143,12 +192,29 @@ class NetworkObject(TaggableObject):
 
         return mat
 
-    def get_torch_tensor(self, dim):
-        return torch.zeros(dim, device=self.device).to(def_dtype)
-
     def _get_mat(
         self, mode, dim, scale=None, density=None, plot=False, kwargs={}
-    ):  # mode in ['zeros', 'zeros()', 'ones', 'ones()', 'uniform(...)', 'lognormal(...)', 'normal(...)']
+    ):
+        """Get a tensor with object's dimensionality.
+        
+        The tensor can be initialized in different modes. List of possible values for mode includes:
+        - "random" or "rand" or "rnd" or "uniform": Uniformly distributed random numbers in range [0, 1).
+        - "normal": Normally distributed random numbers with zero mean and unit variance.
+        - "ones": Tensor filled with ones.
+        - "zeros": Tensor filled with zeros.
+        - A single number: Tensor filled with that number.
+        - You can also use any function from torch package for this purpose. Note that you should **not** use `torch.` prefix.
+        
+        Args:
+            mode (str): Mode to be used to initialize tensor.
+            dim (int or tuple of int): Dimensionality of the tensor.
+            scale (float): Scale of the tensor. The default is None (i.e. No scaling is applied).
+            density (float): Density of the tensor. The default is None (i.e. dense tensor).
+            plot (bool): If true, the histogram of the tensor will be plotted. The default is False.
+            kwargs (dict): Keyword arguments to be passed to the initialization function.
+            
+        Returns:
+            torch.Tensor: The initialized tensor."""
         prefix = "torch."
         if mode == "random" or mode == "rand" or mode == "rnd" or mode == "uniform":
             mode = "rand"
@@ -159,6 +225,9 @@ class NetworkObject(TaggableObject):
         mode = prefix + mode
         if "(" not in mode and ")" not in mode:
             mode += "()"
+
+        if "device" in kwargs:
+            kwargs.pop("device")
 
         if mode not in self._mat_eval_dict:
             a1 = "dim,device=" + f"'{self.device}'"
@@ -188,40 +257,23 @@ class NetworkObject(TaggableObject):
             plt.hist(result.flatten().to("cpu"), bins=30)
             plt.show()
 
+        if "dtype" in kwargs:
+            return result
         return result.to(def_dtype)
 
-    def get_random_tensor(
-        self, dim, density=None, clone_along_first_axis=False, rnd_code=None
-    ):  # rnd_code=torch.rand(dim)
-        if rnd_code is None:
-            result = torch.rand(dim, device=self.device)
-        else:
-            if "dim" not in rnd_code:
-                if rnd_code[-1] == ")":
-                    rnd_code = rnd_code[:-1] + ",size=dim,device=" + self.device + ")"
-                else:
-                    rnd_code = rnd_code + "(size=dim,device=" + self.device + ")"
-            result = eval(rnd_code)
-
-        if density is None:
-            result = result.to(def_dtype)
-        elif type(density) == int or type(density) == float:
-            result = (result * (torch.rand(dim, device=self.device) <= density)).to(
-                def_dtype
-            )
-        elif type(density) is torch.tensor:
-            result = (
-                result * (torch.rand(dim, device=self.device) <= density[:, None])
-            ).to(def_dtype)
-
-        if not clone_along_first_axis:
-            return result
-        else:
-            return torch.cat([result[0] for _ in range(dim[0])]).to(self.device)
-
-    def get_buffer_mat(self, dim, size):
+    def get_buffer_mat(self, dim, size, **kwargs):
+        """Get a buffer of specific size with object's dimensionality.
+        
+        Args:
+            dim (int or tuple of int): Dimensionality of the buffer.
+            size (int): Size of the buffer.
+            kwargs (dict): Keyword arguments to be passed to the initialization function.
+        
+        Returns:
+            torch.Tensor: The buffer.
+        """
         return (
-            torch.cat([self.get_torch_tensor(dim) for _ in range(size)])
+            torch.cat([torch.zeros(dim, **kwargs) for _ in range(size)])
             .reshape(size, *dim)
             .to(self.device)
         )

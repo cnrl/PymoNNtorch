@@ -13,10 +13,16 @@ class TaggableObject(torch.nn.Module):
     Attributes:
         tags (list): List of tags.
         tag_shortcuts (dict): Cache for faster search.
-        device (str): Device on which the object is located.
+        device (str): Device on which the object is located. The default is "cpu".
     """
 
     def __init__(self, tag, device="cpu"):
+        """Initialize the object.
+        
+        Args:
+            tag (str): Tag to add to the object. It can also be a comma-separated string of multiple tags.
+            device (str): Device on which the object is located.
+        """
         self.device = device
         super().__init__()
 
