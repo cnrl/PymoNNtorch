@@ -197,5 +197,5 @@ class NeuronDimension(Behavior):
                 -(self.width - 1) / 2, -(self.height - 1) / 2, -(self.depth - 1) / 2
             )
 
-    def new_iteration(self, neurons):
+    def forward(self, neurons):
         return

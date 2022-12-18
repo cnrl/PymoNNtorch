@@ -16,7 +16,7 @@ class Clock(Behavior):
         print(neuron_or_network.clock_step_size)
         neuron_or_network.t = 0.0
 
-    def new_iteration(self, neuron_or_network):
+    def forward(self, neuron_or_network):
         neuron_or_network.t += neuron_or_network.clock_step_size
 
     def time_to_iterations(self, time_str):

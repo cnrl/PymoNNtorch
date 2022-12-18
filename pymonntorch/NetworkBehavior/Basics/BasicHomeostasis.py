@@ -139,7 +139,7 @@ class InstantHomeostasis(Behavior):
             dtype=torch.float32,
         )
 
-    def new_iteration(self, object):
+    def forward(self, object):
         measure = self.get_measurement_param(object)
         self.adj = self.get_target_adjustment(measure)
         self.adjust_target(object, self.adj)

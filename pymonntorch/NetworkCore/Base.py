@@ -192,11 +192,9 @@ class NetworkObject(TaggableObject):
 
         return mat
 
-    def _get_mat(
-        self, mode, dim, scale=None, density=None, plot=False, kwargs={}
-    ):
+    def _get_mat(self, mode, dim, scale=None, density=None, plot=False, kwargs={}):
         """Get a tensor with object's dimensionality.
-        
+
         The tensor can be initialized in different modes. List of possible values for mode includes:
         - "random" or "rand" or "rnd" or "uniform": Uniformly distributed random numbers in range [0, 1).
         - "normal": Normally distributed random numbers with zero mean and unit variance.
@@ -204,7 +202,7 @@ class NetworkObject(TaggableObject):
         - "zeros": Tensor filled with zeros.
         - A single number: Tensor filled with that number.
         - You can also use any function from torch package for this purpose. Note that you should **not** use `torch.` prefix.
-        
+
         Args:
             mode (str): Mode to be used to initialize tensor.
             dim (int or tuple of int): Dimensionality of the tensor.
@@ -212,7 +210,7 @@ class NetworkObject(TaggableObject):
             density (float): Density of the tensor. The default is None (i.e. dense tensor).
             plot (bool): If true, the histogram of the tensor will be plotted. The default is False.
             kwargs (dict): Keyword arguments to be passed to the initialization function.
-            
+
         Returns:
             torch.Tensor: The initialized tensor."""
         prefix = "torch."
@@ -263,12 +261,12 @@ class NetworkObject(TaggableObject):
 
     def get_buffer_mat(self, dim, size, **kwargs):
         """Get a buffer of specific size with object's dimensionality.
-        
+
         Args:
             dim (int or tuple of int): Dimensionality of the buffer.
             size (int): Size of the buffer.
             kwargs (dict): Keyword arguments to be passed to the initialization function.
-        
+
         Returns:
             torch.Tensor: The buffer.
         """
@@ -278,5 +276,17 @@ class NetworkObject(TaggableObject):
             .to(self.device)
         )
 
-    def set_iteration(self, iteration):
-        self.iteration = iteration
+    @property
+    def iteration(self):
+        """int: iteration number or time step."""
+        return self._iteration
+
+    @iteration.setter
+    def iteration(self, iteration):
+        if iteration >= 0 and type(iteration) is int:
+            self._iteration = iteration
+        else:
+            print(
+                "WARNING: Attempting to set an invalid value for iteration!\n Setting iteration to zero..."
+            )
+            self._iteration = 0

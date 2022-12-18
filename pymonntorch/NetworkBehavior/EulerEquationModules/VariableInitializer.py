@@ -30,7 +30,7 @@ class Variable(Behavior):
             n, self.var_name + "_new", neurons.get_neuron_vec() + eval(self.var_init)
         )
 
-    def new_iteration(self, n):
+    def forward(self, n):
         setattr(
             n, self.var_name, getattr(n, self.var_name + "_new")
         )  # apply the new value to variable
@@ -59,7 +59,7 @@ class SynapseVariable(Behavior):
             s, self.var_name + "_new", synapse.get_synapse_mat() + eval(self.var_init)
         )
 
-    def new_iteration(self, s):
+    def forward(self, s):
         setattr(
             s, self.var_name, getattr(s, self.var_name + "_new")
         )  # apply the new value to variable

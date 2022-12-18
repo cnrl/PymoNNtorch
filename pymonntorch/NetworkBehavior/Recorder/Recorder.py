@@ -80,7 +80,7 @@ class Recorder(Behavior):
             [self.variables[variable], torch.tensor(data, device=device)]
         )
 
-    def new_iteration(self, parent_obj):
+    def forward(self, parent_obj):
         if parent_obj.recording:
             self.counter += 1
 

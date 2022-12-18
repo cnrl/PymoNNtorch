@@ -44,6 +44,6 @@ class Equation(Behavior):
 
         print(self.evaluation)
 
-    def new_iteration(self, n):
+    def forward(self, n):
         new = eval(self.compiled_evaluation)
         setattr(n, self.variable + "_new", torch.tensor(new, device=n.device))

@@ -21,7 +21,7 @@ class Behavior(TaggableObject):
         self.device = object.device
         return
 
-    def new_iteration(self, object):
+    def forward(self, object):
         return
 
     def __repr__(self):

@@ -14,7 +14,7 @@ class Network(NetworkObject):
         self.NeuronGroups = []
         self.SynapseGroups = []
 
-        self.iteration = 0
+        self._iteration = 0
 
     def set_behaviors(self, tag, enabled):
         if enabled:
@@ -210,14 +210,14 @@ class Network(NetworkObject):
         for timestep in self.behavior_timesteps:
             objects = self.all_objects()
             for obj in objects:
-                obj.set_iteration(self.iteration)
+                obj.iteration = self.iteration
                 if timestep in obj.behavior and obj.behavior[timestep].behavior_enabled:
                     if measure_behavior_execution_time:
                         start_time = time.time()
-                        obj.behavior[timestep].new_iteration(obj)
+                        obj.behavior[timestep](obj)
                         time_measures[timestep] = (time() - start_time) * 1000
                     else:
-                        obj.behavior[timestep].new_iteration(obj)
+                        obj.behavior[timestep](obj)
 
         if measure_behavior_execution_time:
             return time_measures

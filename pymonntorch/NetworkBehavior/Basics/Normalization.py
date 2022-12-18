@@ -20,7 +20,7 @@ class SynapticNormalization(Behavior):
 
         neurons.sum_w = neurons.get_neuron_vec(kwargs={"dtype": torch.float32})
 
-    def new_iteration(self, neurons):
+    def forward(self, neurons):
         neurons.sum_w.zero_()
 
         for syn in neurons.afferent_synapses[self.synapse_type]:
