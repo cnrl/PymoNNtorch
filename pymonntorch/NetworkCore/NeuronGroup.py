@@ -6,8 +6,30 @@ from pymonntorch.NetworkCore.Behavior import *
 
 
 class NeuronGroup(NetworkObject):
+    """This is the class to construct a neuronal population.
+    
+    Attributes:
+        size (int): The number of neurons in the population.
+        behavior (list or dict): The behaviors of the population.
+        net (Network): The network the population belongs to.
+        tags (str): The tags of the population.
+        BaseNeuronGroup (NeuronGroup): The base `NeuronGroup` the population belongs to.
+        afferent_synapses (dict): The afferent synapses of the population.
+        efferent_synapses (dict): The efferent synapses of the population.
+        mask (bool): Whether to define a mask for the population (Used for nested populations).
+        learning (bool): Whether to enable learning for the population.
+        recording (bool): Whether to enable recording for the population.
+        id (torch.Tensor): The integer id of the population.
+    """
     def __init__(self, size, behavior, net, tag=None):
-
+        """Initialize the neuronal population.
+        
+        Args:
+            size (int or Behavior): The size or dimension of the population.
+            behavior (list or dict): The behaviors of the population.
+            net (Network): The network the population belongs to.
+            tag (str): The tag of the population.
+        """
         if tag is None and net is not None:
             tag = "NeuronGroup_" + str(len(net.NeuronGroups) + 1)
 
@@ -44,6 +66,14 @@ class NeuronGroup(NetworkObject):
         self.id = torch.arange(self.size, device=self.device)
 
     def require_synapses(self, name, afferent=True, efferent=True, warning=True):
+        """Require the existence of synapses.
+        
+        Args:
+            name (str): The name of the synapse.
+            afferent (bool): Whether to require afferent synapses.
+            efferent (bool): Whether to require efferent synapses.
+            warning (bool): Whether to print a warning if the synapse does not exist.
+        """
         if afferent and not name in self.afferent_synapses:
             if warning:
                 print("warning: no afferent {} synapses found".format(name))
@@ -56,7 +86,26 @@ class NeuronGroup(NetworkObject):
 
     def get_neuron_vec(
         self, mode="zeros()", scale=None, density=None, plot=False, kwargs={}
-    ):  # mode in ['zeros', 'zeros()', 'ones', 'ones()', 'uniform(...)', 'lognormal(...)', 'normal(...)', ...]
+    ):
+        """Get a tensor with population's dimensionality.
+
+        The tensor can be initialized in different modes. List of possible values for mode includes:
+        - "random" or "rand" or "rnd" or "uniform": Uniformly distributed random numbers in range [0, 1).
+        - "normal": Normally distributed random numbers with zero mean and unit variance.
+        - "ones": Tensor filled with ones.
+        - "zeros": Tensor filled with zeros.
+        - A single number: Tensor filled with that number.
+        - You can also use any function from torch package for this purpose. Note that you should **not** use `torch.` prefix.
+
+        Args:
+            mode (str): Mode to be used to initialize tensor.
+            scale (float): Scale of the tensor. The default is None (i.e. No scaling is applied).
+            density (float): Density of the tensor. The default is None (i.e. dense tensor).
+            plot (bool): If true, the histogram of the tensor will be plotted. The default is False.
+            kwargs (dict): Keyword arguments to be passed to the initialization function.
+
+        Returns:
+            torch.Tensor: The initialized tensor."""
         return self._get_mat(
             mode=mode,
             dim=(self.size),
@@ -67,9 +116,25 @@ class NeuronGroup(NetworkObject):
         )
 
     def get_neuron_vec_buffer(self, buffer_size):
+        """Get a buffer for the population's dimensionality.
+        
+        Args:
+            buffer_size (int): The size of the buffer.
+        
+        Returns:
+            torch.Tensor: The buffer.
+        """
         return self.get_buffer_mat((self.size), buffer_size)
 
     def get_combined_synapse_shape(self, Synapse_ID):
+        """Get the population size along with the number of afferent synapses.
+        
+        Args:
+            Synapse_ID (str): The ID of the synapse by which it is registered in list of afferent synapses.
+
+        Returns:
+            tuple: The combined shape.
+        """
         source_num = 0
         for syn in self.afferent_synapses[Synapse_ID]:
             _, s = syn.get_synapse_mat_dim()
@@ -83,12 +148,30 @@ class NeuronGroup(NetworkObject):
         return result + "}"
 
     def subGroup(self, mask=None):
+        """Get a NeuronSubGroup object from the population.
+        
+        Args:
+            mask (bool): The mask condition indicating which neurons to be included in the subgroup.
+
+        Returns:
+            NeuronSubGroup: The subgroup.
+        """
         return NeuronSubGroup(self, mask)
 
     def group_without_subGroup(self):
+        """Get the NeuronGroup object itself."""
         return self
 
     def get_masked_dict(self, dict_name, key):
+        """Get value of a key in a specific dictionary attribute of the population.
+        
+        Args:
+            dict_name (str): Name of the dictionary.
+            key (int or str): the key to retrieve from the dictionary.
+
+        Returns:
+            any: The value.
+        """
         return getattr(self, dict_name)[key]
 
     def connected_NG_param_list(
@@ -100,6 +183,19 @@ class NeuronGroup(NetworkObject):
         same_NG=False,
         search_behaviors=False,
     ):
+        """Get a list of parameters of connected neuron groups.
+        
+        Args:
+            param_name (str): The name of the parameter.
+            syn_tag (str): The tag of the synapse. The default is "All".
+            afferent_NGs (bool): Whether to include afferent neuron groups. The default is False.
+            efferent_NGs (bool): Whether to include efferent neuron groups. The default is False.
+            same_NG (bool): Whether to include the connections within the same neuron group. The default is False.
+            search_behaviors (bool): Whether to search the dictionary of behaviors for the parameter. The default is False.
+
+        Returns:
+            list: The list of parameters.
+        """
         result = []
 
         def search_NG(NG):
@@ -131,10 +227,18 @@ class NeuronGroup(NetworkObject):
 
         return result
 
-    def partition_size(self, block_size=7):
-        w = block_size  # int((self.src.width/block_size+self.dst.width/block_size)/2)
-        h = block_size  # int((self.src.height/block_size+self.dst.height/block_size)/2)
-        d = block_size  # int((self.src.depth / block_size + self.dst.depth / block_size) / 2)
+    def partition(self, block_size=7):
+        """Get a partitioned population.
+        
+        Args:
+            block_size (int): The size of each block. The default is 7.
+
+        Returns:
+            list of NeuronGroup or NeuronSubGroup: The list of partitions.
+        """
+        w = block_size
+        h = block_size
+        d = block_size
         split_size = [np.maximum(w, 1), np.maximum(h, 1), np.maximum(d, 1)]
         if split_size[0] < 2 and split_size[1] < 2 and split_size[2] < 2:
             return [self]
@@ -142,7 +246,14 @@ class NeuronGroup(NetworkObject):
             return self.split_grid_into_sub_group_blocks(split_size)
 
     def partition_masks(self, steps=[1, 1, 1]):
+        """Get a mask tensor for partitioning the population.
+        
+        Args:
+            steps (list of int): The number of steps in each dimension. The default is [1, 1, 1].
 
+        Returns:
+            torch.Tensor: The mask tensor.
+        """
         dst_min = [np.min(p) for p in [self.x, self.y, self.z]]
         dst_max = [np.max(p) for p in [self.x, self.y, self.z]]
 
@@ -177,12 +288,26 @@ class NeuronGroup(NetworkObject):
 
                     results.append(sub_group_mask)
 
-        return results
+        return torch.tensor(results).to(self.device)
 
     def split_grid_into_sub_group_blocks(self, steps=[1, 1, 1]):
+        """Split the population into partitioned subgroups.
+        
+        Returns:
+            list of NeuronGroup or NeuronSubGroup: The list of partitions.
+        """
         return [self.subGroup(mask) for mask in self.partition_masks(steps)]
 
     def get_subgroup_receptive_field_mask(self, subgroup, xyz_rf=[1, 1, 1]):
+        """Get the receptive field mask of a neuron subgroup.
+        
+        Args:
+            subgroup (NeuronSubGroup or NeuronGroup): The neuron subgroup.
+            xyz_rf (list of int): The receptive field size in each dimension. The default is [1, 1, 1].
+
+        Returns:
+            torch.Tensor: The receptive field mask.
+        """
         rf_x, rf_y, rf_z = xyz_rf
 
         src_x_start = np.min(subgroup.x) - rf_x
@@ -206,6 +331,14 @@ class NeuronGroup(NetworkObject):
         return mask
 
     def mask_var(self, var):
+        """Mask a variable.
+        
+        Args:
+            var (torch.Tensor): The variable.
+
+        Returns:
+            torch.Tensor: The masked variable.
+        """
         return var
 
 
@@ -215,7 +348,7 @@ class NeuronSubGroup:
         self.key_id_cache = {}
         self.BaseNeuronGroup = BaseNeuronGroup
         self.mask = mask
-        self.id_mask = np.where(mask)[0]
+        self.id_mask = torch.from_numpy(np.where(mask)[0]).to(BaseNeuronGroup.device)
 
     def mask_var(self, var):
         if var.shape[0] != self.mask.shape[0]:
