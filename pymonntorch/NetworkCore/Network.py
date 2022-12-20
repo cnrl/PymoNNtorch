@@ -8,7 +8,25 @@ from pymonntorch.NetworkCore.SynapseGroup import *
 
 
 class Network(NetworkObject):
+    """This is the class to construct a neural network.
+
+    This is the placeholder of all neural network components to be simulated.
+    All objects will receive an instance of this class.
+
+    Attributes:
+        NeuronGroups (list): List of all NeuronGroups in the network.
+        SynapseGroups (list): List of all SynapseGroups in the network.
+        behavior (list or dict): List of all network-specific behaviors.
+        device (str): Device to run the simulation on. Either 'cpu' or 'cuda'.
+    """
     def __init__(self, tag=None, behavior={}, device="cpu"):
+        """Initialize the network.
+
+        Args:
+            tag (str): Tag to add to the network. It can also be a comma-separated string of multiple tags.
+            behavior (list or dict): List or dictionary of behaviors. If a dictionary is used, the keys must be integers.
+            device (str): Device on which the network is located. The default is "cpu".
+        """
         super().__init__(tag, self, behavior, device=device)
 
         self.NeuronGroups = []
@@ -17,6 +35,12 @@ class Network(NetworkObject):
         self._iteration = 0
 
     def set_behaviors(self, tag, enabled):
+        """Set behaviors of specific tag to be enabled or disabled.
+        
+        Args:
+            tag (str): Tag of behaviors to be enabled or disabled.
+            enabled (bool): If true, behaviors will be enabled. If false, behaviors will be disabled.
+        """
         if enabled:
             print("activating", tag)
         else:
@@ -26,20 +50,24 @@ class Network(NetworkObject):
                 b.behavior_enabled = enabled
 
     def recording_off(self):
+        """Turn off recording for all objects in the network."""
         for obj in self.all_objects():
             obj.recording = False
 
     def recording_on(self):
+        """Turn on recording for all objects in the network."""
         for obj in self.all_objects():
             obj.recording = True
 
     def all_objects(self):
+        """Return a list of all objects in the network."""
         l = [self]
         l.extend(self.NeuronGroups)
         l.extend(self.SynapseGroups)
         return l
 
     def all_behaviors(self):
+        """Return a list of all behaviors in the network."""
         result = []
         for obj in self.all_objects():
             for beh in obj.behavior.values():
@@ -47,6 +75,7 @@ class Network(NetworkObject):
         return result
 
     def clear_recorder(self, keys=None):
+        """Clear the recorder objects of all network components."""
         for obj in self.all_objects():
             for key in obj.behavior:
                 if (keys is None or key in keys) and hasattr(
@@ -90,6 +119,14 @@ class Network(NetworkObject):
         return result[:-2]
 
     def find_objects(self, key):
+        """Find objects in the network with a specific tag.
+        
+        Args:
+            key (str): Tag to search for.
+
+        Returns:
+            list: List of objects with the tag.
+        """
         result = super().find_objects(key)
 
         for ng in self.NeuronGroups:
@@ -104,6 +141,13 @@ class Network(NetworkObject):
         return result
 
     def initialize(self, info=True, warnings=True, storage_manager=None):
+        """Initialize the variables of the network and all its components.
+        
+        Args:
+            info (bool): If true, print information about the network.
+            warnings (bool): If true, print warnings while checking the tag uniqueness.
+            storage_manager (StorageManager): Storage manager to use for the network.
+        """
         if info:
             desc = str(self)
             print(desc)
@@ -127,6 +171,12 @@ class Network(NetworkObject):
             self.behavior_timesteps.sort()
 
     def check_unique_tags(self, warnings=True):
+        """Check if all tags in the network are unique. In case of doubles, a new tag will be 
+        automatically assigned to second instance.
+        
+        Args:
+            warnings (bool): Whether to log the warnings or not.
+        """
         unique_tags = []
         for ng in self.NeuronGroups:
 
@@ -152,6 +202,7 @@ class Network(NetworkObject):
                 unique_tags.append(ng.tags[0])
 
     def clear_tag_cache(self):
+        """Clear the tag cache of all objects in the network for faster search."""
         for obj in self.all_objects():
             obj.clear_cache()
 
@@ -172,6 +223,7 @@ class Network(NetworkObject):
         )
 
     def set_variables(self):
+        """Set the variables of all objects' behaviors in the network."""
         for timestep in self.behavior_timesteps:
 
             for obj in self.all_objects():
@@ -182,6 +234,7 @@ class Network(NetworkObject):
                         obj.behavior[timestep].check_unused_attrs()
 
     def set_synapses_to_neuron_groups(self):
+        """Set the synapses of all synapse groups to the corresponding neuron groups."""
         for ng in self.NeuronGroups:
 
             ng.afferent_synapses = {"All": torch.nn.ModuleList()}
@@ -202,6 +255,16 @@ class Network(NetworkObject):
                         ng.efferent_synapses[tag].append(sg)
 
     def simulate_iteration(self, measure_behavior_execution_time=False):
+        """Simulate one iteration of the network.
+
+        Each iteration includes a `forward` call of objects' behaviors in the order of their keys in the dictionary or list index.
+
+        Args:
+            measure_behavior_execution_time (bool): Whether to measure the actual execution time of the behaviors.
+
+        Returns:
+            None or dict: If `measure_behavior_execution_time` is set to True, a dictionary with the execution times of the behaviors is returned.
+        """
         if measure_behavior_execution_time:
             time_measures = {}
 
@@ -230,6 +293,15 @@ class Network(NetworkObject):
         disable_recording=False,
         batch_progress_update_func=None,
     ):
+        """Simulates the network for a number of iterations.
+        
+        Args:
+            iterations (int): Number of iterations to simulate.
+            batch_size (int): Number of iterations to simulate in one batch. If set to -1, the whole simulation is done in one batch.
+            measure_block_time (bool): Whether to measure the time of each batch.
+            disable_recording (bool): Whether to disable the recording of the network.
+            batch_progress_update_func (function): Function to call after each batch. The function should take the current batch number and network instance as arguments.
+        """
         if type(iterations) is str:
             iterations = self["Clock", 0].time_to_iterations(iterations)
 
