@@ -237,13 +237,13 @@ class Network(NetworkObject):
         """Set the synapses of all synapse groups to the corresponding neuron groups."""
         for ng in self.NeuronGroups:
 
-            ng.afferent_synapses = {"All": torch.nn.ModuleList()}
-            ng.efferent_synapses = {"All": torch.nn.ModuleList()}
+            ng.afferent_synapses = {"All": []}
+            ng.efferent_synapses = {"All": []}
 
             for sg in self.SynapseGroups:
                 for tag in sg.tags:
-                    ng.afferent_synapses[tag] = torch.nn.ModuleList()
-                    ng.efferent_synapses[tag] = torch.nn.ModuleList()
+                    ng.afferent_synapses[tag] = []
+                    ng.efferent_synapses[tag] = []
 
             for sg in self.SynapseGroups:
                 if sg.dst.BaseNeuronGroup == ng:

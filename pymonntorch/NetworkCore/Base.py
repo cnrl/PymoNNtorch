@@ -163,7 +163,7 @@ class NetworkObject(TaggableObject):
             dict: Dictionary of results.
         """
         result = {}
-        modules = torch.nn.ModuleDict()
+        modules = {}
         for module in self[tag]:
             module_results = module.get_results()
             for k in module_results:

@@ -77,12 +77,12 @@ class NeuronGroup(NetworkObject):
         if afferent and not name in self.afferent_synapses:
             if warning:
                 print("warning: no afferent {} synapses found".format(name))
-            self.afferent_synapses[name] = torch.nn.ModuleList()
+            self.afferent_synapses[name] = []
 
         if efferent and not name in self.efferent_synapses:
             if warning:
                 print("warning: no efferent {} synapses found".format(name))
-            self.efferent_synapses[name] = torch.nn.ModuleList()
+            self.efferent_synapses[name] = []
 
     def get_neuron_vec(
         self, mode="zeros()", scale=None, density=None, plot=False, kwargs={}
