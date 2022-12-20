@@ -5,9 +5,23 @@ from pymonntorch.utils import is_number
 
 
 class Behavior(TaggableObject):
+    """Base class for behaviors. All behaviors all `TaggableObject`s.
+    
+    Attributes:
+        tag (str): Tag of the behavior.
+        device (str): Device of the behavior. This is overwritten by object's device upon calling `set_variables`.
+        behavior_enabled (bool): Whether the behavior is enabled. The default is True.
+        init_kwargs (dict): Dictionary of the keyword arguments passed to the constructor.
+        used_attr_keys (list): List of the name of the attributes that have been used in the `set_variables` method.
+    """
     set_variables_on_init = False
 
     def __init__(self, **kwargs):
+        """Constructor of the `Behavior` class.
+        
+        Args:
+            **kwargs: Keyword arguments passed to the constructor.
+        """
         self.init_kwargs = kwargs
         self.used_attr_keys = []
         self.behavior_enabled = self.get_init_attr("behavior_enabled", True, None)
@@ -18,10 +32,22 @@ class Behavior(TaggableObject):
         self.used_attr_keys = torch.nn.ParameterList(self.used_attr_keys)
 
     def set_variables(self, object):
+        """Sets the variables of the object. This method is called by the `Network` class when the object is added to the network.
+        
+        **Note:** All sub-classes of `Behavior` overriding this method should call the super method to ensure everything is placed on the correct device.
+        
+        Args:
+            object (TaggableObject): Object possessing the behavior.
+        """
         self.device = object.device
         return
 
     def forward(self, object):
+        """Forward pass of the behavior. This method is called by the `Network` class per simulation iteration.
+        
+        Args:
+            object (TaggableObject): Object possessing the behavior.
+        """
         return
 
     def __repr__(self):
@@ -31,11 +57,20 @@ class Behavior(TaggableObject):
         result += ")"
         return result
 
-    def evaluate_diversity_string(self, ds, neurons_or_synapses):
+    def evaluate_diversity_string(self, ds, object):
+        """Evaluates the diversity string describing tensors of an object.
+        
+        Args:
+            ds (str): Diversity string describing the tensors of the object.
+            object (NetworkObject): The object possessing the behavior.
+
+        Returns:
+            torch.tensor: The resulting tensor.
+        """
         if "same(" in ds and ds[-1] == ")":
             params = ds[5:-1].replace(" ", "").split(",")
             if len(params) == 2:
-                return getattr(neurons_or_synapses[params[0], 0], params[1])
+                return getattr(object[params[0], 0], params[1])
 
         plot = False
         if ";plot" in ds:
@@ -45,11 +80,11 @@ class Behavior(TaggableObject):
         result = ds
 
         if "(" in ds and ")" in ds:  # is function
-            if type(neurons_or_synapses).__name__ == "NeuronGroup":
-                result = neurons_or_synapses.get_neuron_vec(ds)
+            if type(object).__name__ == "NeuronGroup":
+                result = object.get_neuron_vec(ds)
 
-            if type(neurons_or_synapses).__name__ == "SynapseGroup":
-                result = neurons_or_synapses.get_synapse_mat(ds)
+            if type(object).__name__ == "SynapseGroup":
+                result = object.get_synapse_mat(ds)
 
         if plot:
             if type(result) == torch.tensor:
@@ -61,11 +96,17 @@ class Behavior(TaggableObject):
         return result
 
     def set_init_attrs_as_variables(self, object):
+        """Set the variables defined in the init of behavior as the variables of the object.
+        
+        Args:
+            object (NetworkObject): The object possessing the behavior.
+        """
         for key in self.init_kwargs:
             setattr(object, key, self.get_init_attr(key, None, object=object))
             print("init", key)
 
     def check_unused_attrs(self):
+        """Checks whether all attributes have been used in the `set_variables` method."""
         for key in self.init_kwargs:
             if not key in self.used_attr_keys:
                 print(
@@ -90,6 +131,19 @@ class Behavior(TaggableObject):
         search_other_behaviors=False,
         required=False,
     ):
+        """Gets the value of an attribute.
+        
+        Args:
+            key (str): Name of the attribute.
+            default (any): Default value of the attribute.
+            object (NetworkObject): The object possessing the behavior.
+            do_not_diversify (bool): Whether to diversify the attribute. The default is False.
+            search_other_behaviors (bool): Whether to search for the attribute in other behaviors of the object. The default is False.
+            required (bool): Whether the attribute is required. The default is False.
+
+        Returns:
+            any: The value of the attribute.
+        """
         if required and not key in self.init_kwargs:
             print(
                 "Warning:",
