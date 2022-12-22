@@ -4,8 +4,27 @@ from pymonntorch.NetworkCore.Base import *
 
 
 class SynapseGroup(NetworkObject):
-    def __init__(self, src, dst, net, tag=None, behavior={}):
+    """This is the class to construct synapses between neuronal populations.
 
+    Attributes:
+        src (NeuronGroup): The pre-synaptic neuron group.
+        dst (NeuronGroup): The post-synaptic neuron group.
+        net (Network): The network the synapse group belongs to.
+        tags (list): The tags of the synapse group.
+        behavior (dict or list): The behaviors of the synapse group.
+        enabled (bool): Whether the synapse is enabled for learning or not.
+        group_weighting (float): The weighting of the synapse group.
+    """
+    def __init__(self, src, dst, net, tag=None, behavior={}):
+        """This is the constructor of the SynapseGroup class.
+        
+        Args:
+            src (NeuronGroup): The pre-synaptic neuron group.
+            dst (NeuronGroup): The post-synaptic neuron group.
+            net (Network): The network the synapse group belongs to.
+            tag (str): The tag of the synapse group.
+            behavior (dict or list): The behaviors of the synapse group.
+        """
         if type(src) is str:
             src = net[src, 0]
 
@@ -47,13 +66,37 @@ class SynapseGroup(NetworkObject):
         return result + "}"
 
     def set_var(self, key, value):
+        """Sets a variable of the synapse group.
+        
+        Args:
+            key (str): The name of the variable.
+            value (any): The value of the variable.
+
+        Returns:
+            SynapseGroup: The synapse group itself.
+        """
         setattr(self, key, value)
         return self
 
     def get_synapse_mat_dim(self):
+        """Returns the dimension of the synapse matrix.
+        
+        For a synapse group between a source population of size n and a destination population of size m, the synapse matrix has the dimension m x n.
+
+        Returns:
+            tuple: The dimension of the synapse matrix.
+        """
         return self.dst.size, self.src.size
 
     def get_random_synapse_mat_fixed(self, min_number_of_synapses=0):
+        """Returns a random synapse matrix with a fixed number of synapses per neuron.
+        
+        Args:
+            min_number_of_synapses (int): The minimum number of synapses per neuron.
+
+        Returns:
+            torch.Tensor: The random synapse matrix.
+        """
         dim = self.get_synapse_mat_dim()
         result = torch.zeros(dim, device=self.device)
         if min_number_of_synapses != 0:
@@ -73,7 +116,29 @@ class SynapseGroup(NetworkObject):
         clone_along_first_axis=False,
         plot=False,
         kwargs={},
-    ):  # mode in ['zeros', 'zeros()', 'ones', 'ones()', 'uniform(...)', 'lognormal(...)', 'normal(...)']
+    ):
+        """Get a tensor with synapse group dimensionality.
+
+        The tensor can be initialized in different modes. List of possible values for mode includes:
+        - "random" or "rand" or "rnd" or "uniform": Uniformly distributed random numbers in range [0, 1).
+        - "normal": Normally distributed random numbers with zero mean and unit variance.
+        - "ones": Tensor filled with ones.
+        - "zeros": Tensor filled with zeros.
+        - A single number: Tensor filled with that number.
+        - You can also use any function from torch package for this purpose. Note that you should **not** use `torch.` prefix.
+
+        Args:
+            mode (str): Mode to be used to initialize tensor.
+            scale (float): Scale of the tensor. The default is None (i.e. No scaling is applied).
+            density (float): Density of the tensor. The default is None (i.e. dense tensor).
+            only_enabled (bool): Whether to only consider enabled synapses or not. The default is True.
+            clone_along_first_axis (bool): Whether to clone the tensor along the first axis or not. The default is False.
+            plot (bool): If true, the histogram of the tensor will be plotted. The default is False.
+            kwargs (dict): Keyword arguments to be passed to the initialization function.
+
+        Returns:
+            torch.Tensor: The initialized tensor.
+        """
         result = self._get_mat(
             mode=mode,
             dim=(self.get_synapse_mat_dim()),
@@ -96,6 +161,15 @@ class SynapseGroup(NetworkObject):
         return result
 
     def get_synapse_group_size_factor(self, synapse_group, synapse_type):
+        """Returns the size factor of a synapse group.
+        
+        Args:
+            synapse_group (SynapseGroup): The synapse group.
+            synapse_type (str): The type of the synapse.
+
+        Returns:
+            float: The size factor of the synapse group.
+        """
         total_weighting = 0
         for s in synapse_group.dst.afferent_synapses[synapse_type]:
             total_weighting += s.group_weighting
@@ -112,6 +186,18 @@ class SynapseGroup(NetworkObject):
         )
 
     def get_distance_mat(self, radius, src_x=None, src_y=None, dst_x=None, dst_y=None):
+        """Returns a distance matrix between source and destination neurons.
+
+        Args:
+            radius (float): The radius of the distance to be considered.
+            src_x (torch.Tensor): The x coordinates of the source neurons. The default is None (i.e. the x coordinates of the source neurons will be used).
+            src_y (torch.Tensor): The y coordinates of the source neurons. The default is None (i.e. the y coordinates of the source neurons will be used).
+            dst_x (torch.Tensor): The x coordinates of the destination neurons. The default is None (i.e. the x coordinates of the destination neurons will be used).
+            dst_y (torch.Tensor): The y coordinates of the destination neurons. The default is None (i.e. the y coordinates of the destination neurons will be used).
+
+        Returns:
+            torch.Tensor: The distance matrix.
+        """
         if src_x is None:
             src_x = self.src.x
         if src_y is None:
@@ -138,11 +224,29 @@ class SynapseGroup(NetworkObject):
     def get_ring_mat(
         self, radius, inner_exp, src_x=None, src_y=None, dst_x=None, dst_y=None
     ):
+        """Returns a ring-shaped distance matrix between source and destination neurons.
+        
+        Args:
+            radius (float): The radius of the ring.
+            inner_exp (float): The exponent of the inner radius.
+            src_x (torch.Tensor): The x coordinates of the source neurons. The default is None (i.e. the x coordinates of the source neurons will be used).
+            src_y (torch.Tensor): The y coordinates of the source neurons. The default is None (i.e. the y coordinates of the source neurons will be used).
+            dst_x (torch.Tensor): The x coordinates of the destination neurons. The default is None (i.e. the x coordinates of the destination neurons will be used).
+            dst_y (torch.Tensor): The y coordinates of the destination neurons. The default is None (i.e. the y coordinates of the destination neurons will be used).
+
+        Returns:
+            torch.Tensor: The ring matrix.
+        """
         dm = self.get_distance_mat(radius, src_x, src_y, dst_x, dst_y)
         ring = torch.clamp(dm - torch.pow(dm, inner_exp) * 1.5, 0.0, None)
         return ring / torch.max(ring)
 
     def get_max_receptive_field_size(self):
+        """Returns the maximum receptive field size of the synapse group.
+        
+        Returns:
+            tuple: The maximum receptive field size of the synapse group.
+        """
         max_dx = 1
         max_dy = 1
         max_dz = 1
@@ -169,6 +273,15 @@ class SynapseGroup(NetworkObject):
         return max_dx, max_dy, max_dz
 
     def get_sub_synapse_group(self, src_mask, dst_mask):
+        """Returns a sub synapse group between two neuronal subgroups.
+        
+        Args:
+            src_mask (torch.Tensor): The mask of the source neurons.
+            dst_mask (torch.Tensor): The mask of the destination neurons.
+
+        Returns:
+            SynapseGroup: The sub synapse group.
+        """
         result = SynapseGroup(
             self.src.subGroup(src_mask),
             self.dst.subGroup(dst_mask),
