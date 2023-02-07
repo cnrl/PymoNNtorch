@@ -180,12 +180,12 @@ class NetworkObject(TaggableObject):
 
         Args:
             mat (torch.Tensor): Tensor to be shifted.
-            new (int or float or bool or torch.Tensor): New element to be inserted at the beginning of the tensor. The default is None (i.e. Nothing is added).
+            new (int or float or bool or torch.Tensor): New element to be inserted at the beginning of the tensor. The default is None (i.e. Last element is at the beginning).
 
         Returns:
             torch.Tensor: The shifted tensor.
         """
-        mat[1 : len(mat)] = mat[0 : len(mat) - 1]
+        mat = mat.roll(1, dims=0)
 
         if new is not None:
             mat[0] = new

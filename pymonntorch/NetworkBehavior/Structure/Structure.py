@@ -97,7 +97,7 @@ class NeuronDimension(Behavior):
         result = torch.zeros(
             self.depth,
             self.height,
-            self.depth,
+            self.width,
             dtype=torch.bool,
             device=self.neurons.device,
         )
