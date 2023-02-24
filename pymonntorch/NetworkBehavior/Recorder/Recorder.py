@@ -1,6 +1,7 @@
 from pymonntorch.NetworkCore.Behavior import Behavior
 import copy
 import torch
+import warnings
 
 
 def get_Recorder(variable):
@@ -36,9 +37,9 @@ class Recorder(Behavior):
         self.max_length = self.get_init_attr("max_length", None)
 
     def set_variables(self, object):
-        assert (
-            self.device == object.device
-        ), "Recorder and object must be on the same device"
+        if self.device != object.device:
+            warnings.warn(f"Recorder({self.device}) and object must be on the same device({object.device}). choosing {object.device}.")
+        self.device = object.device
         self.reset()
 
     def add_variable(self, v):
@@ -53,7 +54,7 @@ class Recorder(Behavior):
         result = []
         if key in self.variables:
             result.append(self.variables[key])
-        return torch.tensor(result, device=self.device)
+        return result
 
     def reset(self):
         for v in self.variables:
@@ -75,9 +76,8 @@ class Recorder(Behavior):
         return copy.copy(eval(self.compiled[variable]))
 
     def save_data_v(self, data, variable):
-        device = self.variables[variable].device
         self.variables[variable] = torch.concat(
-            [self.variables[variable], torch.tensor(data, device=device)]
+            (self.variables[variable], data.unsqueeze(0)), dim=0
         )
 
     def forward(self, parent_obj):
@@ -140,7 +140,7 @@ class EventRecorder(Recorder):
         if type(key) is str and key[-2:] == ".i" and key[:-2] in self.variables:
             result.append(self.variables[key[:-2]][:, 1])
 
-        return torch.tensor(result, device=self.device)
+        return result
 
     def get_data_v(self, variable, parent_obj):
         n = parent_obj  # used for eval string "n.x"

@@ -1,6 +1,6 @@
 import torch
 
-def_dtype = torch.float64
+def_dtype = torch.float32
 
 
 class TaggableObject(torch.nn.Module):
