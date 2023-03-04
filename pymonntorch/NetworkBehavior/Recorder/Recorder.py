@@ -37,9 +37,9 @@ class Recorder(Behavior):
         self.max_length = self.get_init_attr("max_length", None)
 
     def set_variables(self, object):
-        if self.device != object.device:
-            warnings.warn(f"Recorder({self.device}) and object must be on the same device({object.device}). choosing {object.device}.")
-        self.device = object.device
+        assert (
+            self.device == object.device
+        ), f"Recorder({self.device}) and object({object.device}) must be on the same device"
         self.reset()
 
     def add_variable(self, v):

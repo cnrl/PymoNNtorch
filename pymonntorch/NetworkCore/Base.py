@@ -175,20 +175,21 @@ class NetworkObject(TaggableObject):
         else:
             return result
 
-    def buffer_roll(self, mat, new=None):
+    def buffer_roll(self, mat, new=None, counter=False):
         """Shift the elements of a tensor to the right.
 
         Args:
             mat (torch.Tensor): Tensor to be shifted.
             new (int or float or bool or torch.Tensor): New element to be inserted at the beginning of the tensor. The default is None (i.e. the last of the buffer is repositoined at the first).
+            counter (bool): If True, rolling is done in opposite direction, and the new element is added at the end.
 
         Returns:
             torch.Tensor: The shifted tensor.
         """
-        mat = mat.roll(1, dim=0)
+        mat = mat.roll(1-(2*counter), dims=0)
 
         if new is not None:
-            mat[0] = new
+            mat[0-counter] = new
 
         return mat
 

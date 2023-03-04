@@ -124,7 +124,7 @@ class NeuronGroup(NetworkObject):
         Returns:
             torch.Tensor: The buffer.
         """
-        return self.get_buffer_mat((self.size), buffer_size)
+        return self.get_buffer_mat((self.size,), buffer_size)
 
     def get_combined_synapse_shape(self, Synapse_ID):
         """Get the population size along with the number of afferent synapses.
