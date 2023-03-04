@@ -180,12 +180,12 @@ class NetworkObject(TaggableObject):
 
         Args:
             mat (torch.Tensor): Tensor to be shifted.
-            new (int or float or bool or torch.Tensor): New element to be inserted at the beginning of the tensor. The default is None (i.e. Last element is at the beginning).
+            new (int or float or bool or torch.Tensor): New element to be inserted at the beginning of the tensor. The default is None (i.e. the last of the buffer is repositoined at the first).
 
         Returns:
             torch.Tensor: The shifted tensor.
         """
-        mat = mat.roll(1, dims=0)
+        mat = mat.roll(1, dim=0)
 
         if new is not None:
             mat[0] = new
@@ -290,3 +290,4 @@ class NetworkObject(TaggableObject):
                 "WARNING: Attempting to set an invalid value for iteration!\n Setting iteration to zero..."
             )
             self._iteration = 0
+            
