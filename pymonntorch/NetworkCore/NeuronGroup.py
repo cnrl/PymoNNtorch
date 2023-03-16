@@ -115,16 +115,17 @@ class NeuronGroup(NetworkObject):
             kwargs=kwargs,
         )
 
-    def get_neuron_vec_buffer(self, buffer_size):
+    def get_neuron_vec_buffer(self, buffer_size, **kwargs):
         """Get a buffer for the population's dimensionality.
         
         Args:
             buffer_size (int): The size of the buffer.
+            **dtype (torch.dtype, optional): The desired data type of returned tensor. 
         
         Returns:
             torch.Tensor: The buffer.
         """
-        return self.get_buffer_mat((self.size,), buffer_size)
+        return self.get_buffer_mat((self.size,), buffer_size, **kwargs)
 
     def get_combined_synapse_shape(self, Synapse_ID):
         """Get the population size along with the number of afferent synapses.
