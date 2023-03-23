@@ -266,7 +266,7 @@ class Network(NetworkObject):
             None or dict: If `measure_behavior_execution_time` is set to True, a dictionary with the execution times of the behaviors is returned.
         """
         if measure_behavior_execution_time:
-            time_measures = {}
+            time_measures = {timestep:0.0 for timestep in self.behavior_timesteps}
 
         self.iteration += 1
 
@@ -278,7 +278,7 @@ class Network(NetworkObject):
                     if measure_behavior_execution_time:
                         start_time = time.time()
                         obj.behavior[timestep](obj)
-                        time_measures[timestep] = (time() - start_time) * 1000
+                        time_measures[timestep] += (time.time() - start_time) * 1000
                     else:
                         obj.behavior[timestep](obj)
 
