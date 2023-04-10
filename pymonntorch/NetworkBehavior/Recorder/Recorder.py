@@ -1,7 +1,9 @@
-from pymonntorch.NetworkCore.Behavior import Behavior
 import copy
 import torch
 import warnings
+from pymonntorch.NetworkCore.Behavior import Behavior
+from pymonntorch.NetworkCore.NeuronGroup import NeuronGroup
+from pymonntorch.NetworkCore.SynapseGroup import SynapseGroup
 
 
 def get_Recorder(variable):
@@ -90,7 +92,15 @@ class Recorder(Behavior):
 
                 for v in self.variables:
                     if self.compiled[v] is None:
-                        self.compiled[v] = compile(v, "<string>", "eval")
+                        if hasattr(parent_obj, v):
+                            if isinstance(parent_obj, NeuronGroup):
+                                v_full = f'n.{v}'
+                            elif isinstance(parent_obj, SynapseGroup):
+                                v_full = f's.{v}'
+                            else:
+                                raise ValueError(f"Recording for {Type(parent_obj)} is not available.")
+                            self.compiled[v] = compile(v_full, "<string>", "eval")
+                            # TODO handle function calls
 
                     data = self.get_data_v(v, parent_obj)
                     if data is not None:
