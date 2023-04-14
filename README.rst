@@ -16,7 +16,9 @@ PymoNNtorch
 
 
 
-PymoNNtorch is a Pytorch adapted version of [PymoNNto](https://github.com/trieschlab/PymoNNto).
+PymoNNtorch is a Pytorch adapted version of PymoNNto_.
+
+.. _PymoNNto: https://github.com/trieschlab/PymoNNto
 
 
 * Free software: MIT license
