@@ -5,22 +5,22 @@ Installation
 ============
 
 
-Stable release
---------------
+.. Stable release
+.. --------------
 
-To install PymoNNtorch, run this command in your terminal:
+.. To install PymoNNtorch, run this command in your terminal:
 
-.. code-block:: console
+.. .. code-block:: console
 
-    $ pip install pymonntorch
+..     $ pip install pymonntorch
 
-This is the preferred method to install PymoNNtorch, as it will always install the most recent stable release.
+.. This is the preferred method to install PymoNNtorch, as it will always install the most recent stable release.
 
-If you don't have `pip`_ installed, this `Python installation guide`_ can guide
-you through the process.
+.. If you don't have `pip`_ installed, this `Python installation guide`_ can guide
+.. you through the process.
 
-.. _pip: https://pip.pypa.io
-.. _Python installation guide: http://docs.python-guide.org/en/latest/starting/installation/
+.. .. _pip: https://pip.pypa.io
+.. .. _Python installation guide: http://docs.python-guide.org/en/latest/starting/installation/
 
 
 From sources
@@ -32,13 +32,13 @@ You can either clone the public repository:
 
 .. code-block:: console
 
-    $ git clone git://github.com/atenagm1375/pymonntorch
+    $ git clone git://github.com/cnrl/pymonntorch
 
 Or download the `tarball`_:
 
 .. code-block:: console
 
-    $ curl -OJL https://github.com/atenagm1375/pymonntorch/tarball/master
+    $ curl -OJL https://github.com/cnrl/pymonntorch/tarball/master
 
 Once you have a copy of the source, you can install it with:
 
@@ -47,5 +47,5 @@ Once you have a copy of the source, you can install it with:
     $ python setup.py install
 
 
-.. _Github repo: https://github.com/atenagm1375/pymonntorch
-.. _tarball: https://github.com/atenagm1375/pymonntorch/tarball/master
+.. _Github repo: https://github.com/cnrl/pymonntorch
+.. _tarball: https://github.com/cnrl/pymonntorch/tarball/master
