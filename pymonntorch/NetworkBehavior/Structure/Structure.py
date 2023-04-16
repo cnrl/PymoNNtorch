@@ -10,12 +10,12 @@ def vec_to_mat_transposed(vec, repeat_count):
     return torch.stack([vec] * repeat_count, dim=1)
 
 
-def rotation_matrix(axis, theta):
+def rotation_matrix(axis, theta, dtype=torch.float):
     """
     Return the rotation matrix associated with counterclockwise rotation about
     the given axis by theta radians.
     """
-    axis = torch.tensor(axis, dtype=torch.float)
+    axis = torch.tensor(axis, dtype=dtype)
     axis = axis / torch.sqrt(torch.dot(axis, axis))
     a = torch.cos(theta / 2.0)
     b, c, d = -axis * torch.sin(theta / 2.0)
@@ -55,7 +55,7 @@ class NeuronDimension(Behavior):
     def set_position(self, width, height, depth):
         self.neurons.x = (
             torch.arange(
-                0, self.neurons.size, dtype=torch.float32, device=self.neurons.device
+                0, self.neurons.size, dtype=self.neurons.def_dtype, device=self.neurons.device
             )
             % width
         )
@@ -64,7 +64,7 @@ class NeuronDimension(Behavior):
                 torch.arange(
                     0,
                     self.neurons.size,
-                    dtype=torch.float32,
+                    dtype=self.neurons.def_dtype,
                     device=self.neurons.device,
                 ),
                 width,
@@ -77,7 +77,7 @@ class NeuronDimension(Behavior):
                 torch.arange(
                     0,
                     self.neurons.size,
-                    dtype=torch.float32,
+                    dtype=self.neurons.def_dtype,
                     device=self.neurons.device,
                 ),
                 (width * height),
@@ -108,13 +108,13 @@ class NeuronDimension(Behavior):
         big_x_mat = torch.stack(
             [torch.arange(wup)] * hup,
             dim=0,
-            dtype=torch.float,
+            dtype=self.neurons.def_dtype,
             device=self.neurons.device,
         )
         big_x_mat = big_x_mat.repeat(depth, 1).flatten()
 
         big_y_mat = torch.repeat_interleave(
-            torch.arange(wup, dtype=torch.float, device=self.neurons.device),
+            torch.arange(wup, dtype=self.neurons.def_dtype, device=self.neurons.device),
             hup * depth,
         )
 
@@ -146,7 +146,7 @@ class NeuronDimension(Behavior):
         return self
 
     def rotate(self, axis, angle):
-        rotation = rotation_matrix(axis, angle)
+        rotation = rotation_matrix(axis, angle, self.neurons.def_dtype)
         self.neurons.x, self.neurons.y, self.neurons.z = torch.matmul(
             rotation, torch.stack([self.neurons.x, self.neurons.y, self.neurons.z])
         )

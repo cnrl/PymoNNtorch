@@ -193,7 +193,7 @@ class NetworkObject(TaggableObject):
 
         return mat
 
-    def _get_mat(self, mode, dim, scale=None, density=None, plot=False, kwargs={}):
+    def _get_mat(self, mode, dim, scale=None, density=None, plot=False, dtype=None):
         """Get a tensor with object's dimensionality.
 
         The tensor can be initialized in different modes. List of possible values for mode includes:
@@ -202,7 +202,7 @@ class NetworkObject(TaggableObject):
         - "ones": Tensor filled with ones.
         - "zeros": Tensor filled with zeros.
         - A single number: Tensor filled with that number.
-        - You can also use any function from torch package for this purpose. Note that you should **not** use `torch.` prefix.
+        - You can also use any function from torch package for this purpose.
 
         Args:
             mode (str): Mode to be used to initialize tensor.
@@ -210,11 +210,17 @@ class NetworkObject(TaggableObject):
             scale (float): Scale of the tensor. The default is None (i.e. No scaling is applied).
             density (float): Density of the tensor. The default is None (i.e. dense tensor).
             plot (bool): If true, the histogram of the tensor will be plotted. The default is False.
-            kwargs (dict): Keyword arguments to be passed to the initialization function.
+            dtype (str or type): Data type of the tensor. If None, `def_dtype` will be used.
 
         Returns:
             torch.Tensor: The initialized tensor."""
-        prefix = "torch."
+        use_def_dtype = True
+
+        if mode.startswith("torch."):
+            prefix = ''
+        else:
+            prefix = "torch."
+
         if mode == "random" or mode == "rand" or mode == "rnd" or mode == "uniform":
             mode = "rand"
 
@@ -224,16 +230,17 @@ class NetworkObject(TaggableObject):
         mode = prefix + mode
         if "(" not in mode and ")" not in mode:
             mode += "()"
-
-        if "device" in kwargs:
-            kwargs.pop("device")
+        
+        if dtype is not None:
+            mode = mode.replace("(", f"(dtype={dtype}")
+            use_def_dtype = False
 
         if mode not in self._mat_eval_dict:
             a1 = "dim,device=" + f"'{self.device}'"
-            if "()" in mode:  # no arguments => no comma
-                ev_str = mode.replace(")", a1 + ",**kwargs)")
-            else:
-                ev_str = mode.replace(")", "," + a1 + ",**kwargs)")
+            ev_str = mode.replace("(", "(" + a1)
+
+            if use_def_dtype:
+                ev_str += '.to(self.def_dtype)'
 
             self._mat_eval_dict[mode] = compile(ev_str, "<string>", "eval")
 
@@ -256,9 +263,7 @@ class NetworkObject(TaggableObject):
             plt.hist(result.flatten().to("cpu"), bins=30)
             plt.show()
 
-        if "dtype" in kwargs:
-            return result
-        return result.to(def_dtype)
+        return result
 
     def get_buffer_mat(self, dim, size, **kwargs):
         """Get a buffer of specific size with object's dimensionality.

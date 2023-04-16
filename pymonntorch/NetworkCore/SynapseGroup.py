@@ -115,7 +115,7 @@ class SynapseGroup(NetworkObject):
         only_enabled=True,
         clone_along_first_axis=False,
         plot=False,
-        kwargs={},
+        dtype=None,
     ):
         """Get a tensor with synapse group dimensionality.
 
@@ -134,7 +134,7 @@ class SynapseGroup(NetworkObject):
             only_enabled (bool): Whether to only consider enabled synapses or not. The default is True.
             clone_along_first_axis (bool): Whether to clone the tensor along the first axis or not. The default is False.
             plot (bool): If true, the histogram of the tensor will be plotted. The default is False.
-            kwargs (dict): Keyword arguments to be passed to the initialization function.
+            dtype (str or type): Data type of the tensor. If None, `def_dtype` will be used.
 
         Returns:
             torch.Tensor: The initialized tensor.
@@ -145,7 +145,7 @@ class SynapseGroup(NetworkObject):
             scale=scale,
             density=density,
             plot=plot,
-            kwargs=kwargs,
+            dtype=dtype,
         )
 
         if clone_along_first_axis:
@@ -306,3 +306,7 @@ class SynapseGroup(NetworkObject):
                 setattr(result, key, copy.copy(sgd[key]))
 
         return result
+    
+    @property
+    def def_dtype(self):
+        return self.network.def_dtype
