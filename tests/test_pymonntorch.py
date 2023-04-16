@@ -3,33 +3,129 @@
 """Tests for `pymonntorch` package."""
 
 import pytest
+
 # from click.testing import CliRunner
 
 # from pymonntorch import cli
 import pymonntorch
 
 
-def test_network_cpu():
-    from pymonntorch.NetworkCore.Network import Network
-    from pymonntorch.NetworkCore.NeuronGroup import NeuronGroup
-    from pymonntorch.NetworkCore.SynapseGroup import SynapseGroup
-    from pymonntorch.NetworkBehavior.Structure.Structure import get_squared_dim
-    from pymonntorch.NetworkBehavior.Basics.Normalization import SynapticNormalization
+def test_network_cpu_annotated():
+    from pymonntorch import (
+        Network,
+        Behavior,
+        NeuronGroup,
+        SynapseGroup,
+        Recorder,
+        EventRecorder,
+    )
 
-    net = Network(device='cuda')
-    ng1 = NeuronGroup(size=get_squared_dim(10000), behavior={1: SynapticNormalization()}, net=net)
-    syn = SynapseGroup(src=ng1, dst=ng1, net=net, tag='glutamate')
-    syn.w = syn.get_synapse_mat('rand')
+    class BasicBehavior(Behavior):
+        def set_variables(self, neurons):
+            super().set_variables(neurons)
+            neurons.voltage = neurons.get_neuron_vec(mode="zeros")
+            self.threshold = 1.0
 
+        def forward(self, neurons):
+            firing = neurons.voltage >= self.threshold
+            neurons.spike = firing.byte()
+            neurons.voltage[firing] = 0.0  # reset
+
+            neurons.voltage *= 0.9  # voltage decay
+            neurons.voltage += neurons.get_neuron_vec(mode="uniform", density=0.1)
+
+    class InputBehavior(Behavior):
+        def set_variables(self, neurons):
+            super().set_variables(neurons)
+            for synapse in neurons.afferent_synapses["GLUTAMATE"]:
+                synapse.W = synapse.get_synapse_mat("uniform", density=0.1)
+                synapse.enabled = synapse.W > 0
+
+        def forward(self, neurons):
+            for synapse in neurons.afferent_synapses["GLUTAMATE"]:
+                neurons.voltage += (
+                    synapse.W @ synapse.src.spike.float() / synapse.src.size * 10
+                )
+
+    net = Network()
+    ng = NeuronGroup(
+        net=net,
+        size=100,
+        behavior={
+            1: BasicBehavior(),
+            2: InputBehavior(),
+            9: Recorder(["n.voltage", "torch.mean(n.voltage)"], auto_annotate=False),
+            10: EventRecorder(["n.spike"]),
+        },
+    )
+    SynapseGroup(ng, ng, net, tag="GLUTAMATE")
     net.initialize()
     net.simulate_iterations(1000)
 
-    assert net.device == 'cuda'
-    assert ng1.device == 'cuda'
-    assert syn.device == 'cuda'
+    assert net.device == "cpu"
+    assert ng.device == "cpu"
 
-    for _, b in ng1.behavior.items():
-        assert b.device == 'cuda'
+    for _, b in ng.behavior.items():
+        assert b.device == "cpu"
+
+
+def test_network_cuda_annotated():
+    from pymonntorch import (
+        Network,
+        Behavior,
+        NeuronGroup,
+        SynapseGroup,
+        Recorder,
+        EventRecorder,
+    )
+
+    class BasicBehavior(Behavior):
+        def set_variables(self, neurons):
+            super().set_variables(neurons)
+            neurons.voltage = neurons.get_neuron_vec(mode="zeros")
+            self.threshold = 1.0
+
+        def forward(self, neurons):
+            firing = neurons.voltage >= self.threshold
+            neurons.spike = firing.byte()
+            neurons.voltage[firing] = 0.0  # reset
+
+            neurons.voltage *= 0.9  # voltage decay
+            neurons.voltage += neurons.get_neuron_vec(mode="uniform", density=0.1)
+
+    class InputBehavior(Behavior):
+        def set_variables(self, neurons):
+            super().set_variables(neurons)
+            for synapse in neurons.afferent_synapses["GLUTAMATE"]:
+                synapse.W = synapse.get_synapse_mat("uniform", density=0.1)
+                synapse.enabled = synapse.W > 0
+
+        def forward(self, neurons):
+            for synapse in neurons.afferent_synapses["GLUTAMATE"]:
+                neurons.voltage += (
+                    synapse.W @ synapse.src.spike.float() / synapse.src.size * 10
+                )
+
+    net = Network(device="cuda")
+    ng = NeuronGroup(
+        net=net,
+        size=100,
+        behavior={
+            1: BasicBehavior(),
+            2: InputBehavior(),
+            9: Recorder(["n.voltage", "torch.mean(n.voltage)"], auto_annotate=False),
+            10: EventRecorder(["n.spike"]),
+        },
+    )
+    SynapseGroup(ng, ng, net, tag="GLUTAMATE")
+    net.initialize()
+    net.simulate_iterations(1000)
+
+    assert net.device == "cuda"
+    assert ng.device == "cuda"
+
+    for _, b in ng.behavior.items():
+        assert b.device == "cuda"
 
 
 # def test_command_line_interface():
