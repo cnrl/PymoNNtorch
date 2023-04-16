@@ -17,9 +17,9 @@ class Network(NetworkObject):
         NeuronGroups (list): List of all NeuronGroups in the network.
         SynapseGroups (list): List of all SynapseGroups in the network.
         behavior (list or dict): List of all network-specific behaviors.
-        device (str): Device to run the simulation on. Either 'cpu' or 'cuda'.
+        settings (dict): Dictionary of network-wide settings, e.g. `def_dtype` and `device`.
     """
-    def __init__(self, tag=None, behavior={}, device="cpu"):
+    def __init__(self, tag=None, behavior={}, settings={}):
         """Initialize the network.
 
         Args:
@@ -27,12 +27,17 @@ class Network(NetworkObject):
             behavior (list or dict): List or dictionary of behaviors. If a dictionary is used, the keys must be integers.
             device (str): Device on which the network is located. The default is "cpu".
         """
-        super().__init__(tag, self, behavior, device=device)
+        self.apply_settings(settings)
+        super().__init__(tag, self, behavior, device=self.device)
 
         self.NeuronGroups = []
         self.SynapseGroups = []
 
         self._iteration = 0
+
+    def apply_settings(self, settings):
+        self.device = settings.get('device', 'cpu')
+        self.def_dtype = settings.get('dtype', torch.float32)
 
     def set_behaviors(self, tag, enabled):
         """Set behaviors of specific tag to be enabled or disabled.

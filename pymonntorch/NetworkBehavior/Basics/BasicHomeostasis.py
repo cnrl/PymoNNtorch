@@ -22,12 +22,12 @@ class InstantHomeostasis(Behavior):
                 if has_min:
                     self.min_th -= self.min_th / 100 * gap_percent
                     check_is_torch_tensor(
-                        self.min_th, device=self.device, dtype=torch.float32
+                        self.min_th, device=self.device, dtype=self.dtype
                     )
                 if has_max:
                     self.max_th += self.max_th / 100 * gap_percent
                     check_is_torch_tensor(
-                        self.max_th, device=self.device, dtype=torch.float32
+                        self.max_th, device=self.device, dtype=self.dtype
                     )
 
     def get_measurement_param(self, object):
@@ -35,7 +35,7 @@ class InstantHomeostasis(Behavior):
             self.compiled_mp = compile(self.measurement_param, "<string>", "eval")
 
         result = check_is_torch_tensor(
-            eval(self.compiled_mp), device=object.device, dtype=torch.float32
+            eval(self.compiled_mp), device=object.device, dtype=self.dtype
         )
 
         result.clamp_(self.measurement_min, self.measurement_max)
@@ -55,7 +55,7 @@ class InstantHomeostasis(Behavior):
         val = check_is_torch_tensor(
             getattr(object, self.adjustment_param),
             device=object.device,
-            dtype=torch.float32,
+            dtype=self.dtype,
         )
         val.add_(adj)
 
@@ -65,6 +65,8 @@ class InstantHomeostasis(Behavior):
 
     def set_variables(self, object):
         super().set_variables(object)
+
+        self.dtype = object.def_dtype
 
         self.compiled_mp = None
 
@@ -91,18 +93,18 @@ class InstantHomeostasis(Behavior):
         self.inc = check_is_torch_tensor(
             self.get_init_attr("inc", 1.0, object),  # increase factor
             device=object.device,
-            dtype=torch.float32,
+            dtype=self.dtype,
         )
         self.dec = check_is_torch_tensor(
             self.get_init_attr("dec", 1.0, object),  # decrease factor
             device=object.device,
-            dtype=torch.float32,
+            dtype=self.dtype,
         )
 
         self.adj_strength = check_is_torch_tensor(
             self.get_init_attr("adj_strength", 1.0, object),  # change factor
             device=object.device,
-            dtype=torch.float32,
+            dtype=self.dtype,
         )
 
         self.adjustment_param = self.get_init_attr(
@@ -118,25 +120,25 @@ class InstantHomeostasis(Behavior):
                 "measurement_min", None, object
             ),  # minimum value which can be measured (below=0)
             device=object.device,
-            dtype=torch.float32,
+            dtype=self.dtype,
         )
         self.measurement_max = check_is_torch_tensor(
             self.get_init_attr(
                 "measurement_max", None, object
             ),  # maximum value which can be measured (above=max)
             device=object.device,
-            dtype=torch.float32,
+            dtype=self.dtype,
         )
 
         self.target_clip_min = check_is_torch_tensor(
             self.get_init_attr("target_clip_min", None, object),  # target clip min
             device=object.device,
-            dtype=torch.float32,
+            dtype=self.dtype,
         )
         self.target_clip_max = check_is_torch_tensor(
             self.get_init_attr("target_clip_max", None, object),  # target clip max
             device=object.device,
-            dtype=torch.float32,
+            dtype=self.dtype,
         )
 
     def forward(self, object):
@@ -160,10 +162,10 @@ class TimeIntegratedHomeostasis(InstantHomeostasis):
         self.integration_length = check_is_torch_tensor(
             self.get_init_attr("integration_length", 1, object),
             device=object.device,
-            dtype=torch.float32,
+            dtype=object.def_dtype,
         )
         self.average = check_is_torch_tensor(
             self.get_init_attr("init_avg", (self.min_th + self.max_th) / 2, object),
             device=object.device,
-            dtype=torch.float32,
+            dtype=object.def_dtype,
         )

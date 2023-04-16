@@ -15,10 +15,10 @@ class SynapticNormalization(Behavior):
         self.norm_factor = check_is_torch_tensor(
             self.get_init_attr("norm_factor", 1.0, neurons),
             device=neurons.device,
-            dtype=torch.float32,
+            dtype=neurons.def_dtype,
         )
 
-        neurons.sum_w = neurons.get_neuron_vec(kwargs={"dtype": torch.float32})
+        neurons.sum_w = neurons.get_neuron_vec(kwargs={"dtype": neurons.def_dtype})
 
     def forward(self, neurons):
         neurons.sum_w.zero_()

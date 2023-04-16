@@ -85,7 +85,7 @@ class NeuronGroup(NetworkObject):
             self.efferent_synapses[name] = []
 
     def get_neuron_vec(
-        self, mode="zeros()", scale=None, density=None, plot=False, **kwargs
+        self, mode="zeros()", scale=None, density=None, plot=False, dtype=None
     ):
         """Get a tensor with population's dimensionality.
 
@@ -102,7 +102,7 @@ class NeuronGroup(NetworkObject):
             scale (float): Scale of the tensor. The default is None (i.e. No scaling is applied).
             density (float): Density of the tensor. The default is None (i.e. dense tensor).
             plot (bool): If true, the histogram of the tensor will be plotted. The default is False.
-            kwargs (dict): Keyword arguments to be passed to the initialization function.
+            dtype (str or type): Data type of the tensor. If None, `def_dtype` will be used.
 
         Returns:
             torch.Tensor: The initialized tensor."""
@@ -112,7 +112,7 @@ class NeuronGroup(NetworkObject):
             scale=scale,
             density=density,
             plot=plot,
-            kwargs=kwargs,
+            dtype=dtype,
         )
 
     def get_neuron_vec_buffer(self, buffer_size, **kwargs):
@@ -341,6 +341,10 @@ class NeuronGroup(NetworkObject):
             torch.Tensor: The masked variable.
         """
         return var
+    
+    @property
+    def def_dtype(self):
+        return self.network.def_dtype
 
 
 class NeuronSubGroup:
