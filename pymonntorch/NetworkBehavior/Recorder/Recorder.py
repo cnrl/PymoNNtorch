@@ -2,8 +2,6 @@ import copy
 import torch
 import warnings
 from pymonntorch.NetworkCore.Behavior import Behavior
-from pymonntorch.NetworkCore.NeuronGroup import NeuronGroup
-from pymonntorch.NetworkCore.SynapseGroup import SynapseGroup
 
 
 def get_Recorder(variable):
@@ -13,7 +11,15 @@ def get_Recorder(variable):
 class Recorder(Behavior):
     visualization_module_outputs = []
 
-    def __init__(self, variables, gap_width=0, tag=None, max_length=None, auto_annotate=True, device="cpu"):
+    def __init__(
+        self,
+        variables,
+        gap_width=0,
+        tag=None,
+        max_length=None,
+        auto_annotate=True,
+        device="cpu",
+    ):
         super().__init__(
             tag=tag,
             variables=variables,
@@ -37,7 +43,7 @@ class Recorder(Behavior):
         self.add_variables(self.get_init_attr("variables", []))
         self.reset()
         self.max_length = self.get_init_attr("max_length", None)
-        
+
         self.auto_annotate = auto_annotate
 
     def set_variables(self, object):
@@ -85,14 +91,14 @@ class Recorder(Behavior):
         )
 
     def eq_split(self, eq, splitter):
-        str = eq.replace(' ', '')
+        str = eq.replace(" ", "")
         parts = []
-        str_buf = ''
+        str_buf = ""
         for s in str:
             if s in splitter:
                 parts.append(str_buf)
                 parts.append(s)
-                str_buf = ''
+                str_buf = ""
             else:
                 str_buf += s
 
@@ -100,11 +106,27 @@ class Recorder(Behavior):
         return parts
 
     def annotate_var_str(self, variable, parent_obj):
-        splitter = ['*', '/', '+', '-', '%', ':', ';', '=', '!', '(', ')', '[', ']', '{', '}']
-        annotated_var = ''
+        splitter = [
+            "*",
+            "/",
+            "+",
+            "-",
+            "%",
+            ":",
+            ";",
+            "=",
+            "!",
+            "(",
+            ")",
+            "[",
+            "]",
+            "{",
+            "}",
+        ]
+        annotated_var = ""
         for part in self.eq_split(variable, splitter):
             if hasattr(parent_obj, part):
-                part = 'n.'+part
+                part = "n." + part
             annotated_var += part
         return annotated_var
 
@@ -120,9 +142,11 @@ class Recorder(Behavior):
                     if self.compiled[v] is None:
                         if self.auto_annotate:
                             annotated_var = self.annotate_var_str(v, parent_obj)
-                            self.compiled[v] = compile(annotated_var, '<string>', 'eval')
+                            self.compiled[v] = compile(
+                                annotated_var, "<string>", "eval"
+                            )
                         else:
-                            self.compiled[v] = compile(v, '<string>', 'eval')
+                            self.compiled[v] = compile(v, "<string>", "eval")
 
                     data = self.get_data_v(v, parent_obj)
                     if data is not None:
@@ -155,13 +179,12 @@ class Recorder(Behavior):
 
 
 class EventRecorder(Recorder):
-    def __init__(self, variables, tag=None, device="cpu"):
+    def __init__(self, variables, tag=None, auto_annotate=True, device="cpu"):
         super().__init__(
-            variables, gap_width=0, tag=tag, max_length=None, device=device
+            variables, gap_width=0, tag=tag, max_length=None, auto_annotate=auto_annotate, device=device
         )
 
     def find_objects(self, key):
-
         result = []
         if key in self.variables:
             result.append(self.variables[key])
