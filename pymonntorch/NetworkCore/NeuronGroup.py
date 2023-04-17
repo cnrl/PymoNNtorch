@@ -85,7 +85,7 @@ class NeuronGroup(NetworkObject):
             self.efferent_synapses[name] = []
 
     def get_neuron_vec(
-        self, mode="zeros()", scale=None, density=None, plot=False, kwargs={}
+        self, mode="zeros()", scale=None, density=None, plot=False, **kwargs
     ):
         """Get a tensor with population's dimensionality.
 
