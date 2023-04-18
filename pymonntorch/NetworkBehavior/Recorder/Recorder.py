@@ -210,10 +210,10 @@ class EventRecorder(Recorder):
 
         data = eval(self.compiled[variable])
 
-        indices = torch.where(data != 0)[0]
-        iteration = torch.ones_like(indices) * parent_obj.iteration
+        indices = torch.where(data != 0)
+        iteration = torch.ones_like(indices[0]) * parent_obj.iteration
 
-        return torch.stack((iteration, indices), dim=1)
+        return torch.stack((iteration, *indices), dim=1)
 
     def save_data_v(self, data, variable):
         self.variables[variable] = torch.concat([self.variables[variable], data])
