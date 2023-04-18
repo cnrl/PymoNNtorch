@@ -209,15 +209,11 @@ class EventRecorder(Recorder):
         synapse = parent_obj
 
         data = eval(self.compiled[variable])
-        indices = torch.where(data != 0)[0]
 
-        if len(indices) > 0:
-            result = []
-            for i in indices:
-                result.append([parent_obj.iteration, i])
-            return torch.tensor(result, device=self.device)
-        else:
-            return None
+        indices = torch.where(data != 0)[0]
+        iteration = torch.ones_like(indices) * parent_obj.iteration
+
+        return torch.stack((iteration, indices), dim=1)
 
     def save_data_v(self, data, variable):
         self.variables[variable] = torch.concat([self.variables[variable], data])
