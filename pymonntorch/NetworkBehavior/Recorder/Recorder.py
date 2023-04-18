@@ -1,6 +1,5 @@
 import copy
 import torch
-import warnings
 from pymonntorch.NetworkCore.Behavior import Behavior
 
 
@@ -86,6 +85,12 @@ class Recorder(Behavior):
         return copy.copy(eval(self.compiled[variable]))
 
     def save_data_v(self, data, variable):
+        if self.variables[variable].dtype != data.dtype and torch.numel(
+            self.variables[variable]
+        ):
+            print(
+                f"WARNING: The recorder received new data with a different datatype({data.dtype}) from the previously recorded data({self.variables[variable].dtype})."
+            )
         self.variables[variable] = torch.concat(
             (self.variables[variable], data.unsqueeze(0)), dim=0
         )
