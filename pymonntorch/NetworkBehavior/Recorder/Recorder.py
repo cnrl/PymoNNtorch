@@ -53,7 +53,7 @@ class Recorder(Behavior):
         self.reset()
 
     def add_variable(self, v):
-        self.variables[v] = torch.tensor([], device=self.device)
+        self.variables[v] = torch.tensor([], dtype=torch.bool, device=self.device)
         self.compiled[v] = None
 
     def add_variables(self, vars):
@@ -86,8 +86,6 @@ class Recorder(Behavior):
         return copy.copy(eval(self.compiled[variable]))
 
     def save_data_v(self, data, variable):
-        if self.variables[variable].dtype != data.dtype:
-            self.variables[variable].to(data.dtype)
         self.variables[variable] = torch.concat(
             (self.variables[variable], data.unsqueeze(0)), dim=0
         )
@@ -177,13 +175,18 @@ class Recorder(Behavior):
             del self.variables[v]
             if device.type == "cuda":
                 torch.cuda.empty_cache()
-            self.variables[v] = torch.tensor([], device=device)
+            self.variables[v] = torch.tensor([], dtype=torch.bool, device=device)
 
 
 class EventRecorder(Recorder):
     def __init__(self, variables, tag=None, auto_annotate=True, device="cpu"):
         super().__init__(
-            variables, gap_width=0, tag=tag, max_length=None, auto_annotate=auto_annotate, device=device
+            variables,
+            gap_width=0,
+            tag=tag,
+            max_length=None,
+            auto_annotate=auto_annotate,
+            device=device,
         )
 
     def find_objects(self, key):
