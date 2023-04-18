@@ -186,10 +186,10 @@ class NetworkObject(TaggableObject):
         Returns:
             torch.Tensor: The shifted tensor.
         """
-        mat = mat.roll(1-(2*counter), dims=0)
+        mat = mat.roll(1 - (2 * counter), dims=0)
 
         if new is not None:
-            mat[0-counter] = new
+            mat[0 - counter] = new
 
         return mat
 
@@ -214,12 +214,8 @@ class NetworkObject(TaggableObject):
 
         Returns:
             torch.Tensor: The initialized tensor."""
-        use_def_dtype = True
 
-        if mode.startswith("torch."):
-            prefix = ''
-        else:
-            prefix = "torch."
+        prefix = "torch."
 
         if mode == "random" or mode == "rand" or mode == "rnd" or mode == "uniform":
             mode = "rand"
@@ -230,18 +226,15 @@ class NetworkObject(TaggableObject):
         mode = prefix + mode
         if "(" not in mode and ")" not in mode:
             mode += "()"
-        
+
         if dtype is not None:
-            mode = mode.replace("(", f"(dtype={dtype}")
-            use_def_dtype = False
+            mode = mode.replace(")", f",dtype={dtype})")
+        else:
+            mode = mode.replace(")", f",dtype={self.def_dtype})")
 
         if mode not in self._mat_eval_dict:
             a1 = "dim,device=" + f"'{self.device}'"
             ev_str = mode.replace("(", "(" + a1)
-
-            if use_def_dtype:
-                ev_str += '.to(self.def_dtype)'
-
             self._mat_eval_dict[mode] = compile(ev_str, "<string>", "eval")
 
         result = eval(self._mat_eval_dict[mode])
@@ -296,4 +289,3 @@ class NetworkObject(TaggableObject):
                 "WARNING: Attempting to set an invalid value for iteration!\n Setting iteration to zero..."
             )
             self._iteration = 0
-            

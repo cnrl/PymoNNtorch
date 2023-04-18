@@ -1,7 +1,5 @@
 import torch
 
-def_dtype = torch.float32
-
 
 class TaggableObject(torch.nn.Module):
     """This is the base class for all taggable objects.
@@ -18,7 +16,7 @@ class TaggableObject(torch.nn.Module):
 
     def __init__(self, tag, device="cpu"):
         """Initialize the object.
-        
+
         Args:
             tag (str): Tag to add to the object. It can also be a comma-separated string of multiple tags.
             device (str): Device on which the object is located.
