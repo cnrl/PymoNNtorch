@@ -43,3 +43,24 @@ SynapseGroup
 
 NetworkBehavior
 ===============
+
+Recorder
+--------
+
+.. automodule:: pymonntorch.NetworkBehavior.Recorder.Recorder
+    :members:
+
+Structure
+---------
+
+.. automodule:: pymonntorch.NetworkBehavior.Structure.Structure
+    :members:
+
+Basics
+------
+
+.. automodule:: pymonntorch.NetworkBehavior.Basics.BasicHomeostasis
+    :members:
+
+.. automodule:: pymonntorch.NetworkBehavior.Basics.Normalization
+    :members:
