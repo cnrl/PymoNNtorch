@@ -10,4 +10,4 @@ Development Lead
 Contributors
 ------------
 
-* Ali Rahimi <Saeid.ali.rahimi@gmail.com>
+* Ali Rahimi <saeed.ali.rahimi@gmail.com>
