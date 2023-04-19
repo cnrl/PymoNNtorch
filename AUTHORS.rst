@@ -11,5 +11,3 @@ Contributors
 ------------
 
 * Ali Rahimi <Saeid.ali.rahimi@gmail.com>
-
-None yet. Why not be the first?
