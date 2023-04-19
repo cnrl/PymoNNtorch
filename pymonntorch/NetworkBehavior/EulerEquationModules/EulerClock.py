@@ -4,13 +4,13 @@ from sympy.physics.units import convert_to, second, seconds
 
 
 class Clock(Behavior):
-    def set_variables(self, neuron_or_network):
-        super().set_variables(neuron_or_network)
+    def initialize(self, neuron_or_network):
+        super().initialize(neuron_or_network)
 
         self.add_tag("Clock")
 
         neuron_or_network.clock_step_size = float(
-            convert_to(eval(self.get_init_attr("step", "1*ms")), seconds) / second
+            convert_to(eval(self.parameter("step", "1*ms")), seconds) / second
         )  # in ms (*ms)
         self.clock_step_size = neuron_or_network.clock_step_size
         print(neuron_or_network.clock_step_size)

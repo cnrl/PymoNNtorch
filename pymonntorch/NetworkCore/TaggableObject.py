@@ -35,6 +35,10 @@ class TaggableObject(torch.nn.Module):
             self.add_tag(tag)
         self.add_tag(self.__class__.__name__)
 
+    @property
+    def tag(self):
+        return self.tags[0]
+
     def has_module(self, tag):
         """Check if object has a module with a specific tag.
 

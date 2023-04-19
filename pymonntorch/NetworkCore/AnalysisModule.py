@@ -10,10 +10,10 @@ from pymonntorch.NetworkCore.Base import *
 
 class AnalysisModule(TaggableObject):
     """This class can be used to add tag-searchable functions to the neurongroups, synapsegroups and the network object.
-    
+
     It has a main execute function which can be called with module(...) or module.exec(...).
     Other "normal" functions can be added as well. Via the add_tag function, the modules can be categorized into groups.
-    
+
     Attributes:
         parent (NeuronGroup, SynapseGroup or Network): The parent object.
         init_kwargs (dict): The arguments passed to the constructor.
@@ -25,9 +25,10 @@ class AnalysisModule(TaggableObject):
         update_notifier_functions (list): The list of the update notifier functions.
         progress_update_function (function): The function to update the progress.
     """
+
     def __init__(self, parent=None, **kwargs):
         self.init_kwargs = kwargs
-        super().__init__(tag=self.get_init_attr("tag", None))
+        super().__init__(tag=self.parameter("tag", None))
 
         self.used_attr_keys = []
 
@@ -48,7 +49,7 @@ class AnalysisModule(TaggableObject):
 
     def add_progress_update_function(self, function):
         """Adds a function to update the progress of the module.
-        
+
         Args:
             function (function): The function to update the progress.
         """
@@ -65,7 +66,7 @@ class AnalysisModule(TaggableObject):
 
     def _attach_and_initialize_(self, parent):
         """Attaches the module to the parent object and initializes it.
-        
+
         Args:
             parent (NeuronGroup, SynapseGroup or Network): The parent object.
         """
@@ -77,21 +78,19 @@ class AnalysisModule(TaggableObject):
     def initialize(self, object):
         """This function is called when the module is attached to the parent object. It should be overridden.
 
-        - access arguments via self.get_init_attr(key, default)
+        - access arguments via self.parameter(key, default)
         - add tag via self.add_tag(tag)
         - add execution arguments via self.add_execution_argument(...)
         `execute` does not have to be used.
-        
+
         Args:
             object (NeuronGroup, SynapseGroup or Network): The parent object.
         """
         return
 
-    def execute(
-        self, object, **kwargs
-    ):  
+    def execute(self, object, **kwargs):
         """Executes the functions of the module with the given arguments. It should be overridden.
-        
+
         Note: Do not call this function directly. Use the instance(...) instead of instance.execute(...).
 
         Args:
@@ -103,9 +102,9 @@ class AnalysisModule(TaggableObject):
     def is_executable(self):
         return type(self).execute != AnalysisModule.execute
 
-    def get_init_attr(self, key, default):
+    def parameter(self, key, default):
         """Returns the value of the given key from the init arguments. If the key is not present, the default value is returned.
-        
+
         Args:
             key (str): The name of the argument.
             default (any): The default value.
@@ -124,7 +123,7 @@ class AnalysisModule(TaggableObject):
 
     def remove_update_notifier(self, function):
         """Removes the given function from the update notifier functions.
-        
+
         Args:
             function (function): The function to remove.
         """
@@ -133,7 +132,7 @@ class AnalysisModule(TaggableObject):
 
     def set_update_notifier(self, function):
         """Adds the given function ro the list of update notifier functions.
-        
+
         Args:
             function (function): The function to set.
         """
@@ -146,10 +145,10 @@ class AnalysisModule(TaggableObject):
 
     def exec(self, **kwargs):
         """Executes the module with the given arguments.
-        
+
         Args:
             **kwargs: The arguments of the function.
-        
+
         Returns:
             any: The result of the function.
         """
@@ -157,12 +156,16 @@ class AnalysisModule(TaggableObject):
         self.current_key = self.generate_current_key(kwargs)
         return self.save_result(self.current_key, self.execute(self.parent, **kwargs))
 
-    def _get_base_name_(self):
+    def _get_name(self):
         return self.__class__.__name__
+
+    def _get_base_name(self):
+        args = [str(v) for v in self.init_kwargs.values()]
+        return self._get_name() + "(" + ", ".join(args) + ")"
 
     def generate_current_key(self, args_key, add_args=True):
         """Generates the key for the current execution.
-        
+
         Args:
             args_key (list): The arguments of the function.
             add_args (bool): If the arguments should be added to the key.
@@ -174,11 +177,11 @@ class AnalysisModule(TaggableObject):
 
     def save_result(self, key, result):
         """Saves the result of the execution.
-        
+
         Args:
             key (str): The key of the execution.
             result (any): The result of the execution.
-        
+
         Returns:
             any: The result of the execution.
         """
@@ -199,7 +202,7 @@ class AnalysisModule(TaggableObject):
 
     def remove_result(self, key):
         """Removes the result of the given key from the dictionary of results.
-        
+
         Args:
             key (str): The key of the execution to remove.
         """

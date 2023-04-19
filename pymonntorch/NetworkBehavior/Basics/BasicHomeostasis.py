@@ -63,67 +63,67 @@ class InstantHomeostasis(Behavior):
 
         setattr(object, self.adjustment_param, val)
 
-    def set_variables(self, object):
-        super().set_variables(object)
+    def initialize(self, object):
+        super().initialize(object)
 
         self.dtype = object.def_dtype
 
         self.compiled_mp = None
 
-        self.min_th = self.get_init_attr(
+        self.min_th = self.parameter(
             "min_th", None, object
         )  # minimum threshold for measurement param
-        self.max_th = self.get_init_attr(
+        self.max_th = self.parameter(
             "max_th", None, object
         )  # maximum threshold for measurement param
 
         self.set_threshold_boundaries(
-            self.get_init_attr(
+            self.parameter(
                 "threshold", None, object=object
             ),  # threshold for measurement param (min=max=th)
-            self.get_init_attr(
+            self.parameter(
                 "gap_percent", None, object=object
             ),  # min max gap is created via a percentage from th (additional param for th)
         )
 
-        self.distance_sensitive = self.get_init_attr(
+        self.distance_sensitive = self.parameter(
             "distance_sensitive", True, object
         )  # stronger adjustment when value is further away from optimum
 
         self.inc = check_is_torch_tensor(
-            self.get_init_attr("inc", 1.0, object),  # increase factor
+            self.parameter("inc", 1.0, object),  # increase factor
             device=object.device,
             dtype=self.dtype,
         )
         self.dec = check_is_torch_tensor(
-            self.get_init_attr("dec", 1.0, object),  # decrease factor
+            self.parameter("dec", 1.0, object),  # decrease factor
             device=object.device,
             dtype=self.dtype,
         )
 
         self.adj_strength = check_is_torch_tensor(
-            self.get_init_attr("adj_strength", 1.0, object),  # change factor
+            self.parameter("adj_strength", 1.0, object),  # change factor
             device=object.device,
             dtype=self.dtype,
         )
 
-        self.adjustment_param = self.get_init_attr(
+        self.adjustment_param = self.parameter(
             "adjustment_param", None, object
         )  # name of object target attribute
 
-        self.measurement_param = self.get_init_attr(
+        self.measurement_param = self.parameter(
             "measurement_param", None, object
         )  # name of parameter to be measured
 
         self.measurement_min = check_is_torch_tensor(
-            self.get_init_attr(
+            self.parameter(
                 "measurement_min", None, object
             ),  # minimum value which can be measured (below=0)
             device=object.device,
             dtype=self.dtype,
         )
         self.measurement_max = check_is_torch_tensor(
-            self.get_init_attr(
+            self.parameter(
                 "measurement_max", None, object
             ),  # maximum value which can be measured (above=max)
             device=object.device,
@@ -131,12 +131,12 @@ class InstantHomeostasis(Behavior):
         )
 
         self.target_clip_min = check_is_torch_tensor(
-            self.get_init_attr("target_clip_min", None, object),  # target clip min
+            self.parameter("target_clip_min", None, object),  # target clip min
             device=object.device,
             dtype=self.dtype,
         )
         self.target_clip_max = check_is_torch_tensor(
-            self.get_init_attr("target_clip_max", None, object),  # target clip max
+            self.parameter("target_clip_max", None, object),  # target clip max
             device=object.device,
             dtype=self.dtype,
         )
@@ -156,16 +156,16 @@ class TimeIntegratedHomeostasis(InstantHomeostasis):
         )
         return self.average
 
-    def set_variables(self, object):
-        super().set_variables(object)
+    def initialize(self, object):
+        super().initialize(object)
 
         self.integration_length = check_is_torch_tensor(
-            self.get_init_attr("integration_length", 1, object),
+            self.parameter("integration_length", 1, object),
             device=object.device,
             dtype=object.def_dtype,
         )
         self.average = check_is_torch_tensor(
-            self.get_init_attr("init_avg", (self.min_th + self.max_th) / 2, object),
+            self.parameter("init_avg", (self.min_th + self.max_th) / 2, object),
             device=object.device,
             dtype=object.def_dtype,
         )

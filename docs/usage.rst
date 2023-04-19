@@ -18,8 +18,8 @@ Similarly, you can write your own `Behavior` Modules with the same logic as Pymo
     from pymonntorch import *
 
     class BasicBehavior(Behavior):
-        def set_variables(self, neurons):
-            neurons.voltage = neurons.get_neuron_vec(mode="zeros")
+        def initialize(self, neurons):
+            neurons.voltage = neurons.vector(mode="zeros")
             self.threshold = 1.0
 
         def forward(self, neurons):
@@ -28,12 +28,12 @@ Similarly, you can write your own `Behavior` Modules with the same logic as Pymo
             neurons.voltage[firing] = 0.0 # reset
             
             neurons.voltage *= 0.9 # voltage decay
-            neurons.voltage += neurons.get_neuron_vec(mode="uniform", density=0.1)
+            neurons.voltage += neurons.vector(mode="uniform", density=0.1)
 
     class InputBehavior(Behavior):
-        def set_variables(self, neurons):
+        def initialize(self, neurons):
             for synapse in neurons.afferent_synapses['GLUTAMATE']:
-                synapse.W = synapse.get_synapse_mat('uniform', density=0.1)
+                synapse.W = synapse.matrix('uniform', density=0.1)
                 synapse.enabled = synapse.W > 0
 
         def forward(self, neurons):
