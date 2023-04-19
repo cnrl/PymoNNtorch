@@ -29,7 +29,7 @@ class Recorder(Behavior):
 
         self.add_tag("recorder")
 
-        self.gap_width = self.get_init_attr("gap_width", 0)
+        self.gap_width = self.parameter("gap_width", 0)
         self.counter = 0
         self.new_data_available = False
 
@@ -39,13 +39,13 @@ class Recorder(Behavior):
         self.variables = {}
         self.compiled = {}
 
-        self.add_variables(self.get_init_attr("variables", []))
+        self.add_variables(self.parameter("variables", []))
         self.reset()
-        self.max_length = self.get_init_attr("max_length", None)
+        self.max_length = self.parameter("max_length", None)
 
         self.auto_annotate = auto_annotate
 
-    def set_variables(self, object):
+    def initialize(self, object):
         assert (
             self.device == object.device
         ), f"Recorder({self.device}) and object({object.device}) must be on the same device"

@@ -66,6 +66,14 @@ class NeuronGroup(NetworkObject):
 
         self.id = torch.arange(self.size, device=self.device)
 
+    @property
+    def def_dtype(self):
+        self.network.def_dtype
+
+    @property
+    def iteration(self):
+        return self.network.iteration
+
     def require_synapses(self, name, afferent=True, efferent=True, warning=True):
         """Require the existence of synapses.
 
@@ -85,9 +93,7 @@ class NeuronGroup(NetworkObject):
                 print("warning: no efferent {} synapses found".format(name))
             self.efferent_synapses[name] = []
 
-    def get_neuron_vec(
-        self, mode="zeros()", scale=None, density=None, plot=False, dtype=None
-    ):
+    def vector(self, mode="zeros()", scale=None, density=None, plot=False, dtype=None):
         """Get a tensor with population's dimensionality.
 
         The tensor can be initialized in different modes. List of possible values for mode includes:
@@ -116,7 +122,7 @@ class NeuronGroup(NetworkObject):
             dtype=dtype,
         )
 
-    def get_neuron_vec_buffer(self, buffer_size, **kwargs):
+    def vector_buffer(self, buffer_size, **kwargs):
         """Get a buffer for the population's dimensionality.
 
         Args:
@@ -140,11 +146,11 @@ class NeuronGroup(NetworkObject):
         """
         source_num = 0
         for syn in self.afferent_synapses[Synapse_ID]:
-            _, s = syn.get_synapse_mat_dim()
+            _, s = syn.matrix_dim()
             source_num += s
         return self.size, source_num
 
-    def __repr__(self):
+    def __str__(self):
         result = "NeuronGroup" + str(self.tags) + "(" + str(self.size) + "){"
         for k in sorted(list(self.behavior.keys())):
             result += str(k) + ":" + str(self.behavior[k])

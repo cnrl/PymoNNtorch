@@ -15,9 +15,10 @@ class SynapseGroup(NetworkObject):
         enabled (bool): Whether the synapse is enabled for learning or not.
         group_weighting (float): The weighting of the synapse group.
     """
+
     def __init__(self, src, dst, net, tag=None, behavior={}):
         """This is the constructor of the SynapseGroup class.
-        
+
         Args:
             src (NeuronGroup): The pre-synaptic neuron group.
             dst (NeuronGroup): The post-synaptic neuron group.
@@ -51,6 +52,23 @@ class SynapseGroup(NetworkObject):
         self.enabled = True
         self.group_weighting = 1
 
+        for ng in self.network.NeuronGroups:
+            for tag in self.tags + ["All"]:
+                if tag not in ng.afferent_synapses:
+                    ng.afferent_synapses[tag] = []
+                if tag not in ng.efferent_synapses:
+                    ng.efferent_synapses[tag] = []
+
+        if (
+            self.dst.BaseNeuronGroup == self.dst
+        ):  # only add to NeuronGroup not to NeuronSubGroup
+            for tag in self.tags + ["All"]:
+                self.dst.afferent_synapses[tag].append(self)
+
+        if self.src.BaseNeuronGroup == self.src:
+            for tag in self.tags + ["All"]:
+                self.src.efferent_synapses[tag].append(self)
+
     def __repr__(self):
         result = (
             "SynapseGroup"
@@ -67,7 +85,7 @@ class SynapseGroup(NetworkObject):
 
     def set_var(self, key, value):
         """Sets a variable of the synapse group.
-        
+
         Args:
             key (str): The name of the variable.
             value (any): The value of the variable.
@@ -78,9 +96,17 @@ class SynapseGroup(NetworkObject):
         setattr(self, key, value)
         return self
 
-    def get_synapse_mat_dim(self):
+    @property
+    def def_dtype(self):
+        return self.network.def_dtype
+
+    @property
+    def iteration(self):
+        return self.network.iteration
+
+    def matrix_dim(self):
         """Returns the dimension of the synapse matrix.
-        
+
         For a synapse group between a source population of size n and a destination population of size m, the synapse matrix has the dimension m x n.
 
         Returns:
@@ -90,14 +116,14 @@ class SynapseGroup(NetworkObject):
 
     def get_random_synapse_mat_fixed(self, min_number_of_synapses=0):
         """Returns a random synapse matrix with a fixed number of synapses per neuron.
-        
+
         Args:
             min_number_of_synapses (int): The minimum number of synapses per neuron.
 
         Returns:
             torch.Tensor: The random synapse matrix.
         """
-        dim = self.get_synapse_mat_dim()
+        dim = self.matrix_dim()
         result = torch.zeros(dim, device=self.device)
         if min_number_of_synapses != 0:
             for i in range(dim[0]):
@@ -107,7 +133,7 @@ class SynapseGroup(NetworkObject):
                 result[i, synapses] = torch.rand(len(synapses), device=self.device)
         return result
 
-    def get_synapse_mat(
+    def matrix(
         self,
         mode="zeros()",
         scale=None,
@@ -141,7 +167,7 @@ class SynapseGroup(NetworkObject):
         """
         result = self._get_mat(
             mode=mode,
-            dim=(self.get_synapse_mat_dim()),
+            dim=(self.matrix_dim()),
             scale=scale,
             density=density,
             plot=plot,
@@ -150,8 +176,8 @@ class SynapseGroup(NetworkObject):
 
         if clone_along_first_axis:
             result = (
-                torch.cat([result[0] for _ in range(self.get_synapse_mat_dim()[0])])
-                .reshape(self.get_synapse_mat_dim()[0], *result[0].shape)
+                torch.cat([result[0] for _ in range(self.matrix_dim()[0])])
+                .reshape(self.matrix_dim()[0], *result[0].shape)
                 .to(self.device)
             )
 
@@ -162,7 +188,7 @@ class SynapseGroup(NetworkObject):
 
     def get_synapse_group_size_factor(self, synapse_group, synapse_type):
         """Returns the size factor of a synapse group.
-        
+
         Args:
             synapse_group (SynapseGroup): The synapse group.
             synapse_type (str): The type of the synapse.
@@ -225,7 +251,7 @@ class SynapseGroup(NetworkObject):
         self, radius, inner_exp, src_x=None, src_y=None, dst_x=None, dst_y=None
     ):
         """Returns a ring-shaped distance matrix between source and destination neurons.
-        
+
         Args:
             radius (float): The radius of the ring.
             inner_exp (float): The exponent of the inner radius.
@@ -243,7 +269,7 @@ class SynapseGroup(NetworkObject):
 
     def get_max_receptive_field_size(self):
         """Returns the maximum receptive field size of the synapse group.
-        
+
         Returns:
             tuple: The maximum receptive field size of the synapse group.
         """
@@ -274,7 +300,7 @@ class SynapseGroup(NetworkObject):
 
     def get_sub_synapse_group(self, src_mask, dst_mask):
         """Returns a sub synapse group between two neuronal subgroups.
-        
+
         Args:
             src_mask (torch.Tensor): The mask of the source neurons.
             dst_mask (torch.Tensor): The mask of the destination neurons.
@@ -292,9 +318,7 @@ class SynapseGroup(NetworkObject):
         # partition enabled update
         if type(self.enabled) is torch.tensor:
             mat_mask = dst_mask[:, None] * src_mask[None, :]
-            result.enabled = (
-                self.enabled[mat_mask].copy().reshape(result.get_synapse_mat_dim())
-            )
+            result.enabled = self.enabled[mat_mask].copy().reshape(result.matrix_dim())
 
         # copy al attributes
         sgd = self.__dict__
@@ -306,7 +330,7 @@ class SynapseGroup(NetworkObject):
                 setattr(result, key, copy.copy(sgd[key]))
 
         return result
-    
+
     @property
     def def_dtype(self):
         return self.network.def_dtype

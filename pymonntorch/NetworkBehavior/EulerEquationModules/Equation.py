@@ -8,12 +8,12 @@ import torch
 
 
 class Equation(Behavior):
-    def set_variables(self, neurons):
-        super().set_variables(neurons)
+    def initialize(self, neurons):
+        super().initialize(neurons)
         n = neurons
         self.add_tag("EquationModule")
-        self.step_size = self.get_init_attr("step_size", "1*ms", neurons)
-        eq_parts = eq_split(self.get_init_attr("eq", None))
+        self.step_size = self.parameter("step_size", "1*ms", neurons)
+        eq_parts = eq_split(self.parameter("eq", None))
 
         if (
             eq_parts[0][0] == "d"

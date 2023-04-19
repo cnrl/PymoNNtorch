@@ -6,36 +6,41 @@ from pymonntorch.utils import is_number
 
 class Behavior(TaggableObject):
     """Base class for behaviors. All behaviors all `TaggableObject`s.
-    
+
     Attributes:
         tag (str): Tag of the behavior.
-        device (str): Device of the behavior. This is overwritten by object's device upon calling `set_variables`.
+        device (str): Device of the behavior. This is overwritten by object's device upon calling `initialize`.
         behavior_enabled (bool): Whether the behavior is enabled. The default is True.
         init_kwargs (dict): Dictionary of the keyword arguments passed to the constructor.
-        used_attr_keys (list): List of the name of the attributes that have been used in the `set_variables` method.
+        used_attr_keys (list): List of the name of the attributes that have been used in the `initialize` method.
     """
-    set_variables_on_init = False
 
-    def __init__(self, **kwargs):
+    initialize_on_init = False
+    initialize_last = False
+
+    def __init__(self, *args, **kwargs):
         """Constructor of the `Behavior` class.
-        
+
         Args:
             **kwargs: Keyword arguments passed to the constructor.
         """
         self.init_kwargs = kwargs
+        for i, arg in enumerate(args):
+            self.init_kwargs["arg_" + str(i)] = arg
         self.used_attr_keys = []
-        self.behavior_enabled = self.get_init_attr("behavior_enabled", True, None)
+        self.behavior_enabled = self.parameter("behavior_enabled", True, None)
         super().__init__(
-            tag=self.get_init_attr("tag", None, None),
-            device=self.get_init_attr("device", None, None),
+            tag=self.parameter("tag", None, None),
+            device=self.parameter("device", None, None),
         )
+        self.empty_iteration_function = self.is_empty_iteration_function()
         self.used_attr_keys = torch.nn.ParameterList(self.used_attr_keys)
 
-    def set_variables(self, object):
+    def initialize(self, object):
         """Sets the variables of the object. This method is called by the `Network` class when the object is added to the network.
-        
+
         **Note:** All sub-classes of `Behavior` overriding this method should call the super method to ensure everything is placed on the correct device.
-        
+
         Args:
             object (TaggableObject): Object possessing the behavior.
         """
@@ -44,13 +49,13 @@ class Behavior(TaggableObject):
 
     def forward(self, object):
         """Forward pass of the behavior. This method is called by the `Network` class per simulation iteration.
-        
+
         Args:
             object (TaggableObject): Object possessing the behavior.
         """
         return
 
-    def __repr__(self):
+    def __str__(self):
         result = self.__class__.__name__ + "("
         for k in self.init_kwargs:
             result += str(k) + "=" + str(self.init_kwargs[k]) + ","
@@ -59,7 +64,7 @@ class Behavior(TaggableObject):
 
     def evaluate_diversity_string(self, ds, object):
         """Evaluates the diversity string describing tensors of an object.
-        
+
         Args:
             ds (str): Diversity string describing the tensors of the object.
             object (NetworkObject): The object possessing the behavior.
@@ -81,10 +86,10 @@ class Behavior(TaggableObject):
 
         if "(" in ds and ")" in ds:  # is function
             if type(object).__name__ == "NeuronGroup":
-                result = object.get_neuron_vec(ds)
+                result = object.vector(ds)
 
             if type(object).__name__ == "SynapseGroup":
-                result = object.get_synapse_mat(ds)
+                result = object.matrix(ds)
 
         if plot:
             if type(result) == torch.tensor:
@@ -95,34 +100,34 @@ class Behavior(TaggableObject):
 
         return result
 
-    def set_init_attrs_as_variables(self, object):
+    def set_parameters_as_variables(self, object):
         """Set the variables defined in the init of behavior as the variables of the object.
-        
+
         Args:
             object (NetworkObject): The object possessing the behavior.
         """
         for key in self.init_kwargs:
-            setattr(object, key, self.get_init_attr(key, None, object=object))
+            setattr(object, key, self.parameter(key, None, object=object))
             print("init", key)
 
     def check_unused_attrs(self):
-        """Checks whether all attributes have been used in the `set_variables` method."""
+        """Checks whether all attributes have been used in the `initialize` method."""
         for key in self.init_kwargs:
             if not key in self.used_attr_keys:
                 print(
                     'Warning: "'
                     + key
-                    + '" not used in set_variables of '
+                    + '" not used in initialize of '
                     + str(self)
                     + ' behavior! Make sure that "'
                     + key
-                    + '" is spelled correctly and get_init_attr('
+                    + '" is spelled correctly and parameter('
                     + key
-                    + ",...) is called in set_variables. Valid attributes are:"
+                    + ",...) is called in initialize. Valid attributes are:"
                     + str(self.used_attr_keys)
                 )
 
-    def get_init_attr(
+    def parameter(
         self,
         key,
         default,
@@ -132,7 +137,7 @@ class Behavior(TaggableObject):
         required=False,
     ):
         """Gets the value of an attribute.
-        
+
         Args:
             key (str): Name of the attribute.
             default (any): Default value of the attribute.
@@ -175,3 +180,30 @@ class Behavior(TaggableObject):
             result = type(default)(result)
 
         return result
+
+    def is_empty_iteration_function(self):
+        """Checks whether a function does anything or not.
+
+        used to stop calling behaviors with empty forward method.
+        """
+        f = self.forward
+
+        # Returns true if f is an empty function.
+        def empty_func():
+            pass
+
+        def empty_func_with_docstring():
+            # Empty function with docstring.
+            pass
+
+        def constants(f):
+            # Return a tuple containing all the constants of a function without: * docstring
+            return tuple(x for x in f.__code__.co_consts if x != f.__doc__)
+
+        return (
+            f.__code__.co_code == empty_func.__code__.co_code
+            and constants(f) == constants(empty_func)
+        ) or (
+            f.__code__.co_code == empty_func_with_docstring.__code__.co_code
+            and constants(f) == constants(empty_func_with_docstring)
+        )

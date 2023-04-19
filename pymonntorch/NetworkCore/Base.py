@@ -31,13 +31,20 @@ class NetworkObject(TaggableObject):
             self.behavior = dict(zip(range(len(behavior)), behavior))
         # self.behavior = torch.nn.ModuleDict(self.behavior)
 
+        for b in self.behavior.values():
+            if not hasattr(self, b.tags[0]):
+                setattr(self, b.tags[0], b)
+
+        for k, b in self.behavior.items():
+            self.network._add_behavior_to_sorted_execution_list(k, self, b)
+
         for k in sorted(list(self.behavior.keys())):
-            if self.behavior[k].set_variables_on_init:
-                network._set_variables_check(self, k)
+            if self.behavior[k].initialize_on_init:
+                self.behavior[k].initialize(self)
 
         self.analysis_modules = []
 
-    def register_behavior(self, key, behavior, initialize=True):
+    def add_behavior(self, key, behavior, initialize=True):
         """Register a single behavior to the network object.
 
         Args:
@@ -48,17 +55,20 @@ class NetworkObject(TaggableObject):
         Returns:
             Behavior: The behavior.
         """
-        self.behavior[key] = behavior
-        self.network._add_key_to_sorted_behavior_timesteps(key)
-        self.network.clear_tag_cache()
+        if not key in self.behavior:
+            self.behavior[key] = behavior
+            self.network._add_behavior_to_sorted_execution_list(
+                key, self, self.behavior[key]
+            )
+            self.network.clear_tag_cache()
+            if initialize:
+                behavior.initialize(self)
+                behavior.check_unused_attrs()
+            return behavior
+        else:
+            raise Exception("Error: Key already exists." + str(key))
 
-        if initialize:
-            behavior.set_variables(self)
-            behavior.check_unused_attrs()
-
-        return behavior
-
-    def register_behaviors(self, behavior_dict):
+    def add_behaviors(self, behavior_dict):
         """Register multiple behaviors to the network object.
 
         Args:
@@ -89,7 +99,8 @@ class NetworkObject(TaggableObject):
                 remove_keys.append(key)
 
         for key in remove_keys:
-            self.behavior.pop(key)
+            b = self.behavior.pop(key)
+            self.network._remove_behavior_from_sorted_execution_list(self, b)
 
     def set_behaviors(self, tag, enabled):
         """Set behaviors to be enabled or disabled.
@@ -144,7 +155,7 @@ class NetworkObject(TaggableObject):
 
         return result
 
-    def register_analysis_module(self, module):
+    def add_analysis_module(self, module):
         """Register an analysis module to the network object.
 
         Args:
@@ -214,25 +225,24 @@ class NetworkObject(TaggableObject):
 
         Returns:
             torch.Tensor: The initialized tensor."""
-
-        prefix = "torch."
-
-        if mode == "random" or mode == "rand" or mode == "rnd" or mode == "uniform":
-            mode = "rand"
-
-        if type(mode) == int or type(mode) == float:
-            mode = "ones()*" + str(mode)
-
-        mode = prefix + mode
-        if "(" not in mode and ")" not in mode:
-            mode += "()"
-
-        if dtype is not None:
-            mode = mode.replace(")", f",dtype={dtype})")
-        else:
-            mode = mode.replace(")", f",dtype={self.def_dtype})")
-
         if mode not in self._mat_eval_dict:
+            prefix = "torch."
+
+            if mode == "random" or mode == "rand" or mode == "rnd" or mode == "uniform":
+                mode = "rand"
+
+            if type(mode) == int or type(mode) == float:
+                mode = "ones()*" + str(mode)
+
+            mode = prefix + mode
+            if "(" not in mode and ")" not in mode:
+                mode += "()"
+
+            if dtype is not None:
+                mode = mode.replace(")", f",dtype={dtype})")
+            else:
+                mode = mode.replace(")", f",dtype={self.def_dtype})")
+
             a1 = "dim,device=" + f"'{self.device}'"
             ev_str = mode.replace("(", "(" + a1)
             self._mat_eval_dict[mode] = compile(ev_str, "<string>", "eval")

@@ -19,6 +19,7 @@ class Network(NetworkObject):
         behavior (list or dict): List of all network-specific behaviors.
         settings (dict): Dictionary of network-wide settings, e.g. `def_dtype` and `device`.
     """
+
     def __init__(self, tag=None, behavior={}, settings={}):
         """Initialize the network.
 
@@ -28,20 +29,25 @@ class Network(NetworkObject):
             device (str): Device on which the network is located. The default is "cpu".
         """
         self.apply_settings(settings)
-        super().__init__(tag, self, behavior, device=self.device)
 
         self.NeuronGroups = []
         self.SynapseGroups = []
 
         self._iteration = 0
 
+        self.sorted_behavior_execution_list = (
+            []
+        )  # stores (key, beh_parent, behavior) triplets
+
+        super().__init__(tag, self, behavior, device=self.device)
+
     def apply_settings(self, settings):
-        self.device = settings.get('device', 'cpu')
-        self.def_dtype = settings.get('dtype', torch.float32)
+        self.device = settings.get("device", "cpu")
+        self.def_dtype = settings.get("dtype", torch.float32)
 
     def set_behaviors(self, tag, enabled):
         """Set behaviors of specific tag to be enabled or disabled.
-        
+
         Args:
             tag (str): Tag of behaviors to be enabled or disabled.
             enabled (bool): If true, behaviors will be enabled. If false, behaviors will be disabled.
@@ -88,7 +94,7 @@ class Network(NetworkObject):
                 ):
                     obj.behavior[key].clear_recorder()
 
-    def __repr__(self):
+    def __str__(self):
         neuron_count = torch.sum(torch.tensor([ng.size for ng in self.NeuronGroups]))
         synapse_count = torch.sum(
             torch.tensor([sg.src.size * sg.dst.size for sg in self.SynapseGroups])
@@ -125,7 +131,7 @@ class Network(NetworkObject):
 
     def find_objects(self, key):
         """Find objects in the network with a specific tag.
-        
+
         Args:
             key (str): Tag to search for.
 
@@ -147,7 +153,7 @@ class Network(NetworkObject):
 
     def initialize(self, info=True, warnings=True, storage_manager=None):
         """Initialize the variables of the network and all its components.
-        
+
         Args:
             info (bool): If true, print information about the network.
             warnings (bool): If true, print warnings while checking the tag uniqueness.
@@ -159,32 +165,52 @@ class Network(NetworkObject):
             if storage_manager is not None:
                 storage_manager.save_param("info", desc)
 
-        self.set_synapses_to_neuron_groups()
-        self.behavior_timesteps = []
-
-        for obj in self.all_objects():
-            for ind in obj.behavior:
-                self._add_key_to_behavior_timesteps(ind)
-
-        self.set_variables()
-
+        self.initialize_behaviors()
         self.check_unique_tags(warnings)
 
-    def _add_key_to_behavior_timesteps(self, ind):
-        if ind not in self.behavior_timesteps:
-            self.behavior_timesteps.append(ind)
-            self.behavior_timesteps.sort()
+    def initialize_behaviors(self):
+        for key, parent, behavior in self.sorted_behavior_execution_list:
+            if not behavior.initialize_on_init and not behavior.initialize_last:
+                behavior.initialize(parent)
+                behavior.check_unused_attrs()
+
+        for key, parent, behavior in self.sorted_behavior_execution_list:
+            if behavior.initialize_last:
+                behavior.initialize(parent)
+                behavior.check_unused_attrs()
+
+    def _add_behavior_to_sorted_execution_list(self, key, beh_parent, behavior):
+        insert_indx = 0
+        for i, kpb in enumerate(self.sorted_behavior_execution_list):
+            k, p, b = kpb
+            if key >= k:
+                insert_indx = i + 1
+        self.sorted_behavior_execution_list.insert(
+            insert_indx, (key, beh_parent, behavior)
+        )
+
+    def _remove_behavior_from_sorted_execution_list(self, behavior, beh_parent=None):
+        remove_indexes = []
+        for i, kpb in enumerate(self.sorted_behavior_execution_list):
+            k, p, b = kpb
+            if behavior == b:
+                if beh_parent is None or beh_parent == p:
+                    remove_indexes.append(i)
+        if remove_indexes:
+            for index in remove_indexes[::-1]:
+                self.sorted_behavior_execution_list.pop(index)
+        else:
+            raise Exception("behavior not found")
 
     def check_unique_tags(self, warnings=True):
-        """Check if all tags in the network are unique. In case of doubles, a new tag will be 
+        """Check if all tags in the network are unique. In case of doubles, a new tag will be
         automatically assigned to second instance.
-        
+
         Args:
             warnings (bool): Whether to log the warnings or not.
         """
         unique_tags = []
         for ng in self.NeuronGroups:
-
             if len(ng.tags) == 0:
                 ng.tags.append("NG")
                 print('no tag defined for NeuronGroup. "NG" tag added')
@@ -214,34 +240,9 @@ class Network(NetworkObject):
             for k in obj.behavior:
                 obj.behavior[k].clear_cache()
 
-    def _set_variables_check(self, obj, key):
-        obj_keys_before = list(obj.__dict__.keys())
-        beh_keys_before = list(obj.behavior[key].__dict__.keys())
-        obj.behavior[key].set_variables(obj)
-        obj_keys_after = list(obj.__dict__.keys())
-        beh_keys_after = list(obj.behavior[key].__dict__.keys())
-        obj.behavior[key]._created_obj_variables = list(
-            set(obj_keys_after) - set(obj_keys_before)
-        )
-        obj.behavior[key]._created_beh_variables = list(
-            set(beh_keys_after) - set(beh_keys_before)
-        )
-
-    def set_variables(self):
-        """Set the variables of all objects' behaviors in the network."""
-        for timestep in self.behavior_timesteps:
-
-            for obj in self.all_objects():
-
-                if timestep in obj.behavior:
-                    if not obj.behavior[timestep].set_variables_on_init:
-                        self._set_variables_check(obj, timestep)
-                        obj.behavior[timestep].check_unused_attrs()
-
     def set_synapses_to_neuron_groups(self):
         """Set the synapses of all synapse groups to the corresponding neuron groups."""
         for ng in self.NeuronGroups:
-
             ng.afferent_synapses = {"All": []}
             ng.efferent_synapses = {"All": []}
 
@@ -271,21 +272,20 @@ class Network(NetworkObject):
             None or dict: If `measure_behavior_execution_time` is set to True, a dictionary with the execution times of the behaviors is returned.
         """
         if measure_behavior_execution_time:
-            time_measures = {timestep:0.0 for timestep in self.behavior_timesteps}
+            time_measures = {
+                key: 0.0 for key, _, _ in self.sorted_behavior_execution_list
+            }
 
         self.iteration += 1
 
-        for timestep in self.behavior_timesteps:
-            objects = self.all_objects()
-            for obj in objects:
-                obj.iteration = self.iteration
-                if timestep in obj.behavior and obj.behavior[timestep].behavior_enabled:
-                    if measure_behavior_execution_time:
-                        start_time = time.time()
-                        obj.behavior[timestep](obj)
-                        time_measures[timestep] += (time.time() - start_time) * 1000
-                    else:
-                        obj.behavior[timestep](obj)
+        for key, parent, behavior in self.sorted_behavior_execution_list:
+            if behavior.behavior_enabled and not behavior.empty_iteration_function:
+                if measure_behavior_execution_time:
+                    start_time = time.time()
+                    behavior(parent)
+                    time_measures[key] += (time.time() - start_time) * 1000
+                else:
+                    behavior(parent)
 
         if measure_behavior_execution_time:
             return time_measures
@@ -299,7 +299,7 @@ class Network(NetworkObject):
         batch_progress_update_func=None,
     ):
         """Simulates the network for a number of iterations.
-        
+
         Args:
             iterations (int): Number of iterations to simulate.
             batch_size (int): Number of iterations to simulate in one batch. If set to -1, the whole simulation is done in one batch.
@@ -309,6 +309,9 @@ class Network(NetworkObject):
         """
         if type(iterations) is str:
             iterations = self["Clock", 0].time_to_iterations(iterations)
+
+        if type(batch_size) is str:
+            batch_size = self["Clock", 0].time_to_iterations(batch_size)
 
         time_diff = None
 
@@ -348,7 +351,7 @@ class Network(NetworkObject):
             self.simulate_iteration()
 
         if disable_recording:
-            self.recording_on()
+            self.recording_off()
 
         if measure_block_time:
             print("")
