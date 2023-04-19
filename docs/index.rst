@@ -8,7 +8,7 @@ Welcome to PymoNNtorch's documentation!
    readme
    installation
    usage
-   modules
+   documentation
    contributing
    authors
    history
