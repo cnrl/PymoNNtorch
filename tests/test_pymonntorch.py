@@ -21,9 +21,9 @@ def test_network_cpu_annotated():
     )
 
     class BasicBehavior(Behavior):
-        def set_variables(self, neurons):
-            super().set_variables(neurons)
-            neurons.voltage = neurons.get_neuron_vec(mode="zeros")
+        def initialize(self, neurons):
+            super().initialize(neurons)
+            neurons.voltage = neurons.vector(mode="zeros")
             self.threshold = 1.0
 
         def forward(self, neurons):
@@ -32,13 +32,13 @@ def test_network_cpu_annotated():
             neurons.voltage[firing] = 0.0  # reset
 
             neurons.voltage *= 0.9  # voltage decay
-            neurons.voltage += neurons.get_neuron_vec(mode="uniform", density=0.1)
+            neurons.voltage += neurons.vector(mode="uniform", density=0.1)
 
     class InputBehavior(Behavior):
-        def set_variables(self, neurons):
-            super().set_variables(neurons)
+        def initialize(self, neurons):
+            super().initialize(neurons)
             for synapse in neurons.afferent_synapses["GLUTAMATE"]:
-                synapse.W = synapse.get_synapse_mat("uniform", density=0.1)
+                synapse.W = synapse.matrix("uniform", density=0.1)
                 synapse.enabled = synapse.W > 0
 
         def forward(self, neurons):
@@ -80,9 +80,9 @@ def test_network_cuda_annotated():
     )
 
     class BasicBehavior(Behavior):
-        def set_variables(self, neurons):
-            super().set_variables(neurons)
-            neurons.voltage = neurons.get_neuron_vec(mode="zeros")
+        def initialize(self, neurons):
+            super().initialize(neurons)
+            neurons.voltage = neurons.vector(mode="zeros")
             self.threshold = 1.0
 
         def forward(self, neurons):
@@ -91,13 +91,13 @@ def test_network_cuda_annotated():
             neurons.voltage[firing] = 0.0  # reset
 
             neurons.voltage *= 0.9  # voltage decay
-            neurons.voltage += neurons.get_neuron_vec(mode="uniform", density=0.1)
+            neurons.voltage += neurons.vector(mode="uniform", density=0.1)
 
     class InputBehavior(Behavior):
-        def set_variables(self, neurons):
-            super().set_variables(neurons)
+        def initialize(self, neurons):
+            super().initialize(neurons)
             for synapse in neurons.afferent_synapses["GLUTAMATE"]:
-                synapse.W = synapse.get_synapse_mat("uniform", density=0.1)
+                synapse.W = synapse.matrix("uniform", density=0.1)
                 synapse.enabled = synapse.W > 0
 
         def forward(self, neurons):
@@ -106,7 +106,7 @@ def test_network_cuda_annotated():
                     synapse.W @ synapse.src.spike.float() / synapse.src.size * 10
                 )
 
-    net = Network(device="cuda")
+    net = Network(settings={"device": "cuda"})
     ng = NeuronGroup(
         net=net,
         size=100,

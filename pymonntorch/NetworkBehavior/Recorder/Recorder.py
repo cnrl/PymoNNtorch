@@ -1,6 +1,5 @@
 import copy
 import torch
-import warnings
 from pymonntorch.NetworkCore.Behavior import Behavior
 
 
@@ -30,7 +29,7 @@ class Recorder(Behavior):
 
         self.add_tag("recorder")
 
-        self.gap_width = self.get_init_attr("gap_width", 0)
+        self.gap_width = self.parameter("gap_width", 0)
         self.counter = 0
         self.new_data_available = False
 
@@ -40,20 +39,20 @@ class Recorder(Behavior):
         self.variables = {}
         self.compiled = {}
 
-        self.add_variables(self.get_init_attr("variables", []))
+        self.add_variables(self.parameter("variables", []))
         self.reset()
-        self.max_length = self.get_init_attr("max_length", None)
+        self.max_length = self.parameter("max_length", None)
 
         self.auto_annotate = auto_annotate
 
-    def set_variables(self, object):
+    def initialize(self, object):
         assert (
             self.device == object.device
         ), f"Recorder({self.device}) and object({object.device}) must be on the same device"
         self.reset()
 
     def add_variable(self, v):
-        self.variables[v] = torch.tensor([], dtype=torch.float32, device=self.device)
+        self.variables[v] = torch.tensor([], dtype=torch.bool, device=self.device)
         self.compiled[v] = None
 
     def add_variables(self, vars):
@@ -86,6 +85,12 @@ class Recorder(Behavior):
         return copy.copy(eval(self.compiled[variable]))
 
     def save_data_v(self, data, variable):
+        if self.variables[variable].dtype != data.dtype and torch.numel(
+            self.variables[variable]
+        ):
+            print(
+                f"WARNING: The recorder received new data with a different datatype({data.dtype}) from the previously recorded data({self.variables[variable].dtype})."
+            )
         self.variables[variable] = torch.concat(
             (self.variables[variable], data.unsqueeze(0)), dim=0
         )
@@ -175,13 +180,18 @@ class Recorder(Behavior):
             del self.variables[v]
             if device.type == "cuda":
                 torch.cuda.empty_cache()
-            self.variables[v] = torch.tensor([], dtype=torch.float32, device=device)
+            self.variables[v] = torch.tensor([], dtype=torch.bool, device=device)
 
 
 class EventRecorder(Recorder):
     def __init__(self, variables, tag=None, auto_annotate=True, device="cpu"):
         super().__init__(
-            variables, gap_width=0, tag=tag, max_length=None, auto_annotate=auto_annotate, device=device
+            variables,
+            gap_width=0,
+            tag=tag,
+            max_length=None,
+            auto_annotate=auto_annotate,
+            device=device,
         )
 
     def find_objects(self, key):
@@ -204,15 +214,11 @@ class EventRecorder(Recorder):
         synapse = parent_obj
 
         data = eval(self.compiled[variable])
-        indices = torch.where(data != 0)[0]
 
-        if len(indices) > 0:
-            result = []
-            for i in indices:
-                result.append([parent_obj.iteration, i])
-            return torch.tensor(result, device=self.device)
-        else:
-            return None
+        indices = torch.where(data != 0)
+        iteration = torch.ones_like(indices[0]) * parent_obj.iteration
+
+        return torch.stack((iteration, *indices), dim=1)
 
     def save_data_v(self, data, variable):
         self.variables[variable] = torch.concat([self.variables[variable], data])

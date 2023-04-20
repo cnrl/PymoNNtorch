@@ -6,12 +6,12 @@ from pymonntorch.NetworkBehavior.EulerEquationModules.Helper import (
 
 
 class Variable(Behavior):
-    def set_variables(self, neurons):
-        super().set_variables(neurons)
+    def initialize(self, neurons):
+        super().initialize(neurons)
 
         n = neurons
 
-        eq_parts = eq_split(self.get_init_attr("eq", None))
+        eq_parts = eq_split(self.parameter("eq", None))
 
         if eq_parts[1] == "=" and len(eq_parts) >= 3:
             self.var_name = eq_parts[0]
@@ -24,11 +24,9 @@ class Variable(Behavior):
 
         self.var_init = "".join(eq_parts[2:])
 
-        setattr(n, self.var_name, neurons.get_neuron_vec() + eval(self.var_init))
+        setattr(n, self.var_name, neurons.vector() + eval(self.var_init))
 
-        setattr(
-            n, self.var_name + "_new", neurons.get_neuron_vec() + eval(self.var_init)
-        )
+        setattr(n, self.var_name + "_new", neurons.vector() + eval(self.var_init))
 
     def forward(self, n):
         setattr(
@@ -37,10 +35,10 @@ class Variable(Behavior):
 
 
 class SynapseVariable(Behavior):
-    def set_variables(self, synapse):
+    def initialize(self, synapse):
         s = synapse
 
-        eq_parts = eq_split(self.get_init_attr("eq", None))
+        eq_parts = eq_split(self.parameter("eq", None))
 
         if eq_parts[1] == "=" and len(eq_parts) >= 3:
             self.var_name = eq_parts[0]
@@ -53,11 +51,9 @@ class SynapseVariable(Behavior):
 
         self.var_init = "".join(eq_parts[2:])
 
-        setattr(s, self.var_name, synapse.get_synapse_mat() + eval(self.var_init))
+        setattr(s, self.var_name, synapse.matrix() + eval(self.var_init))
 
-        setattr(
-            s, self.var_name + "_new", synapse.get_synapse_mat() + eval(self.var_init)
-        )
+        setattr(s, self.var_name + "_new", synapse.matrix() + eval(self.var_init))
 
     def forward(self, s):
         setattr(

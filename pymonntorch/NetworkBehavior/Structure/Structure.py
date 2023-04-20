@@ -10,12 +10,12 @@ def vec_to_mat_transposed(vec, repeat_count):
     return torch.stack([vec] * repeat_count, dim=1)
 
 
-def rotation_matrix(axis, theta):
+def rotation_matrix(axis, theta, dtype=torch.float):
     """
     Return the rotation matrix associated with counterclockwise rotation about
     the given axis by theta radians.
     """
-    axis = torch.tensor(axis, dtype=torch.float)
+    axis = torch.tensor(axis, dtype=dtype)
     axis = axis / torch.sqrt(torch.dot(axis, axis))
     a = torch.cos(theta / 2.0)
     b, c, d = -axis * torch.sin(theta / 2.0)
@@ -49,13 +49,15 @@ def get_squared_dim(n_neurons, depth=1):
 
 
 class NeuronDimension(Behavior):
-
-    set_variables_on_init = True
+    initialize_on_init = True
 
     def set_position(self, width, height, depth):
         self.neurons.x = (
             torch.arange(
-                0, self.neurons.size, dtype=torch.float32, device=self.neurons.device
+                0,
+                self.neurons.size,
+                dtype=self.neurons.def_dtype,
+                device=self.neurons.device,
             )
             % width
         )
@@ -64,7 +66,7 @@ class NeuronDimension(Behavior):
                 torch.arange(
                     0,
                     self.neurons.size,
-                    dtype=torch.float32,
+                    dtype=self.neurons.def_dtype,
                     device=self.neurons.device,
                 ),
                 width,
@@ -77,7 +79,7 @@ class NeuronDimension(Behavior):
                 torch.arange(
                     0,
                     self.neurons.size,
-                    dtype=torch.float32,
+                    dtype=self.neurons.def_dtype,
                     device=self.neurons.device,
                 ),
                 (width * height),
@@ -108,13 +110,13 @@ class NeuronDimension(Behavior):
         big_x_mat = torch.stack(
             [torch.arange(wup)] * hup,
             dim=0,
-            dtype=torch.float,
+            dtype=self.neurons.def_dtype,
             device=self.neurons.device,
         )
         big_x_mat = big_x_mat.repeat(depth, 1).flatten()
 
         big_y_mat = torch.repeat_interleave(
-            torch.arange(wup, dtype=torch.float, device=self.neurons.device),
+            torch.arange(wup, dtype=self.neurons.def_dtype, device=self.neurons.device),
             hup * depth,
         )
 
@@ -146,7 +148,7 @@ class NeuronDimension(Behavior):
         return self
 
     def rotate(self, axis, angle):
-        rotation = rotation_matrix(axis, angle)
+        rotation = rotation_matrix(axis, angle, self.neurons.def_dtype)
         self.neurons.x, self.neurons.y, self.neurons.z = torch.matmul(
             rotation, torch.stack([self.neurons.x, self.neurons.y, self.neurons.z])
         )
@@ -163,14 +165,14 @@ class NeuronDimension(Behavior):
             z_stretch = target_neurons.depth / self.neurons.depth
             self.neurons.z *= z_stretch
 
-    def set_variables(self, neurons):
-        super().set_variables(neurons)
+    def initialize(self, neurons):
+        super().initialize(neurons)
 
-        self.width = self.get_init_attr("width", 1, neurons)
-        self.height = self.get_init_attr("height", 1, neurons)
-        self.depth = self.get_init_attr("depth", 1, neurons)
+        self.width = self.parameter("width", 1, neurons)
+        self.height = self.parameter("height", 1, neurons)
+        self.depth = self.parameter("depth", 1, neurons)
 
-        for pg in self.get_init_attr("input_patterns", torch.tensor([]), neurons):
+        for pg in self.parameter("input_patterns", torch.tensor([]), neurons):
             dim = pg.size()
             if len(dim) > 0:
                 self.height = max(self.height, dim[0])
@@ -192,7 +194,7 @@ class NeuronDimension(Behavior):
 
         self.set_position(self.width, self.height, self.depth)
 
-        if self.get_init_attr("centered", True, neurons):
+        if self.parameter("centered", True, neurons):
             self.move(
                 -(self.width - 1) / 2, -(self.height - 1) / 2, -(self.depth - 1) / 2
             )
