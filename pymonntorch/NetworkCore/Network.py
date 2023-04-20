@@ -351,7 +351,7 @@ class Network(NetworkObject):
             self.simulate_iteration()
 
         if disable_recording:
-            self.recording_on()
+            self.recording_off()
 
         if measure_block_time:
             print("")
