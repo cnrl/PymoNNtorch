@@ -91,13 +91,13 @@ def get_squared_dim(n_neurons, depth=1):
 class NeuronDimension(Behavior):
     """
     The Behavior that defines structure for a `NeuronGroup`.
-    It overrides the `size` variable of the `NeuronGroup` and adds `x`,`y`, and `z` vectors, 
+    It overrides the `size` variable of the `NeuronGroup` and adds `x`, `y`, and `z` vectors, 
     as well as `width`, `height` and `depth` variables. The Behaviour is special, because its 
     `initialize` function is executed when the `NeuronGroup` is created rather than 
     when network.initialize() is called. The neurons are arranged in a 3-dimensional grid 
     with size=width * height * depth. Because is overrides the `size` variable, it does not 
     have to be added in the behaviour dictionary directly, but also indirectly 
-    (:python:`NeuronGroup(size=NeuronDimension(),...)`). In this case it will be added to 
+    ( `NeuronGroup(size=NeuronDimension(),...)` ). In this case it will be added to 
     position 0 in the dictionary.
 
     Args:

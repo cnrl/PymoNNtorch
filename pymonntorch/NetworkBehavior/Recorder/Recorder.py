@@ -187,7 +187,20 @@ class Recorder(Behavior):
 
 
 class EventRecorder(Recorder):
-
+    """This class is used to record sparse boolean vectors over time more efficiently.
+    It returns a tensor of (t, i) tuples where t indicates the time step and i is the 
+    index of elements with value `True`. If the variable to record is not boolean itself,
+    it is converted to one by assessing whether values are >0.
+    
+    Args:
+        variables (list of str): List of variable names to record.
+        gap_width (int): The intervals of time to record variables. The default is 0.
+        tag (str): A tag name for the `Recorder` object. The default is None.
+        max_length (int): The history buffer size. If `None`, the variables are recorded \
+            for the whole simulation time. The default is None.
+        auto_annotate (bool): This parameter specifies whether the variable names include the \
+            network object prefix (neurons/synapse/n/s) or not. The default is True.
+    """
     def find_objects(self, key):
         result = []
         if key in self.variables:
