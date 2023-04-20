@@ -1,19 +1,50 @@
+"""
+This module includes functions and classes to handle structured NeuronGroups.
+"""
 import torch
 from pymonntorch.NetworkCore.Behavior import Behavior
 
 
 def vec_to_mat(vec, repeat_count):
+    """
+    Stack `repeat_count` numbers of the input vector on first dimension.
+
+    Args:
+        vec (torch.tensor): The vector to replicate.
+        repeat_count (int): Number of replicas.
+
+    Returns:
+        torch.tensor: A matrix of the stacked `vec`s for `repeat_count` times.
+    """
     return torch.stack([vec] * repeat_count, dim=0)
 
 
 def vec_to_mat_transposed(vec, repeat_count):
+    """
+    Stack `repeat_count` numbers of the input vector on second dimension.
+
+    Args:
+        vec (torch.tensor): The vector to replicate.
+        repeat_count (int): Number of replicas.
+
+    Returns:
+        torch.tensor: A matrix of the stacked `vec`s for `repeat_count` times.
+    """
     return torch.stack([vec] * repeat_count, dim=1)
 
 
 def rotation_matrix(axis, theta, dtype=torch.float):
     """
     Return the rotation matrix associated with counterclockwise rotation about
-    the given axis by theta radians.
+    the given `axis` by `theta` radians.
+
+    Args:
+        axis (int): The axis.
+        theta (float): The angle of rotation in radians.
+        dtype (type): Type of the tensor values. The default is `torch.float`.
+
+    Returns:
+        torch.tensor: The rotation matrix.
     """
     axis = torch.tensor(axis, dtype=dtype)
     axis = axis / torch.sqrt(torch.dot(axis, axis))
@@ -32,8 +63,17 @@ def rotation_matrix(axis, theta, dtype=torch.float):
 
 def get_squared_dim(n_neurons, depth=1):
     """
-    Get the squared dimension of a square matrix that can hold n_neurons
-    neurons, with depth layers.
+    Get the squared dimension of a square matrix that can hold `n_neurons`
+    neurons, with `depth` layers. The neurons are structured in a square-like 
+    manner.
+
+    Args:
+        n_neurons (int): The desired number of neurons in the `NeuronGroup`.
+        depth (int): The depth of the structured `NeuronGroup`. The default is 1.
+
+    Returns:
+        NeuronDimension: An instance of `NeuronDimension` behavior with the given depth \
+            and calculated height and depth.
     """
     divider = int(torch.trunc(torch.sqrt(torch.tensor(n_neurons))))
 
@@ -49,9 +89,32 @@ def get_squared_dim(n_neurons, depth=1):
 
 
 class NeuronDimension(Behavior):
+    """
+    The Behavior that defines structure for a `NeuronGroup`.
+    It overrides the `size` variable of the `NeuronGroup` and adds `x`,`y`, and `z` vectors, 
+    as well as `width`, `height` and `depth` variables. The Behaviour is special, because its 
+    `initialize` function is executed when the `NeuronGroup` is created rather than 
+    when network.initialize() is called. The neurons are arranged in a 3-dimensional grid 
+    with size=width * height * depth. Because is overrides the `size` variable, it does not 
+    have to be added in the behaviour dictionary directly, but also indirectly 
+    (:python:`NeuronGroup(size=NeuronDimension(),...)`). In this case it will be added to 
+    position 0 in the dictionary.
+
+    Args:
+        width (int): Width of the `NeuronGroup`. The default is 1.
+        height (int): Height of the `NeuronGroup`. The default is 1.
+        depth (int): Depth of the `NeuronGroup`. The default is 1.
+    """
     initialize_on_init = True
 
     def set_position(self, width, height, depth):
+        """Set the coordinate of neurons by setting vectors `x`, `y`, and `z`.
+        
+        Args:
+            width (int): Width of the neurons.
+            height (int): Height of the neurons.
+            depth (int): Depth of the neurons.
+        """
         self.neurons.x = (
             torch.arange(
                 0,
@@ -89,6 +152,20 @@ class NeuronDimension(Behavior):
         )
 
     def get_area_mask(self, xmin=0, xmax=-1, ymin=0, ymax=-1, zmin=0, zmax=-1):
+        """Returns a mask tensor with the same shape as the NeuronGroup 
+        with the given start and end points.
+        
+        Args:
+            xmin (int): Start point in x axis. The default is 0.
+            xmax (int): End point in x axis. The default is -1.
+            ymin (int): Start point in y axis. The default is 0.
+            ymax (int): End point in y axis. The default is -1.
+            zmin (int): Start point in z axis. The default is 0.
+            zmax (int): End point in z axis. The default is -1.
+
+        Returns:
+            torch.BoolTensor: The mask tensor.
+        """
         if xmax < 1:
             xmax = self.width - xmax
         if ymax < 1:
@@ -107,6 +184,14 @@ class NeuronDimension(Behavior):
         return result.flatten()
 
     def apply_pattern_transformation_function(self, transform_mat, hup, wup, depth):
+        """Apply a transformation matrix on the neurons.
+        
+        Args:
+            transform_mat (torch.tensor): The transformation matrix.
+            hup (int): The height upperbound.
+            wup (int): The width upperbound.
+            depth (int): The depth.
+        """
         big_x_mat = torch.stack(
             [torch.arange(wup)] * hup,
             dim=0,
@@ -124,18 +209,48 @@ class NeuronDimension(Behavior):
         self.neurons.y = big_y_mat[transform_mat]
 
     def move(self, x=0, y=0, z=0):
+        """Move the neurons in the 3D space.
+        
+        Args:
+            x (int or float): The displacement in x axis.
+            y (int or float): The displacement in y axis.
+            z (int or float): The displacement in z axis.
+
+        Returns:
+            NeuronDimension: The modified `NeuronDimension`.
+        """
         self.neurons.x += x
         self.neurons.y += y
         self.neurons.z += z
         return self
 
     def scale(self, x=1, y=1, z=1):
+        """Scale the neuron grid in the 3D space.
+        
+        Args:
+            x (int or float): The stretch in x axis.
+            y (int or float): The stretch in y axis.
+            z (int or float): The stretch in z axis.
+
+        Returns:
+            NeuronDimension: The modified `NeuronDimension`.
+        """
         self.neurons.x *= x
         self.neurons.y *= y
         self.neurons.z *= z
         return self
 
-    def noise(self, x_noise=1, y_noise=1, z_noise=1, centered=True):
+    def noise(self, x_noise=1, y_noise=1, z_noise=1):
+        """Apply random noise to neuron coordinates.
+        
+        Args:
+            x (int or float): The noise bounds in x axis.
+            y (int or float): The noise bounds in y axis.
+            z (int or float): The noise bounds in z axis.
+
+        Returns:
+            NeuronDimension: The modified `NeuronDimension`.
+        """
         self.neurons.x += torch.randint(
             -x_noise, x_noise, self.neurons.size, device=self.neurons.device
         )
@@ -148,6 +263,15 @@ class NeuronDimension(Behavior):
         return self
 
     def rotate(self, axis, angle):
+        """Rotate the `NeuronGroup` in space.
+        
+        Args:
+            axis (int): The axis along which the rotation is made.
+            angle (float): The angle to rotate in radians.
+
+        Returns:
+            NeuronDimension: The modified `NeuronDimension`.
+        """
         rotation = rotation_matrix(axis, angle, self.neurons.def_dtype)
         self.neurons.x, self.neurons.y, self.neurons.z = torch.matmul(
             rotation, torch.stack([self.neurons.x, self.neurons.y, self.neurons.z])
@@ -155,6 +279,11 @@ class NeuronDimension(Behavior):
         return self
 
     def stretch_to_equal_size(self, target_neurons):
+        """Stretch to `NeuronGroup` to match a target `NeuronGroup` dimensions.
+        
+        Args:
+            target_neurons (NeuronGroup): The target `NeuronGroup`.
+        """
         if hasattr(target_neurons, "width") and self.neurons.width > 0:
             x_stretch = target_neurons.width / self.neurons.width
             self.neurons.x *= x_stretch
@@ -198,6 +327,3 @@ class NeuronDimension(Behavior):
             self.move(
                 -(self.width - 1) / 2, -(self.height - 1) / 2, -(self.depth - 1) / 2
             )
-
-    def forward(self, neurons):
-        return
