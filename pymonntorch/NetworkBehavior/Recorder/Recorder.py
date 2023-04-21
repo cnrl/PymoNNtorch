@@ -1,54 +1,57 @@
+"""
+This module includes functions and classes to facilitate recording of network object \
+variables through out the simulation time.
+"""
 import copy
 import torch
 from pymonntorch.NetworkCore.Behavior import Behavior
 
 
 def get_Recorder(variable):
+    """Returns a `Recorder` instance for the given variable.
+
+    Args:
+        variable (str): Name of the variable to record.
+
+    Returns:
+        Recorder: The `Recorder` object.
+    """
     return Recorder(variables=[variable])
 
 
 class Recorder(Behavior):
+    """This is the base class to record variables of a network object.
+    
+    Args:
+        variables (list of str): List of variable names to record.
+        gap_width (int): The intervals of time to record variables. The default is 0.
+        tag (str): A tag name for the `Recorder` object. The default is None.
+        max_length (int): The history buffer size. If `None`, the variables are recorded \
+            for the whole simulation time. The default is None.
+        auto_annotate (bool): This parameter specifies whether the variable names include the \
+            network object prefix (neurons/synapse/n/s) or not. The default is True.
+    """
+    initialize_last = True
     visualization_module_outputs = []
 
-    def __init__(
-        self,
-        variables,
-        gap_width=0,
-        tag=None,
-        max_length=None,
-        auto_annotate=True,
-        device="cpu",
-    ):
-        super().__init__(
-            tag=tag,
-            variables=variables,
-            gap_width=gap_width,
-            max_length=max_length,
-            device=device,
-        )
+    def initialize(self, object):
+        super().initialize(object)
 
-        self.add_tag("recorder")
+        variables = self.parameter('variables', [])
+        if variables == []:
+            variables = self.parameter('arg_0', [])
+        if isinstance(variables, str):
+            variables = [variables]
 
-        self.gap_width = self.parameter("gap_width", 0)
+        self.gap_width = self.parameter('gap_width', 0)
+        self.max_length = self.parameter('max_length', None)
+        self.auto_annotate = self.parameter('auto_annotate', True)
         self.counter = 0
         self.new_data_available = False
-
-        if type(variables) is str:
-            variables = list(map(str.strip, variables.split(",")))
-
         self.variables = {}
         self.compiled = {}
 
-        self.add_variables(self.parameter("variables", []))
-        self.reset()
-        self.max_length = self.parameter("max_length", None)
-
-        self.auto_annotate = auto_annotate
-
-    def initialize(self, object):
-        assert (
-            self.device == object.device
-        ), f"Recorder({self.device}) and object({object.device}) must be on the same device"
+        self.add_variables(variables)
         self.reset()
 
     def add_variable(self, v):
@@ -184,16 +187,20 @@ class Recorder(Behavior):
 
 
 class EventRecorder(Recorder):
-    def __init__(self, variables, tag=None, auto_annotate=True, device="cpu"):
-        super().__init__(
-            variables,
-            gap_width=0,
-            tag=tag,
-            max_length=None,
-            auto_annotate=auto_annotate,
-            device=device,
-        )
-
+    """This class is used to record sparse boolean vectors over time more efficiently.
+    It returns a tensor of (t, i) tuples where t indicates the time step and i is the 
+    index of elements with value `True`. If the variable to record is not boolean itself,
+    it is converted to one by assessing whether values are >0.
+    
+    Args:
+        variables (list of str): List of variable names to record.
+        gap_width (int): The intervals of time to record variables. The default is 0.
+        tag (str): A tag name for the `Recorder` object. The default is None.
+        max_length (int): The history buffer size. If `None`, the variables are recorded \
+            for the whole simulation time. The default is None.
+        auto_annotate (bool): This parameter specifies whether the variable names include the \
+            network object prefix (neurons/synapse/n/s) or not. The default is True.
+    """
     def find_objects(self, key):
         result = []
         if key in self.variables:

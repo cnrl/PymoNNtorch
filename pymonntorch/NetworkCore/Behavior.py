@@ -53,7 +53,7 @@ class Behavior(TaggableObject):
         Args:
             object (TaggableObject): Object possessing the behavior.
         """
-        return
+        pass
 
     def __str__(self):
         result = self.__class__.__name__ + "("
