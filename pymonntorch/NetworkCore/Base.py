@@ -45,11 +45,11 @@ class NetworkObject(TaggableObject):
         self.analysis_modules = []
 
     def add_behavior(self, key, behavior, initialize=True):
-        """Register a single behavior to the network object.
+        """Add a single behavior to the network object.
 
         Args:
             key (str): Key to be used to access behavior.
-            behavior (Behavior): Behavior to be registered.
+            behavior (Behavior): Behavior to be added.
             initialize (bool): If true, behavior will be initialized. The default is True.
 
         Returns:
@@ -69,16 +69,16 @@ class NetworkObject(TaggableObject):
             raise Exception("Error: Key already exists." + str(key))
 
     def add_behaviors(self, behavior_dict):
-        """Register multiple behaviors to the network object.
+        """Add multiple behaviors to the network object.
 
         Args:
-            behavior_dict (dict): Dictionary of behaviors to be registered. The keys must be integers.
+            behavior_dict (dict): Dictionary of behaviors to be added. The keys must be integers.
 
         Returns:
             dict: The dictionary of behaviors.
         """
         for key, behavior in behavior_dict.items():
-            self.register_behavior(key, behavior)
+            self.add_behavior(key, behavior)
         return behavior_dict
 
     def remove_behavior(self, key_tag_behavior_or_type):
@@ -156,10 +156,10 @@ class NetworkObject(TaggableObject):
         return result
 
     def add_analysis_module(self, module):
-        """Register an analysis module to the network object.
+        """Add an analysis module to the network object.
 
         Args:
-            module (AnalysisModule): Analysis module to be registered.
+            module (AnalysisModule): Analysis module to be added.
         """
         module._attach_and_initialize_(self)
 
