@@ -91,7 +91,7 @@ In most simulations, we need to keep track of variables through time. To do so, 
 
     plt.plot(net['voltage', 0][:,0:10])
     plt.plot(net['torch.mean(voltage)', 0], color='black')
-    plt.axhline(pop['BasicBehavior', 0].threshold, color='black', linestyle='--')
+    plt.axhline(ng['BasicBehavior', 0].threshold, color='black', linestyle='--')
     plt.xlabel('iterations')
     plt.ylabel('voltage')
     plt.title('Voltage of first 10 neurons')

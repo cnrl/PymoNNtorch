@@ -40,7 +40,7 @@ You can use the same syntax as `PymoNNto <https://pymonnto.readthedocs.io/en/lat
 
     from pymonntorch import *
 
-    net = Network(device="cpu")  # To create and simulate the network on GPU, simply change the device.
+    net = Network()
     ng = NeuronGroup(net=net, tag="my_neuron", size=100)
     SynapseGroup(src=ng, dst=ng, net=net, tag="recurrent_synapse")
     net.initialize()
