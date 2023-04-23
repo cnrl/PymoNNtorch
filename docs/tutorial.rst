@@ -4,7 +4,7 @@ Tutorial
 Create and Simulate a Simple Network
 ************************************
 
-Just like ``PymoNNto``, each ``Network`` in ``PymoNNtorch`` is composed of ``NeuronGroup``s, which indicates the neuronal population, and possible ``SynapticGroup``(s), which defines the synaptic connection between the ``NeuronGroup``s. ``Network`` is the main container of all network objects (including itself) and hence, should be defined first. For instance, to create a network of 1000 neurons with regressive synaptic connections, we write: ::
+Just like ``PymoNNto``, each ``Network`` in ``PymoNNtorch`` is composed of ``NeuronGroup`` s, which indicates the neuronal population, and possible ``SynapticGroup`` (s), which defines the synaptic connection between the ``NeuronGroup`` s. ``Network`` is the main container of all network objects (including itself) and hence, should be defined first. For instance, to create a network of 1000 neurons with regressive synaptic connections, we write: ::
 
     from pymonntorch import *
 
@@ -23,7 +23,7 @@ To have a functioning network, we can write ``Behavior``(s) for different networ
             super().initialize(neurons)  # Always remember to call the super method to ensure all objects and tensors are located on the same device.
 
             neurons.voltage = neurons.vector(mode="zeros")
-            self.threshold = 1.0
+            self.threshold = 2.0
 
         def forward(self, neurons):  # override this method to define what happens in each iteration of the simulation.
             firing = neurons.voltage >= self.threshold
@@ -66,3 +66,45 @@ To initialize and simulate the network for 1s, we write: ::
 
     net.initialize()
     net.simulate_iterations(1000)
+
+Monitoring The Simulation
+*************************
+
+In most simulations, we need to keep track of variables through time. To do so, the so-called ``Recorder`` modules is useful, as it saves a buffer of the variable(s) we intend to track throughout the simulation. Let's add recorders to track the voltage and spike activity of neurons in ``ng`` in above example: ::
+
+    net = Network()
+    ng = NeuronGroup(net=net,
+                    size=1000, 
+                    behavior={
+                        1: BasicBehavior(),
+                        2: InputBehavior(),
+                        9: Recorder(['voltage', 'mean(voltage)']),
+                        10: EventRecorder(['spike'])
+                    })
+    SynapseGroup(ng, ng, net, tag='GLUTAMATE')
+    net.initialize()
+    net.simulate_iterations(1000)
+
+``EventRecorder`` is a subclass of ``Recorder`` which facilitates tracking of sparse boolean tensors by saving them in memory-efficient way (key-value scheme). Note that we have defined the two recorders in some late indices (9 & 10) to ensure every change has taken place on the desired variables. We can now plot the recorded variables to observe their behavior throughout the simulation: ::
+
+    import matplotlib.pyplot as plt
+
+    plt.plot(net['voltage', 0][:,0:10])
+    plt.plot(net['torch.mean(voltage)', 0], color='black')
+    plt.axhline(pop['BasicBehavior', 0].threshold, color='black', linestyle='--')
+    plt.xlabel('iterations')
+    plt.ylabel('voltage')
+    plt.title('Voltage of first 10 neurons')
+    plt.show()
+
+    plt.plot(net['spike.t', 0], net['spike.i', 0], '.k')
+    plt.xlabel('iterations')
+    plt.ylabel('neuron index')
+    plt.title('Raster Plot')
+    plt.show()
+
+.. image:: _images/voltage.png
+    :width: 600
+
+.. image:: _images/spike.png
+    :width: 600
