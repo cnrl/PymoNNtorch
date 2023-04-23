@@ -16,9 +16,7 @@ PymoNNtorch
 
 
 
-PymoNNtorch is a *Pytorch*-adapted version of PymoNNto_.
-
-.. _PymoNNto: https://github.com/trieschlab/PymoNNto
+PymoNNtorch is a *Pytorch*-adapted version of `PymoNNto <https://github.com/trieschlab/PymoNNto>`_.
 
 
 * Free software: MIT license
@@ -31,12 +29,14 @@ Features
 * Use ``torch`` tensors and Pytorch-like syntax to create a spiking neural network (SNN).
 * Simulate an SNN on CPU or GPU.
 * Define dynamics of SNN components as ``Behavior`` modules.
-* Control over the order of applying different *Behavior*s in each simulation time step.
+* Control over the order of applying different behaviors in each simulation time step.
 
 Usage
 -----
 
-You can use the same syntax as `PymoNNto <https://pymonnto.readthedocs.io/en/latest/Introduction/basics2/>`_ to create you network: ::
+You can use the same syntax as `PymoNNto <https://pymonnto.readthedocs.io/en/latest/Introduction/basics2/>`_ to create you network:
+
+.. code-block:: python
 
     from pymonntorch import *
 
@@ -47,7 +47,9 @@ You can use the same syntax as `PymoNNto <https://pymonnto.readthedocs.io/en/lat
     net.simulate_iterations(1000)
 
 
-Similarly, you can write your own `Behavior` Modules with the same logic as PymoNNto; except using `torch` tensors instead of `numpy` ndarrays. ::
+Similarly, you can write your own `Behavior` Modules with the same logic as PymoNNto; except using `torch` tensors instead of `numpy` ndarrays.
+
+.. code-block:: python
 
     from pymonntorch import *
 
@@ -102,8 +104,7 @@ Credits
 -------
 
 This package was created with Cookiecutter_ and the `audreyr/cookiecutter-pypackage`_ project template.
-It changes the codebase of PymoNNto_ to use ``torch`` rather than ``numpy`` and ``tensorflow numpy``.
+It changes the codebase of `PymoNNto <https://github.com/trieschlab/PymoNNto>`_ to use ``torch`` rather than ``numpy`` and ``tensorflow numpy``.
 
 .. _Cookiecutter: https://github.com/audreyr/cookiecutter
 .. _`audreyr/cookiecutter-pypackage`: https://github.com/audreyr/cookiecutter-pypackage
-.. _PymoNNto: https://github.com/trieschlab/PymoNNto
