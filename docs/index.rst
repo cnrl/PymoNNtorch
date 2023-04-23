@@ -7,7 +7,7 @@ Welcome to PymoNNtorch's documentation!
 
    readme
    installation
-   usage
+   tutorial
    documentation
    contributing
    authors
