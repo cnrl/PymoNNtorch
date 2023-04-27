@@ -189,16 +189,15 @@ class Network(NetworkObject):
             insert_indx, (key, beh_parent, behavior)
         )
 
-    def _remove_behavior_from_sorted_execution_list(self, behavior, beh_parent=None):
-        remove_indexes = []
+    def _remove_behavior_from_sorted_execution_list(self, key, beh_parent, behavior):
+        rm_indx = -1
         for i, kpb in enumerate(self.sorted_behavior_execution_list):
             k, p, b = kpb
-            if behavior == b:
-                if beh_parent is None or beh_parent == p:
-                    remove_indexes.append(i)
-        if remove_indexes:
-            for index in remove_indexes[::-1]:
-                self.sorted_behavior_execution_list.pop(index)
+            if key == k and beh_parent == p and behavior == b:
+                rm_indx = i
+                break
+        if rm_indx>-1:
+            self.sorted_behavior_execution_list.pop(rm_indx)
         else:
             raise Exception("behavior not found")
 
