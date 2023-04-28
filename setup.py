@@ -15,7 +15,7 @@ requirements = ['numpy>=1.21.0', 'torch>=1.11.0', ]
 test_requirements = ['pytest>=3', ]
 
 setup(
-    author="Ashena Gorgan Mohammadi",
+    author="Computational Neuroscience Research Laboratory",
     author_email='ashenatena@gmail.com',
     python_requires='>=3.8',
     classifiers=[
@@ -24,8 +24,8 @@ setup(
         'License :: OSI Approved :: MIT License',
         'Natural Language :: English',
         'Programming Language :: Python :: 3',
-#        'Programming Language :: Python :: 3.6',
-#        'Programming Language :: Python :: 3.7',
+        # 'Programming Language :: Python :: 3.6',
+        # 'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3.8',
     ],
     description="PymoNNtorch is a Pytorch version of PymoNNto",
@@ -43,7 +43,7 @@ setup(
     packages=find_packages(include=['pymonntorch', 'pymonntorch.*']),
     test_suite='tests',
     tests_require=test_requirements,
-    url='https://github.com/atenagm1375/pymonntorch',
+    url='https://github.com/cnrl/PymoNNtorch',
     version='0.1.0',
     zip_safe=False,
 )
