@@ -43,7 +43,7 @@ setup(
     packages=find_packages(include=['pymonntorch', 'pymonntorch.*']),
     test_suite='tests',
     tests_require=test_requirements,
-    url='https://github.com/atenagm1375/pymonntorch',
+    url='https://github.com/cnrl/pymonntorch',
     version='0.1.0',
     zip_safe=False,
 )
