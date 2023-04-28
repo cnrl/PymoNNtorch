@@ -15,7 +15,7 @@ Types of Contributions
 Report Bugs
 ~~~~~~~~~~~
 
-Report bugs at https://github.com/cnrl/pymonntorch/issues.
+Report bugs at https://github.com/cnrl/PymoNNtorch/issues/new.
 
 If you are reporting a bug, please include:
 
@@ -45,7 +45,7 @@ articles, and such.
 Submit Feedback
 ~~~~~~~~~~~~~~~
 
-The best way to send feedback is to file an issue at https://github.com/cnrl/pymonntorch/issues.
+The best way to send feedback is to file an issue at https://github.com/cnrl/pymonntorch/issues/new .
 
 If you are proposing a feature:
 
@@ -62,7 +62,7 @@ Ready to contribute? Here's how to set up `pymonntorch` for local development.
 1. Fork the `pymonntorch` repo on GitHub.
 2. Clone your fork locally::
 
-    $ git clone git@github.com:your_name_here/pymonntorch.git
+    $ git clone https://github.com/your_name/PymoNNtorch.git --depth 1 --single-branch --branch main
 
 3. Install your local copy into a virtualenv. Assuming you have virtualenvwrapper installed, this is how you set up your fork for local development::
 
