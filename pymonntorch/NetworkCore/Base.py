@@ -26,7 +26,7 @@ class NetworkObject(TaggableObject):
         super().__init__(tag, device)
 
         self.network = network
-        self.behavior = behavior
+        self.behavior = behavior if behavior is not None else {}
         if type(behavior) == list:
             self.behavior = dict(zip(range(len(behavior)), behavior))
         # self.behavior = torch.nn.ModuleDict(self.behavior)

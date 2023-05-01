@@ -20,7 +20,7 @@ class Network(NetworkObject):
         settings (dict): Dictionary of network-wide settings, e.g. `def_dtype` and `device`.
     """
 
-    def __init__(self, tag=None, behavior={}, settings={}):
+    def __init__(self, tag=None, behavior=None, settings=None):
         """Initialize the network.
 
         Args:
@@ -28,6 +28,7 @@ class Network(NetworkObject):
             behavior (list or dict): List or dictionary of behaviors. If a dictionary is used, the keys must be integers.
             device (str): Device on which the network is located. The default is "cpu".
         """
+        settings = settings if settings is not None else {}
         self.apply_settings(settings)
 
         self.NeuronGroups = []
@@ -42,8 +43,8 @@ class Network(NetworkObject):
         super().__init__(tag, self, behavior, device=self.device)
 
     def apply_settings(self, settings):
-        self.device = settings.get("device", "cpu")
-        self.def_dtype = settings.get("dtype", torch.float32)
+        self.device = settings.setdefault("device", "cpu")
+        self.def_dtype = settings.setdefault("dtype", torch.float32)
 
     def set_behaviors(self, tag, enabled):
         """Set behaviors of specific tag to be enabled or disabled.
@@ -196,7 +197,7 @@ class Network(NetworkObject):
             if key == k and beh_parent == p and behavior == b:
                 rm_indx = i
                 break
-        if rm_indx>-1:
+        if rm_indx > -1:
             self.sorted_behavior_execution_list.pop(rm_indx)
         else:
             raise Exception("behavior not found")
