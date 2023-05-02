@@ -41,7 +41,7 @@ You can use the same syntax as `PymoNNto <https://pymonnto.readthedocs.io/en/lat
     from pymonntorch import *
 
     net = Network()
-    ng = NeuronGroup(net=net, tag="my_neuron", size=100)
+    ng = NeuronGroup(net=net, tag="my_neuron", size=100, behavior=None)
     SynapseGroup(src=ng, dst=ng, net=net, tag="recurrent_synapse")
     net.initialize()
     net.simulate_iterations(1000)
