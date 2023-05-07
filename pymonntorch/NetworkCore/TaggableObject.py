@@ -134,14 +134,14 @@ class TaggableObject(torch.nn.Module):
         return result
 
     def add_tag(self, tag):
-        """Add a tag to the object.
+        """Add tags to the object.
+
+        Adds a tag only if object doesn't have the tag.
+        Tags should be separated by ",".
 
         Args:
-            tag (str): Tag to add.
-
-        Returns:
-            TaggableObject: The object itself.
+            tag (str): Tag string to add.
         """
         for subtag in tag.split(","):
-            self.tags.append(subtag.strip())
-        return self
+            if subtag.strip() not in self.tags:
+                self.tags.append(subtag.strip())
