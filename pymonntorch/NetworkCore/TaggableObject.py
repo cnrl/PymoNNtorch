@@ -143,5 +143,5 @@ class TaggableObject(torch.nn.Module):
             tag (str): Tag string to add.
         """
         for subtag in tag.split(","):
-            if subtag.strip() not in self.tags:
+            if subtag.strip() not in self.tags and len(subtag.strip()) > 0:
                 self.tags.append(subtag.strip())
