@@ -66,6 +66,23 @@ class NeuronGroup(NetworkObject):
 
         self.id = torch.arange(self.size, device=self.device)
 
+    def synapses(self, mode, tag="All"):
+        """Get synapses connected to the NeuronGroup.
+
+        Args:
+            mode (str or bool): Whether to return efferent or afferent synapses connected to the NeuronGroup.
+                                Values indicating afferent: ` "afferent", "dendrite", "pre", "preSynaptic", 0, False `
+                                Values indicating efferent: ` "efferent", "axon", "post", "postSynaptic", 1 , True`
+            tag (str, optional): Filters Synapses to have provided tag . Defaults to "All".
+
+        Returns:
+            List[SynapseGroup]: The list containing SynapseGroups
+        """
+        if mode in ["afferent", "dendrite", "pre", "preSynaptic", 0]:
+            return self.afferent_synapses[tag]
+        if mode in ["efferent", "axon", "post", "postSynaptic", 1]:
+            return self.efferent_synapses[tag]
+
     @property
     def def_dtype(self):
         self.network.def_dtype
