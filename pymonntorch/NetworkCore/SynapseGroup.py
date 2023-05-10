@@ -70,15 +70,13 @@ class SynapseGroup(NetworkObject):
                 self.src.efferent_synapses[tag].append(self)
 
     def __repr__(self):
-        result = (
-            "SynapseGroup"
-            + str(self.tags)
-            + "(D"
-            + str(self.dst.size)
-            + "xS"
-            + str(self.src.size)
-            + "){"
-        )
+        result = "SynapseGroup" + str(self.tags)
+        if self.network.transposed_synapse_matrix_mode:
+            result = result + "(S" + str(self.src.size) + "xD" + str(self.dst.size)
+        else:
+            result = result + "(D" + str(self.dst.size) + "xS" + str(self.src.size)
+        result = result + "){"
+
         for k in sorted(list(self.behavior.keys())):
             result += str(k) + ":" + str(self.behavior[k]) + ","
         return result + "}"
@@ -112,6 +110,8 @@ class SynapseGroup(NetworkObject):
         Returns:
             tuple: The dimension of the synapse matrix.
         """
+        if self.network.transposed_synapse_matrix_mode:
+            return self.src.size, self.dst.size
         return self.dst.size, self.src.size
 
     def get_random_synapse_mat_fixed(self, min_number_of_synapses=0):
