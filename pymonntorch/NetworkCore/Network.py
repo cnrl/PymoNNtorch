@@ -20,7 +20,7 @@ class Network(NetworkObject):
         NeuronGroups (list): List of all NeuronGroups in the network.
         SynapseGroups (list): List of all SynapseGroups in the network.
         behavior (list or dict): List of all network-specific behaviors.
-        settings (dict): Dictionary of network-wide settings, e.g. `def_dtype`, `syn_dim` and `device`.
+        settings (dict): Dictionary of network-wide settings, e.g. `def_dtype`, `synapse_mode` and `device`.
     """
 
     def __init__(self, tag=None, behavior=None, settings=None):
@@ -48,7 +48,9 @@ class Network(NetworkObject):
     def apply_settings(self, settings):
         self.device = settings.setdefault("device", "cpu")
         self.def_dtype = settings.setdefault("dtype", torch.float32)
-        self.transposed_synapse_matrix_mode = settings.setdefault("syn_dim", DxS) != DxS
+        self.transposed_synapse_matrix_mode = (
+            settings.setdefault("synapse_mode", DxS) != DxS
+        )
 
     def set_behaviors(self, tag, enabled):
         """Set behaviors of specific tag to be enabled or disabled.
