@@ -9,6 +9,7 @@ from pymonntorch.NetworkCore.Behavior import *
 from pymonntorch.NetworkCore.NeuronGroup import *
 from pymonntorch.NetworkCore.SynapseGroup import *
 from pymonntorch.NetworkCore.AnalysisModule import *
+from pymonntorch.NetworkCore.IzhikevichNeuron import *
 
 from pymonntorch.NetworkBehavior.Basics.BasicHomeostasis import *
 from pymonntorch.NetworkBehavior.Basics.Normalization import *
