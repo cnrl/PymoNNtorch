@@ -193,7 +193,7 @@ class Behavior(TaggableObject):
             pass
 
         def empty_func_with_docstring():
-            # Empty function with docstring.
+            """Empty function with docstring."""
             pass
 
         def constants(f):
