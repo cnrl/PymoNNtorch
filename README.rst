@@ -34,7 +34,7 @@ Features
 Usage
 -----
 
-You can use the same syntax as `PymoNNto <https://pymonnto.readthedocs.io/en/latest/Introduction/basics2/>`_ to create you network:
+You can use the same syntax as ``PymoNNto`` to create you network:
 
 .. code-block:: python
 
@@ -47,7 +47,7 @@ You can use the same syntax as `PymoNNto <https://pymonnto.readthedocs.io/en/lat
     net.simulate_iterations(1000)
 
 
-Similarly, you can write your own `Behavior` Modules with the same logic as PymoNNto; except using `torch` tensors instead of `numpy` ndarrays.
+Similarly, you can write your own ``Behavior`` Modules with the same logic as ``PymoNNto``; except using ``torch`` tensors instead of ``numpy`` ndarrays.
 
 .. code-block:: python
 
