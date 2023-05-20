@@ -20,7 +20,7 @@ class Network(NetworkObject):
         NeuronGroups (list): List of all NeuronGroups in the network.
         SynapseGroups (list): List of all SynapseGroups in the network.
         behavior (list or dict): List of all network-specific behaviors.
-        settings (dict): Dictionary of network-wide settings, e.g. `def_dtype`, `synapse_mode` and `device`.
+        settings (dict): Dictionary of network-wide settings, e.g. `dtype`, `synapse_mode` and `device`.
     """
 
     def __init__(self, tag=None, behavior=None, settings=None):
@@ -29,7 +29,7 @@ class Network(NetworkObject):
         Args:
             tag (str): Tag to add to the network. It can also be a comma-separated string of multiple tags.
             behavior (list or dict): List or dictionary of behaviors. If a dictionary is used, the keys must be integers.
-            device (str): Device on which the network is located. The default is "cpu".
+            settings (dict): Dictionary of network-wide settings, e.g. `dtype`, `synapse_mode` and `device`.
         """
         settings = settings if settings is not None else {}
         self.apply_settings(settings)
