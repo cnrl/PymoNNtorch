@@ -91,13 +91,13 @@ def get_squared_dim(n_neurons, depth=1):
 class NeuronDimension(Behavior):
     """
     The Behavior that defines structure for a `NeuronGroup`.
-    It overrides the `size` variable of the `NeuronGroup` and adds `x`, `y`, and `z` vectors, 
-    as well as `width`, `height` and `depth` variables. The Behaviour is special, because its 
-    `initialize` function is executed when the `NeuronGroup` is created rather than 
-    when network.initialize() is called. The neurons are arranged in a 3-dimensional grid 
-    with size=width * height * depth. Because is overrides the `size` variable, it does not 
-    have to be added in the behaviour dictionary directly, but also indirectly 
-    ( `NeuronGroup(size=NeuronDimension(),...)` ). In this case it will be added to 
+    It overrides the `size` variable of the `NeuronGroup` and adds `x`, `y`, and `z` vectors,
+    as well as `width`, `height` and `depth` variables. The Behaviour is special, because its
+    `initialize` function is executed when the `NeuronGroup` is created rather than
+    when network.initialize() is called. The neurons are arranged in a 3-dimensional grid
+    with size=width * height * depth. Because is overrides the `size` variable, it does not
+    have to be added in the behaviour dictionary directly, but also indirectly
+    ( `NeuronGroup(size=NeuronDimension(),...)` ). In this case it will be added to
     position 0 in the dictionary.
 
     Args:
@@ -105,11 +105,12 @@ class NeuronDimension(Behavior):
         height (int): Height of the `NeuronGroup`. The default is 1.
         depth (int): Depth of the `NeuronGroup`. The default is 1.
     """
+
     initialize_on_init = True
 
     def set_position(self, width, height, depth):
         """Set the coordinate of neurons by setting vectors `x`, `y`, and `z`.
-        
+
         Args:
             width (int): Width of the neurons.
             height (int): Height of the neurons.
@@ -152,9 +153,9 @@ class NeuronDimension(Behavior):
         )
 
     def get_area_mask(self, xmin=0, xmax=-1, ymin=0, ymax=-1, zmin=0, zmax=-1):
-        """Returns a mask tensor with the same shape as the NeuronGroup 
+        """Returns a mask tensor with the same shape as the NeuronGroup
         with the given start and end points.
-        
+
         Args:
             xmin (int): Start point in x axis. The default is 0.
             xmax (int): End point in x axis. The default is -1.
@@ -185,7 +186,7 @@ class NeuronDimension(Behavior):
 
     def apply_pattern_transformation_function(self, transform_mat, hup, wup, depth):
         """Apply a transformation matrix on the neurons.
-        
+
         Args:
             transform_mat (torch.tensor): The transformation matrix.
             hup (int): The height upperbound.
@@ -210,7 +211,7 @@ class NeuronDimension(Behavior):
 
     def move(self, x=0, y=0, z=0):
         """Move the neurons in the 3D space.
-        
+
         Args:
             x (int or float): The displacement in x axis.
             y (int or float): The displacement in y axis.
@@ -226,7 +227,7 @@ class NeuronDimension(Behavior):
 
     def scale(self, x=1, y=1, z=1):
         """Scale the neuron grid in the 3D space.
-        
+
         Args:
             x (int or float): The stretch in x axis.
             y (int or float): The stretch in y axis.
@@ -242,7 +243,7 @@ class NeuronDimension(Behavior):
 
     def noise(self, x_noise=1, y_noise=1, z_noise=1):
         """Apply random noise to neuron coordinates.
-        
+
         Args:
             x (int or float): The noise bounds in x axis.
             y (int or float): The noise bounds in y axis.
@@ -264,7 +265,7 @@ class NeuronDimension(Behavior):
 
     def rotate(self, axis, angle):
         """Rotate the `NeuronGroup` in space.
-        
+
         Args:
             axis (int): The axis along which the rotation is made.
             angle (float): The angle to rotate in radians.
@@ -280,7 +281,7 @@ class NeuronDimension(Behavior):
 
     def stretch_to_equal_size(self, target_neurons):
         """Stretch to `NeuronGroup` to match a target `NeuronGroup` dimensions.
-        
+
         Args:
             target_neurons (NeuronGroup): The target `NeuronGroup`.
         """
@@ -321,9 +322,10 @@ class NeuronDimension(Behavior):
 
         neurons.size = self.width * self.height * self.depth
 
-        self.set_position(self.width, self.height, self.depth)
+        if neurons.network.index_neurons:
+            self.set_position(self.width, self.height, self.depth)
 
-        if self.parameter("centered", True, neurons):
-            self.move(
-                -(self.width - 1) / 2, -(self.height - 1) / 2, -(self.depth - 1) / 2
-            )
+            if self.parameter("centered", True, neurons):
+                self.move(
+                    -(self.width - 1) / 2, -(self.height - 1) / 2, -(self.depth - 1) / 2
+                )

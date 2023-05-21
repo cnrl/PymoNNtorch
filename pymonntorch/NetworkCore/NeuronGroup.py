@@ -64,7 +64,8 @@ class NeuronGroup(NetworkObject):
         self.learning = True
         self.recording = True
 
-        self.id = torch.arange(self.size, device=self.device)
+        if net.index_neurons:
+            self.id = torch.arange(self.size, device=self.device)
 
     def synapses(self, mode, tag="All"):
         """Get synapses connected to the NeuronGroup.

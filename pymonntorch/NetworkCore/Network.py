@@ -6,8 +6,8 @@ from pymonntorch.NetworkCore.Base import *
 from pymonntorch.NetworkCore.Behavior import Behavior
 from pymonntorch.NetworkCore.SynapseGroup import *
 
-SxD = 0
-DxS = 1
+SxD = False
+DxS = True
 
 
 class Network(NetworkObject):
@@ -20,7 +20,10 @@ class Network(NetworkObject):
         NeuronGroups (list): List of all NeuronGroups in the network.
         SynapseGroups (list): List of all SynapseGroups in the network.
         behavior (list or dict): List of all network-specific behaviors.
-        settings (dict): Dictionary of network-wide settings, e.g. `dtype`, `synapse_mode` and `device`.
+        def_dtype (type): Floating point precision of tensors. Defaults to `torch.float32`; can be changed via setttings with "dtype" key.
+        device (string): The device to allocate tensors' memory on. Defaults to `'cpu'`; can be changed via setttings with "device" key.
+        transposed_synapse_matrix_mode (bool): If `True`, in the matrix created by synapse, each row corresponds to a neuron from the source neuron group. Defaults to `False`; can be changed via settings with the "synapse_mode" key, which can have `DxS` and `SxD` as possible values.
+        index_neurons (bool): If True, the `id` attribute for neuron groups refers to neuron indices. Defaults to `True`; can be changed via setttings with "index" key.
     """
 
     def __init__(self, tag=None, behavior=None, settings=None):
@@ -29,7 +32,11 @@ class Network(NetworkObject):
         Args:
             tag (str): Tag to add to the network. It can also be a comma-separated string of multiple tags.
             behavior (list or dict): List or dictionary of behaviors. If a dictionary is used, the keys must be integers.
-            settings (dict): Dictionary of network-wide settings, e.g. `dtype`, `synapse_mode` and `device`.
+            settings (dict): Dictionary of network-wide settings, e.g. `dtype`, `synapse_mode`, `device` and `index`.
+                             `dtype`: Floating point precision of tensors. Defaults to `torch.float32`.
+                             `synapse_mode`: If `SxD`, rows of matrix created by a synapse referes to the source neuron group and columns referes to the Destination neurpn group. Possible values `DxS` and `SxD`.
+                             `device`: The device to allocate tensors' data on. Defaults to `'cpu'`.
+                             `index`: If True, create an indexing tensor as `id` attribute for each neuron group.
         """
         settings = settings if settings is not None else {}
         self.apply_settings(settings)
@@ -48,6 +55,7 @@ class Network(NetworkObject):
     def apply_settings(self, settings):
         self.device = settings.setdefault("device", "cpu")
         self.def_dtype = settings.setdefault("dtype", torch.float32)
+        self.index_neurons = settings.setdefault("index", True)
         self.transposed_synapse_matrix_mode = (
             settings.setdefault("synapse_mode", DxS) != DxS
         )
