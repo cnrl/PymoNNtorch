@@ -123,8 +123,9 @@ class Behavior(TaggableObject):
                     + key
                     + '" is spelled correctly and parameter('
                     + key
-                    + ",...) is called in initialize. Valid attributes are:"
-                    + str(self.used_attr_keys)
+                    + ",...) is called in initialize. Valid attributes are: "
+                    + ", ".join([f'"{param}"' for param in list(self.used_attr_keys)])
+                    + "."
                 )
 
     def parameter(
