@@ -365,10 +365,6 @@ class NeuronGroup(NetworkObject):
         """
         return var
 
-    @property
-    def def_dtype(self):
-        return self.network.def_dtype
-
 
 class NeuronSubGroup:
     def __init__(self, BaseNeuronGroup, mask):

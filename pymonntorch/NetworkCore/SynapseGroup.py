@@ -328,7 +328,3 @@ class SynapseGroup(NetworkObject):
                 setattr(result, key, copy.copy(sgd[key]))
 
         return result
-
-    @property
-    def def_dtype(self):
-        return self.network.def_dtype
