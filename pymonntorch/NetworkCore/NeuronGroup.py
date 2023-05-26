@@ -165,7 +165,7 @@ class NeuronGroup(NetworkObject):
             source_num += s
         return self.size, source_num
 
-    def __str__(self):
+    def __repr__(self):
         result = "NeuronGroup" + str(self.tags) + "(" + str(self.size) + "){"
         for k in sorted(list(self.behavior.keys())):
             result += str(k) + ":" + str(self.behavior[k])

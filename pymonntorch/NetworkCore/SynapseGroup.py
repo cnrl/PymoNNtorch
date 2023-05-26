@@ -67,7 +67,7 @@ class SynapseGroup(NetworkObject):
             for tag in self.tags + ["All"]:
                 self.src.efferent_synapses[tag].append(self)
 
-    def __str__(self):
+    def __repr__(self):
         result = "SynapseGroup" + str(self.tags)
         if self.network.transposed_synapse_matrix_mode:
             result = result + "(S" + str(self.src.size) + "xD" + str(self.dst.size)
