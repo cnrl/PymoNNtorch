@@ -61,9 +61,6 @@ class NeuronGroup(NetworkObject):
 
         self.mask = True
 
-        self.learning = True
-        self.recording = True
-
         if net.index_neurons:
             self.id = torch.arange(self.size, device=self.device)
 

@@ -44,6 +44,8 @@ class NetworkObject(TaggableObject):
 
         self.analysis_modules = []
 
+        self.recording = True
+
     def add_behavior(self, key, behavior, initialize=True):
         """Add a single behavior to the network object.
 

@@ -45,8 +45,6 @@ class SynapseGroup(NetworkObject):
             net.SynapseGroups.append(self)
             setattr(net, self.tags[0], self)
 
-        self.recording = True
-
         self.src = src
         self.dst = dst
         self.enabled = True
