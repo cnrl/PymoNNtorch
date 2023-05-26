@@ -83,7 +83,7 @@ class NeuronGroup(NetworkObject):
 
     @property
     def def_dtype(self):
-        self.network.def_dtype
+        return self.network.def_dtype
 
     @property
     def iteration(self):
