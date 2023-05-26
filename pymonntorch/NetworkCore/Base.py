@@ -57,7 +57,7 @@ class NetworkObject(TaggableObject):
         Returns:
             Behavior: The behavior.
         """
-        if not key in self.behavior:
+        if key not in self.behavior:
             self.behavior[key] = behavior
             self.network._add_behavior_to_sorted_execution_list(
                 key, self, self.behavior[key]

@@ -113,7 +113,7 @@ class Behavior(TaggableObject):
     def check_unused_attrs(self):
         """Checks whether all attributes have been used in the `initialize` method."""
         for key in self.init_kwargs:
-            if not key in self.used_attr_keys:
+            if key not in self.used_attr_keys:
                 print(
                     'Warning: "'
                     + key
@@ -149,7 +149,7 @@ class Behavior(TaggableObject):
         Returns:
             any: The value of the attribute.
         """
-        if required and not key in self.init_kwargs:
+        if required and key not in self.init_kwargs:
             print(
                 "Warning:",
                 key,
