@@ -92,14 +92,6 @@ class SynapseGroup(NetworkObject):
         setattr(self, key, value)
         return self
 
-    @property
-    def def_dtype(self):
-        return self.network.def_dtype
-
-    @property
-    def iteration(self):
-        return self.network.iteration
-
     def matrix_dim(self):
         """Returns the dimension of the synapse matrix.
 

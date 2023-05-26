@@ -81,14 +81,6 @@ class NeuronGroup(NetworkObject):
         if mode in ["efferent", "axon", "post", "postSynaptic", 1]:
             return self.efferent_synapses[tag]
 
-    @property
-    def def_dtype(self):
-        return self.network.def_dtype
-
-    @property
-    def iteration(self):
-        return self.network.iteration
-
     def require_synapses(self, name, afferent=True, efferent=True, warning=True):
         """Require the existence of synapses.
 

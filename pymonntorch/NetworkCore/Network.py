@@ -54,7 +54,7 @@ class Network(NetworkObject):
 
     def apply_settings(self, settings):
         self.device = settings.setdefault("device", "cpu")
-        self.def_dtype = settings.setdefault("dtype", torch.float32)
+        self._def_dtype = settings.setdefault("dtype", torch.float32)
         self.index_neurons = settings.setdefault("index", True)
         self.transposed_synapse_matrix_mode = (
             settings.setdefault("synapse_mode", DxS) != DxS

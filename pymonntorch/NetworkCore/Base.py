@@ -290,14 +290,22 @@ class NetworkObject(TaggableObject):
     @property
     def iteration(self):
         """int: iteration number or time step."""
-        return self._iteration
+        return self.network._iteration
 
     @iteration.setter
     def iteration(self, iteration):
         if iteration >= 0 and type(iteration) is int:
-            self._iteration = iteration
+            self.network._iteration = iteration
         else:
             print(
                 "WARNING: Attempting to set an invalid value for iteration!\n Setting iteration to zero..."
             )
-            self._iteration = 0
+            self.network._iteration = 0
+
+    @property
+    def def_dtype(self):
+        return self.network._def_dtype
+
+    @def_dtype.setter
+    def def_dtype(self, dtype):
+        self.network._def_dtype = dtype
