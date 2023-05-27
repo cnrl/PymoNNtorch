@@ -134,7 +134,7 @@ latex_elements = {
 latex_documents = [
     (master_doc, 'pymonntorch.tex',
      'PymoNNtorch Documentation',
-     'Ashena Gorgan Mohammadi', 'manual'),
+     'CNRL', 'manual'),
 ]
 
 
