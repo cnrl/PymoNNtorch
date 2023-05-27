@@ -55,7 +55,7 @@ class Behavior(TaggableObject):
         """
         pass
 
-    def __str__(self):
+    def __repr__(self):
         result = self.__class__.__name__ + "("
         for k in self.init_kwargs:
             result += str(k) + "=" + str(self.init_kwargs[k]) + ","
@@ -113,7 +113,7 @@ class Behavior(TaggableObject):
     def check_unused_attrs(self):
         """Checks whether all attributes have been used in the `initialize` method."""
         for key in self.init_kwargs:
-            if not key in self.used_attr_keys:
+            if key not in self.used_attr_keys:
                 print(
                     'Warning: "'
                     + key
@@ -123,8 +123,9 @@ class Behavior(TaggableObject):
                     + key
                     + '" is spelled correctly and parameter('
                     + key
-                    + ",...) is called in initialize. Valid attributes are:"
-                    + str(self.used_attr_keys)
+                    + ",...) is called in initialize. Valid attributes are: "
+                    + ", ".join([f'"{param}"' for param in list(self.used_attr_keys)])
+                    + "."
                 )
 
     def parameter(
@@ -149,7 +150,7 @@ class Behavior(TaggableObject):
         Returns:
             any: The value of the attribute.
         """
-        if required and not key in self.init_kwargs:
+        if required and key not in self.init_kwargs:
             print(
                 "Warning:",
                 key,

@@ -61,10 +61,8 @@ class NeuronGroup(NetworkObject):
 
         self.mask = True
 
-        self.learning = True
-        self.recording = True
-
-        self.id = torch.arange(self.size, device=self.device)
+        if net.index_neurons:
+            self.id = torch.arange(self.size, device=self.device)
 
     def synapses(self, mode, tag="All"):
         """Get synapses connected to the NeuronGroup.
@@ -82,14 +80,6 @@ class NeuronGroup(NetworkObject):
             return self.afferent_synapses[tag]
         if mode in ["efferent", "axon", "post", "postSynaptic", 1]:
             return self.efferent_synapses[tag]
-
-    @property
-    def def_dtype(self):
-        self.network.def_dtype
-
-    @property
-    def iteration(self):
-        return self.network.iteration
 
     def require_synapses(self, name, afferent=True, efferent=True, warning=True):
         """Require the existence of synapses.
@@ -167,7 +157,7 @@ class NeuronGroup(NetworkObject):
             source_num += s
         return self.size, source_num
 
-    def __str__(self):
+    def __repr__(self):
         result = "NeuronGroup" + str(self.tags) + "(" + str(self.size) + "){"
         for k in sorted(list(self.behavior.keys())):
             result += str(k) + ":" + str(self.behavior[k])
@@ -366,10 +356,6 @@ class NeuronGroup(NetworkObject):
             torch.Tensor: The masked variable.
         """
         return var
-
-    @property
-    def def_dtype(self):
-        return self.network.def_dtype
 
 
 class NeuronSubGroup:

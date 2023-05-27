@@ -44,6 +44,8 @@ class NetworkObject(TaggableObject):
 
         self.analysis_modules = []
 
+        self.recording = True
+
     def add_behavior(self, key, behavior, initialize=True):
         """Add a single behavior to the network object.
 
@@ -55,7 +57,7 @@ class NetworkObject(TaggableObject):
         Returns:
             Behavior: The behavior.
         """
-        if not key in self.behavior:
+        if key not in self.behavior:
             self.behavior[key] = behavior
             self.network._add_behavior_to_sorted_execution_list(
                 key, self, self.behavior[key]
@@ -288,14 +290,22 @@ class NetworkObject(TaggableObject):
     @property
     def iteration(self):
         """int: iteration number or time step."""
-        return self._iteration
+        return self.network._iteration
 
     @iteration.setter
     def iteration(self, iteration):
         if iteration >= 0 and type(iteration) is int:
-            self._iteration = iteration
+            self.network._iteration = iteration
         else:
             print(
                 "WARNING: Attempting to set an invalid value for iteration!\n Setting iteration to zero..."
             )
-            self._iteration = 0
+            self.network._iteration = 0
+
+    @property
+    def def_dtype(self):
+        return self.network._def_dtype
+
+    @def_dtype.setter
+    def def_dtype(self, dtype):
+        self.network._def_dtype = dtype

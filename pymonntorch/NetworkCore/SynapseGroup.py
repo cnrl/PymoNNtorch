@@ -45,8 +45,6 @@ class SynapseGroup(NetworkObject):
             net.SynapseGroups.append(self)
             setattr(net, self.tags[0], self)
 
-        self.recording = True
-
         self.src = src
         self.dst = dst
         self.enabled = True
@@ -93,14 +91,6 @@ class SynapseGroup(NetworkObject):
         """
         setattr(self, key, value)
         return self
-
-    @property
-    def def_dtype(self):
-        return self.network.def_dtype
-
-    @property
-    def iteration(self):
-        return self.network.iteration
 
     def matrix_dim(self):
         """Returns the dimension of the synapse matrix.
@@ -330,7 +320,3 @@ class SynapseGroup(NetworkObject):
                 setattr(result, key, copy.copy(sgd[key]))
 
         return result
-
-    @property
-    def def_dtype(self):
-        return self.network.def_dtype
