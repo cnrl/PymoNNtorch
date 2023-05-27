@@ -6,8 +6,8 @@ PymoNNtorch
 .. image:: https://img.shields.io/pypi/v/pymonntorch.svg
         :target: https://pypi.python.org/pypi/pymonntorch
 
-.. image:: https://img.shields.io/travis/cnrl/pymonntorch.svg
-        :target: https://travis-ci.com/cnrl/pymonntorch
+.. .. image:: https://img.shields.io/travis/cnrl/pymonntorch.svg
+..         :target: https://travis-ci.com/cnrl/pymonntorch
 
 .. image:: https://readthedocs.org/projects/pymonntorch/badge/?version=latest
         :target: https://pymonntorch.readthedocs.io/en/latest/?version=latest
@@ -108,3 +108,6 @@ It changes the codebase of `PymoNNto <https://github.com/trieschlab/PymoNNto>`_ 
 
 .. _Cookiecutter: https://github.com/audreyr/cookiecutter
 .. _`audreyr/cookiecutter-pypackage`: https://github.com/audreyr/cookiecutter-pypackage
+
+
+.. include:: HISTORY.rst
