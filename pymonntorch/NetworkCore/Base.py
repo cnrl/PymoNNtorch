@@ -228,8 +228,9 @@ class NetworkObject(TaggableObject):
         Returns:
             torch.Tensor: The initialized tensor."""
 
-        compile_key = f"{mode}|{str(dtype)}|{str(dim)}"
-        if compile_key not in self._mat_eval_dict:
+        dtype = self.def_dtype if dtype is None else dtype
+
+        if mode not in self._mat_eval_dict:
             prefix = "torch."
             ev_str = mode
 
@@ -248,18 +249,16 @@ class NetworkObject(TaggableObject):
             if "(" not in ev_str and ")" not in ev_str:
                 ev_str += "()"
 
-            dtype = f"{dtype}" if dtype is not None else f"{self.def_dtype}"
-
-            a1 = f"size=dim,device='{self.device}',dtype={dtype})"
+            a1 = "size=dim,device=self.device,dtype=dtype)"
 
             # check for positional argument
             if ev_str[ev_str.index("(") + 1 : ev_str.index(")")].strip():
                 a1 = "," + a1
 
             ev_str = ev_str.replace(")", a1)
-            self._mat_eval_dict[compile_key] = compile(ev_str, "<string>", "eval")
+            self._mat_eval_dict[mode] = compile(ev_str, "<string>", "eval")
 
-        result = eval(self._mat_eval_dict[compile_key])
+        result = eval(self._mat_eval_dict[mode])
 
         if density is not None:
             if type(density) == int or type(density) == float:
