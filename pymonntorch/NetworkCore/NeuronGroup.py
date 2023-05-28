@@ -122,7 +122,7 @@ class NeuronGroup(NetworkObject):
             torch.Tensor: The initialized tensor."""
         return self._get_mat(
             mode=mode,
-            dim=(self.size),
+            dim=(self.size,),
             scale=scale,
             density=density,
             plot=plot,
