@@ -1,3 +1,4 @@
+import numbers
 import torch
 
 from pymonntorch.NetworkCore.Base import TaggableObject
@@ -135,6 +136,7 @@ class Behavior(TaggableObject):
         object=None,
         do_not_diversify=False,
         search_other_behaviors=False,
+        tensor=False,
         required=False,
     ):
         """Gets the value of an attribute.
@@ -145,6 +147,7 @@ class Behavior(TaggableObject):
             object (NetworkObject): The object possessing the behavior.
             do_not_diversify (bool): Whether to diversify the attribute. The default is False.
             search_other_behaviors (bool): Whether to search for the attribute in other behaviors of the object. The default is False.
+            tensor (bool): Whether to make a tensor out of value. Suitable for list and numbers.
             required (bool): Whether the attribute is required. The default is False.
 
         Returns:
@@ -179,6 +182,17 @@ class Behavior(TaggableObject):
                 result = str(float(result.replace("%", "")) / 100.0)
 
             result = type(default)(result)
+
+        if tensor:
+            if object is None:
+                raise RuntimeError(
+                    f'To turn parameter value of key "{key}" to a tensor, object should not be None.'
+                )
+            if isinstance(result, numbers.Number):
+                result = [result]
+            result = torch.tensor(result, device=object.device)
+            if result.is_floating_point():
+                result = result.to(dtype=object.def_dtype)
 
         return result
 

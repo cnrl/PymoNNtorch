@@ -211,7 +211,7 @@ class NetworkObject(TaggableObject):
 
         The tensor can be initialized in different modes. List of possible values for mode includes:
         - "random" or "rand" or "rnd" or "uniform": Uniformly distributed random numbers in range [0, 1).
-        - "normal": Normally distributed random numbers with zero mean and unit variance.
+        - "normal(mean=a, std=b)": Normally distributed random numbers with `a` as mean and `b` as standard derivation.
         - "ones": Tensor filled with ones.
         - "zeros": Tensor filled with zeros.
         - A single number: Tensor filled with that number.
@@ -227,26 +227,35 @@ class NetworkObject(TaggableObject):
 
         Returns:
             torch.Tensor: The initialized tensor."""
+
+        dtype = self.def_dtype if dtype is None else dtype
+
         if mode not in self._mat_eval_dict:
             prefix = "torch."
+            ev_str = mode
 
-            if mode == "random" or mode == "rand" or mode == "rnd" or mode == "uniform":
-                mode = "rand"
+            if (
+                ev_str == "random"
+                or ev_str == "rand"
+                or ev_str == "rnd"
+                or ev_str == "uniform"
+            ):
+                ev_str = "rand"
 
-            if type(mode) == int or type(mode) == float:
-                mode = "ones()*" + str(mode)
+            if type(ev_str) == int or type(ev_str) == float:
+                ev_str = "ones()*" + str(ev_str)
 
-            mode = prefix + mode
-            if "(" not in mode and ")" not in mode:
-                mode += "()"
+            ev_str = prefix + ev_str
+            if "(" not in ev_str and ")" not in ev_str:
+                ev_str += "()"
 
-            if dtype is not None:
-                mode = mode.replace(")", f",dtype={dtype})")
-            else:
-                mode = mode.replace(")", f",dtype={self.def_dtype})")
+            a1 = "size=dim,device=self.device,dtype=dtype)"
 
-            a1 = "dim,device=" + f"'{self.device}'"
-            ev_str = mode.replace("(", "(" + a1)
+            # check for positional argument
+            if ev_str[ev_str.index("(") + 1 : ev_str.index(")")].strip():
+                a1 = "," + a1
+
+            ev_str = ev_str.replace(")", a1)
             self._mat_eval_dict[mode] = compile(ev_str, "<string>", "eval")
 
         result = eval(self._mat_eval_dict[mode])
