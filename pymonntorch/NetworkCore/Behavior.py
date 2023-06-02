@@ -1,4 +1,3 @@
-import numbers
 import torch
 
 from pymonntorch.NetworkCore.Base import TaggableObject
@@ -188,8 +187,6 @@ class Behavior(TaggableObject):
                 raise RuntimeError(
                     f'To turn parameter value of key "{key}" to a tensor, object should not be None.'
                 )
-            if isinstance(result, numbers.Number):
-                result = [result]
             result = torch.tensor(result, device=object.device)
             if result.is_floating_point():
                 result = result.to(dtype=object.def_dtype)
