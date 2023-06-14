@@ -279,6 +279,30 @@ class NetworkObject(TaggableObject):
 
         return result
 
+    def tensor(self, mode, dim, scale=None, density=None, dtype=None):
+        """Get a tensor with desired dimensionality.
+
+        The tensor can be initialized in different modes. List of possible values for mode includes:
+        - "random" or "rand" or "rnd" or "uniform": Uniformly distributed random numbers in range [0, 1).
+        - "normal(mean=a, std=b)": Normally distributed random numbers with `a` as mean and `b` as standard derivation.
+        - "ones": Tensor filled with ones.
+        - "zeros": Tensor filled with zeros.
+        - A single number: Tensor filled with that number.
+        - You can also use any function from torch package for this purpose.
+
+        Args:
+            mode (str): Mode to be used to initialize tensor.
+            dim (int or tuple of int): Dimensionality of the tensor.
+            scale (float): Scale of the tensor. The default is None (i.e. No scaling is applied).
+            density (float): Density of the tensor. The default is None (i.e. dense tensor).
+            dtype (str or type): Data type of the tensor. If None, `def_dtype` will be used.
+
+        Returns:
+            torch.Tensor: The initialized tensor."""
+        return self._get_mat(
+            mode=mode, dim=dim, scale=scale, density=density, dtype=dtype
+        )
+
     def get_buffer_mat(self, dim, size, **kwargs):
         """Get a buffer of specific size with object's dimensionality.
 
