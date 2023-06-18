@@ -2,8 +2,10 @@
 PymoNNtorch
 ===========
 
-.. image:: docs/_images/pymoNNtorch-logo-t-256.png
+.. image:: https://github.com/cnrl/PymoNNtorch/blob/main/docs/_images/pymoNNtorch-logo-t-256.png
     :width: 256
+
+
 
 
 .. image:: https://img.shields.io/pypi/v/pymonntorch.svg
