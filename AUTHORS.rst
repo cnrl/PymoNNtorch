@@ -2,6 +2,11 @@
 Credits
 =======
 
+Project Lead
+------------
+
+* Mohammad Ganjtabesh
+
 Development Lead
 ----------------
 
