@@ -2,13 +2,13 @@
 Credits
 =======
 
-Project Lead
-------------
+Project Leader
+--------------
 
-* Mohammad Ganjtabesh
+* Mohammad Ganjtabesh (Director of `CNRL <https://cnrl.ut.ac.ir>`_) <mgtabesh@ut.ac.ir>
 
-Development Lead
-----------------
+Development Leader
+------------------
 
 * Ashena Gorgan Mohammadi <ashenatena@gmail.com>
 
