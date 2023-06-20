@@ -94,7 +94,11 @@ html_theme_options = {
     "show_nav_level": 2,
     "show_toc_level": 2,
     "collapse_navigation": False,
+    "logo_only": False,
 }
+
+
+html_logo = "https://raw.githubusercontent.com/cnrl/PymoNNtorch/main/docs/_images/pymoNNtorch-logo-t-256.png"
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
