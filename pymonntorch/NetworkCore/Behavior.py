@@ -182,7 +182,7 @@ class Behavior(TaggableObject):
 
             result = type(default)(result)
 
-        if tensor:
+        if tensor and result is not None:
             if object is None:
                 raise RuntimeError(
                     f'To turn parameter value of key "{key}" to a tensor, object should not be None.'
