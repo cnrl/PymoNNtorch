@@ -4,6 +4,9 @@ from sympy.physics.units import convert_to, second, seconds
 
 
 class Clock(Behavior):
+    def __init__(self, *args, step="1*ms", **kwargs):
+        super().__init__(*args, step=step, **kwargs)
+
     def initialize(self, neuron_or_network):
         super().initialize(neuron_or_network)
 

@@ -35,6 +35,26 @@ class Recorder(Behavior):
     initialize_last = True
     visualization_module_outputs = []
 
+    def __init__(
+        self,
+        *args,
+        variables=None,
+        gap_width=0,
+        max_length=None,
+        auto_annotate=True,
+        tag=None,
+        **kwargs,
+    ):
+        super().__init__(
+            *args,
+            variables=variables,
+            gap_width=gap_width,
+            max_length=max_length,
+            auto_annotate=auto_annotate,
+            tag=tag,
+            **kwargs,
+        )
+
     def initialize(self, object):
         super().initialize(object)
 

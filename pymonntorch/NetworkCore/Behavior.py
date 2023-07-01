@@ -163,6 +163,7 @@ class Behavior(TaggableObject):
         self.used_attr_keys.append(key)
 
         result = self.init_kwargs.get(key, default)
+        result = default if result is None else result
 
         if (
             key not in self.init_kwargs

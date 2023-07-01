@@ -108,6 +108,18 @@ class NeuronDimension(Behavior):
 
     initialize_on_init = True
 
+    def __init__(
+        self, *args, depth=1, height=1, width=1, input_patterns=None, **kwargs
+    ):
+        super().__init__(
+            *args,
+            depth=depth,
+            height=height,
+            width=width,
+            input_patterns=input_patterns,
+            **kwargs,
+        )
+
     def set_position(self, width, height, depth):
         """Set the coordinate of neurons by setting vectors `x`, `y`, and `z`.
 
