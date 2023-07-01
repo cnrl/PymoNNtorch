@@ -152,11 +152,11 @@ class Behavior(TaggableObject):
         Returns:
             any: The value of the attribute.
         """
-        if required and key not in self.init_kwargs:
+        if required and self.init_kwargs.get(key, None) is None:
             print(
                 "Warning:",
                 key,
-                "has to be specified for the behavior to run properly.",
+                "has to be specified for the behavior with a non None value to run properly.",
                 self,
             )
 
