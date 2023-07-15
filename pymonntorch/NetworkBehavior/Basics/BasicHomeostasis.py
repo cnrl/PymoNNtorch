@@ -5,6 +5,44 @@ from pymonntorch.utils import check_is_torch_tensor
 
 
 class InstantHomeostasis(Behavior):
+    def __init__(
+        self,
+        *args,
+        min_th=None,
+        max_th=None,
+        threshold=None,
+        gap_percent=None,
+        distance_sensitive=True,
+        inc=1.0,
+        dec=1.0,
+        adj_strength=1.0,
+        adjustment_param=None,
+        measurement_param=None,
+        measurement_min=None,
+        measurement_max=None,
+        target_clip_min=None,
+        target_clip_max=None,
+        **kwargs
+    ):
+        super().__init__(
+            *args,
+            min_th=min_th,
+            max_th=max_th,
+            threshold=threshold,
+            gap_percent=gap_percent,
+            distance_sensitive=distance_sensitive,
+            inc=inc,
+            dec=dec,
+            adj_strength=adj_strength,
+            adjustment_param=adjustment_param,
+            measurement_param=measurement_param,
+            measurement_min=measurement_min,
+            measurement_max=measurement_max,
+            target_clip_min=target_clip_min,
+            target_clip_max=target_clip_max,
+            **kwargs
+        )
+
     def set_threshold_boundaries(self, th, gap_percent):
         self.th = th
 
@@ -148,6 +186,48 @@ class InstantHomeostasis(Behavior):
 
 
 class TimeIntegratedHomeostasis(InstantHomeostasis):
+    def __init__(
+        self,
+        *args,
+        min_th=None,
+        max_th=None,
+        threshold=None,
+        gap_percent=None,
+        distance_sensitive=True,
+        inc=1.0,
+        dec=1.0,
+        adj_strength=1.0,
+        adjustment_param=None,
+        measurement_param=None,
+        measurement_min=None,
+        measurement_max=None,
+        target_clip_min=None,
+        target_clip_max=None,
+        integration_length=1,
+        init_avg=None,
+        **kwargs
+    ):
+        super().__init__(
+            *args,
+            min_th=min_th,
+            max_th=max_th,
+            threshold=threshold,
+            gap_percent=gap_percent,
+            distance_sensitive=distance_sensitive,
+            inc=inc,
+            dec=dec,
+            adj_strength=adj_strength,
+            adjustment_param=adjustment_param,
+            measurement_param=measurement_param,
+            measurement_min=measurement_min,
+            measurement_max=measurement_max,
+            target_clip_min=target_clip_min,
+            target_clip_max=target_clip_max,
+            integration_length=integration_length,
+            init_avg=init_avg,
+            **kwargs
+        )
+
     def get_measurement_param(self, object):
         val = super().get_measurement_param(object)
 

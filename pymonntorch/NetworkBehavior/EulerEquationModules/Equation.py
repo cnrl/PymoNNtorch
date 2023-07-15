@@ -8,6 +8,9 @@ import torch
 
 
 class Equation(Behavior):
+    def __init__(self, *args, eq=None, step_size="1*ms", **kwargs):
+        super().__init__(*args, eq=eq, step_size=step_size, **kwargs)
+
     def initialize(self, neurons):
         super().initialize(neurons)
         n = neurons

@@ -6,6 +6,9 @@ from pymonntorch.NetworkBehavior.EulerEquationModules.Helper import (
 
 
 class Variable(Behavior):
+    def __init__(self, *args, eq=None, **kwargs):
+        super().__init__(*args, eq=eq, **kwargs)
+
     def initialize(self, neurons):
         super().initialize(neurons)
 
@@ -35,6 +38,9 @@ class Variable(Behavior):
 
 
 class SynapseVariable(Behavior):
+    def __init__(self, *args, eq=None, **kwargs):
+        super().__init__(*args, eq=eq, **kwargs)
+
     def initialize(self, synapse):
         s = synapse
 

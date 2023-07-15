@@ -5,6 +5,11 @@ from pymonntorch.utils import check_is_torch_tensor
 
 
 class SynapticNormalization(Behavior):
+    def __init__(self, *args, synapse_type="glutamate", norm_factor=1.0, **kwargs):
+        super().__init__(
+            *args, synapse_type=synapse_type, norm_factor=norm_factor, **kwargs
+        )
+
     def initialize(self, neurons):
         super().initialize(neurons)
 
