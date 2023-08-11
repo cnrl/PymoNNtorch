@@ -58,9 +58,11 @@ class Recorder(Behavior):
     def initialize(self, object):
         super().initialize(object)
 
-        variables = self.parameter("variables", [])
-        if variables == []:
-            variables = self.parameter("arg_0", [])
+        variables = self.parameter("variables", None)
+        if variables is None:
+            variables = self.parameter("arg_0", None)
+            if variables is None:
+                variables = []
         if isinstance(variables, str):
             variables = [variables]
 
