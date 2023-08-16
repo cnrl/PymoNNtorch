@@ -54,6 +54,7 @@ class Recorder(Behavior):
             tag=tag,
             **kwargs,
         )
+        self.variables = {}
 
     def initialize(self, object):
         super().initialize(object)
@@ -71,7 +72,6 @@ class Recorder(Behavior):
         self.auto_annotate = self.parameter("auto_annotate", True)
         self.counter = 0
         self.new_data_available = False
-        self.variables = {}
         self.compiled = {}
 
         self.add_variables(variables)

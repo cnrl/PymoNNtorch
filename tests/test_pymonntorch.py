@@ -106,7 +106,7 @@ def test_network_cuda_annotated():
                     synapse.W @ synapse.src.spike.float() / synapse.src.size * 10
                 )
 
-    net = Network(settings={"device": "cuda"})
+    net = Network(device="cuda")
     ng = NeuronGroup(
         net=net,
         size=100,

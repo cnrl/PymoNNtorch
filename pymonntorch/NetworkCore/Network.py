@@ -6,9 +6,6 @@ from pymonntorch.NetworkCore.Base import *
 from pymonntorch.NetworkCore.Behavior import Behavior
 from pymonntorch.NetworkCore.SynapseGroup import *
 
-SxD = False
-DxS = True
-
 
 class Network(NetworkObject):
     """This is the class to construct a neural network.
@@ -20,26 +17,41 @@ class Network(NetworkObject):
         NeuronGroups (list): List of all NeuronGroups in the network.
         SynapseGroups (list): List of all SynapseGroups in the network.
         behavior (list or dict): List of all network-specific behaviors.
-        def_dtype (type): Floating point precision of tensors. Defaults to `torch.float32`; can be changed via setttings with "dtype" key.
-        device (string): The device to allocate tensors' memory on. Defaults to `'cpu'`; can be changed via setttings with "device" key.
-        transposed_synapse_matrix_mode (bool): If `True`, in the matrix created by synapse, each row corresponds to a neuron from the source neuron group. Defaults to `False`; can be changed via settings with the "synapse_mode" key, which can have `DxS` and `SxD` as possible values.
-        index_neurons (bool): If True, the `id` attribute for neuron groups refers to neuron indices. Defaults to `True`; can be changed via setttings with "index" key.
+        def_dtype (type): Floating point precision of tensors. Defaults to `torch.float32`.
+        device (string): The device to allocate tensors on. Defaults to `'cpu'`.
+        transposed_synapse_matrix_mode (bool): If `True`, in the matrix created by synapse, each row corresponds to a neuron from the source neuron group. Defaults to `False`.
+        index_neurons (bool): If True, the `id` attribute for neuron groups refers to neuron indices. Defaults to `True`.
     """
 
-    def __init__(self, tag=None, behavior=None, settings=None):
+    def __init__(
+        self,
+        tag=None,
+        behavior=None,
+        dtype=torch.float32,
+        device="cpu",
+        synapse_mode="SxD",
+        index=True,
+    ):
         """Initialize the network.
 
         Args:
             tag (str): Tag to add to the network. It can also be a comma-separated string of multiple tags.
             behavior (list or dict): List or dictionary of behaviors. If a dictionary is used, the keys must be integers.
-            settings (dict): Dictionary of network-wide settings, e.g. `dtype`, `synapse_mode`, `device` and `index`.
-                             `dtype`: Floating point precision of tensors. Defaults to `torch.float32`.
-                             `synapse_mode`: If `SxD`, rows of matrix created by a synapse referes to the source neuron group and columns referes to the Destination neurpn group. Possible values `DxS` and `SxD`.
-                             `device`: The device to allocate tensors' data on. Defaults to `'cpu'`.
-                             `index`: If True, create an indexing tensor as `id` attribute for each neuron group.
+            dtype (torch.dtype): Floating point precision of tensors.
+            synapse_mode (string): If `SxD`, rows of matrix created by a synapse referes to the source neuron group and columns referes to the Destination neurpn group. Possible values `DxS` and `SxD`.
+            device (string): The device to allocate tensors' data on. Defaults to `'cpu'`.
+            index (bool): If True, create an indexing tensor as `id` attribute for each neuron group.
         """
-        settings = settings if settings is not None else {}
-        self.apply_settings(settings)
+        self.device = device
+        self._def_dtype = dtype
+        self.index_neurons = index
+        if synapse_mode not in ["SxD", "DxS"]:
+            print(
+                f"""warning: synapse_mode should be either "SxD" or "DxS". using "DxS"."""
+            )
+        self.transposed_synapse_matrix_mode = (
+            False if synapse_mode == "DxS" else synapse_mode == "SxD"
+        )
 
         self.NeuronGroups = []
         self.SynapseGroups = []
@@ -51,14 +63,6 @@ class Network(NetworkObject):
         )  # stores (key, beh_parent, behavior) triplets
 
         super().__init__(tag, self, behavior, device=self.device)
-
-    def apply_settings(self, settings):
-        self.device = settings.setdefault("device", "cpu")
-        self._def_dtype = settings.setdefault("dtype", torch.float32)
-        self.index_neurons = settings.setdefault("index", True)
-        self.transposed_synapse_matrix_mode = (
-            settings.setdefault("synapse_mode", DxS) != DxS
-        )
 
     def set_behaviors(self, tag, enabled):
         """Set behaviors of specific tag to be enabled or disabled.

@@ -12,7 +12,7 @@ Just like ``PymoNNto``, each ``Network`` in ``PymoNNtorch`` is composed of ``Neu
     ng = NeuronGroup(net=net, size=1000, behavior={})
     syn = SynapseGroup(net=net, src=ng, dst=ng, tag='GLUTAMATE')
 
-So far, ``ng`` has been added to network ``net`` and synaptic connection has been defined to connect ``ng`` to itself, i.e. both afferent and efferent synapses of ``ng`` are ``syn``. By default, each network and its components are created on CPU and the data type of any tensor inside the objects is set to ``torch.float32``. Pass an argument ``settings`` to the ``Network`` to change these default setups. ``settings`` is a dictionary with keys ``device`` and ``dtype`` which indicate the device and data type of everything within the network, respectively.
+So far, ``ng`` has been added to network ``net`` and synaptic connection has been defined to connect ``ng`` to itself, i.e. both afferent and efferent synapses of ``ng`` are ``syn``. By default, each network and its components are created on CPU and the data type of any tensor inside the objects is set to ``torch.float32``. To change these settings on creation, simply, fill the arguments of the network with your desired device and dtype.
 
 To have a functioning network, we can write ``Behavior`` (s) for different network objects to define dynamics and attributes for them. To do so, we can proceed as follows: ::
 
@@ -29,7 +29,7 @@ To have a functioning network, we can write ``Behavior`` (s) for different netwo
             firing = neurons.voltage >= self.threshold
             neurons.spike = firing.byte()
             neurons.voltage[firing] = 0.0 # reset
-            
+
             neurons.voltage *= 0.9 # voltage decay
             neurons.voltage += neurons.vector(mode="uniform", density=0.1)
 
@@ -52,7 +52,7 @@ Note that each behavior is given an index upon being assigned to a network objec
                 neurons.voltage += synapse.W@synapse.src.spike.float() / synapse.src.size * 10
 
 Now, assume we have defined ``ng`` by::
-    
+
     ng = NeuronGroup(net=net,
                      size=1000,
                      behavior={
@@ -74,11 +74,11 @@ In most simulations, we need to keep track of variables through time. To do so, 
 
     net = Network()
     ng = NeuronGroup(net=net,
-                    size=1000, 
+                    size=1000,
                     behavior={
                         1: BasicBehavior(),
                         2: InputBehavior(),
-                        9: Recorder(['voltage', 'mean(voltage)']),
+                        9: Recorder(['voltage', 'torch.mean(voltage)']),
                         10: EventRecorder(['spike'])
                     })
     SynapseGroup(ng, ng, net, tag='GLUTAMATE')
