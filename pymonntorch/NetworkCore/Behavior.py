@@ -131,7 +131,7 @@ class Behavior(TaggableObject):
     def parameter(
         self,
         key,
-        default,
+        default=None,
         object=None,
         do_not_diversify=False,
         search_other_behaviors=False,
