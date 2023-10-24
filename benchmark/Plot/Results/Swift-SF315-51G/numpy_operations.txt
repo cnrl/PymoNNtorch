@@ -1,0 +1,28 @@
+Initialization...
+
+Synapse Operation...
+  W1.dot(s): 29.056288480758667 ms
+  np.sum(W1[:, s], axis=1): 6.352580785751343 ms 4.57393450956674 x ratio
+  W2.T.dot(s): 29.328654527664185 ms 0.990713312584844 x ratio
+  np.sum(W2[s], axis=0): 0.5672938823699951 ms 51.21911126446424 x ratio
+
+STDP...
+  W1 += d[:, None] * s[None, :]: 65.17059278488159 ms
+  W1[d[:, None] * s[None, :]] += 1: 41.54950761795044 ms 1.568504574930901 x ratio
+  W1[np.ix_(d, s)] += 1: 0.0778799057006836 ms 836.808830192376 x ratio
+  W2 += s[:, None] * d[None, :]: 113.40348815917969 ms
+  W2[s[:, None] * d[None, :]] += 1: 83.35632538795471 ms 1.3604664988695254 x ratio
+  W2[np.ix_(s, d)] += 1: 0.07498407363891602 ms 1512.36766230215 x ratio
+
+Reset operation...
+  voltage = voltage * 0.0: 0.002754652500152588 ms
+  voltage = np.zeros(5000, dtype=dtype): 0.0012801361083984374 ms 2.151843450146016 x ratio
+  voltage.fill(0): 0.001611979007720947 ms 1.708863755023199 x ratio
+
+Datatypes...
+  float64: 0.6118819713592529 ms
+  float32: 0.18270540237426758 ms 3.3490086412761215 x ratio
+/home/saeed/anaconda3/envs/wnestml/lib/python3.11/site-packages/numpy/core/fromnumeric.py:88: RuntimeWarning: overflow encountered in reduce
+  return ufunc.reduce(obj, axis, dtype, out, **passkwargs)
+  float16: 3.877153158187866 ms 0.15781733307776757 x ratio
+

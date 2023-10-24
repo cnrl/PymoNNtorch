@@ -1,0 +1,26 @@
+Initialization...
+
+Synapse Operation...
+  W1.dot(s): 28.728623628616333 ms
+  np.sum(W1[:, s], axis=1): 7.292013883590698 ms 3.9397379225051505 x ratio
+  W2.T.dot(s): 29.517022371292114 ms 0.9732900313331548 x ratio
+  np.sum(W2[s], axis=0): 0.24581956863403318 ms 116.86874152556348 x ratio
+
+STDP...
+  W1 += d[:, None] * s[None, :]: 190.00608563423157 ms
+  W1[d[:, None] * s[None, :]] += 1: 107.68864870071411 ms 1.7644021716930653 x ratio
+  W1[np.ix_(d, s)] += 1: 0.17751264572143555 ms 1070.3805628157982 x ratio
+  W2 += s[:, None] * d[None, :]: 195.76051211357117 ms
+  W2[s[:, None] * d[None, :]] += 1: 104.63068795204163 ms 1.8709665007965892 x ratio
+  W2[np.ix_(s, d)] += 1: 0.15137124061584473 ms 1293.247722071454 x ratio
+
+Reset operation...
+  voltage = voltage * 0.0: 0.004859132766723633 ms
+  voltage = torch.zeros(5000, dtype=dtype): 0.003850061893463135 ms 1.2620921172653765 x ratio
+  voltage.fill(0): 0.002020423412322998 ms 2.405007156958652 x ratio
+
+Datatypes...
+  float64: 0.22604584693908691 ms
+  float32: 0.17580652236938477 ms 1.2857648504311174 x ratio
+  float16: 0.6492710113525391 ms 0.3481533026835681 x ratio
+
