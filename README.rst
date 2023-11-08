@@ -141,4 +141,6 @@ After use these codes:
     from visualizer.Visualize_OpenGL_IMGUI import GUI
     GUI(net).initializeOpenGL()
 
-``example_gui.py`` is simple network with GUI
+``example_gui.py`` is simple network with GUI :
+
+.. image:: https://ali-asgari.github.io/assets/images/Neuroscience.png
