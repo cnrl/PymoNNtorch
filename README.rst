@@ -114,3 +114,31 @@ It changes the codebase of `PymoNNto <https://github.com/trieschlab/PymoNNto>`_ 
 
 .. _Cookiecutter: https://github.com/audreyr/cookiecutter
 .. _`audreyr/cookiecutter-pypackage`: https://github.com/audreyr/cookiecutter-pypackage
+
+
+Visualization 
+--------------
+For using visualization first initialize network on CUDA:
+
+
+.. code-block:: python
+
+    from visualizer.Visualize_OpenGL_IMGUI import *
+
+    net = Network(dtype=torch.float32,device='cuda')
+    .
+    .
+    .
+
+    net.initialize()
+
+
+After use these codes:
+
+
+.. code-block:: python
+
+    from visualizer.Visualize_OpenGL_IMGUI import GUI
+    GUI(net).initializeOpenGL()
+
+``example_gui.py`` is simple network with GUI
