@@ -55,6 +55,7 @@ class Network(NetworkObject):
 
         self.NeuronGroups = []
         self.SynapseGroups = []
+        self.Structures = []
 
         self._iteration = 0
 
@@ -92,8 +93,7 @@ class Network(NetworkObject):
     def all_objects(self):
         """Return a list of all objects in the network."""
         l = [self]
-        l.extend(self.NeuronGroups)
-        l.extend(self.SynapseGroups)
+        l.extend(self.Structures)
         return l
 
     def all_behaviors(self):
@@ -159,11 +159,8 @@ class Network(NetworkObject):
         """
         result = super().find_objects(key)
 
-        for ng in self.NeuronGroups:
-            result.extend(ng[key])
-
-        for sg in self.SynapseGroups:
-            result.extend(sg[key])
+        for struc in self.Structures:
+            result.extend(struc[key])
 
         for am in self.analysis_modules:
             result.extend(am[key])

@@ -44,7 +44,21 @@ class NetworkObject(TaggableObject):
 
         self.analysis_modules = []
 
+        self.sub_structures = []
+        self.parent_structure = network
+        if network != self:
+            network.Structures.append(self)
+
         self.recording = True
+
+    def add_sub_structure(self, new_structure):
+        """add a new structure as sub structure
+
+        Args:
+            new_structure (NetworkObject): the new structure to add.
+        """
+        self.sub_structures.append(new_structure)
+        new_structure.parent_structure = self
 
     def add_behavior(self, key, behavior, initialize=True):
         """Add a single behavior to the network object.

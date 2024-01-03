@@ -38,9 +38,6 @@ class SynapseGroup(NetworkObject):
         super().__init__(tag, net, behavior, net.device)
         self.add_tag("syn")
 
-        if len(src.tags) > 0 and len(dst.tags) > 0:
-            self.add_tag(src.tags[0] + " => " + dst.tags[0])
-
         if net is not None:
             net.SynapseGroups.append(self)
             setattr(net, self.tags[0], self)
@@ -50,6 +47,8 @@ class SynapseGroup(NetworkObject):
         self.enabled = True
         self.group_weighting = 1
 
+        self.set_connection_tag()
+
         for ng in self.network.NeuronGroups:
             for tag in self.tags + ["All"]:
                 if tag not in ng.afferent_synapses:
@@ -58,14 +57,46 @@ class SynapseGroup(NetworkObject):
                     ng.efferent_synapses[tag] = []
 
         if (
-            self.dst.BaseNeuronGroup == self.dst
+            self.dst is not None and self.dst.BaseNeuronGroup == self.dst
         ):  # only add to NeuronGroup not to NeuronSubGroup
             for tag in self.tags + ["All"]:
                 self.dst.afferent_synapses[tag].append(self)
 
+        if self.src is not None and self.src.BaseNeuronGroup == self.src:
+            for tag in self.tags + ["All"]:
+                self.src.efferent_synapses[tag].append(self)
+
+    def set_connection_tag(self):
+        """Adds the connection tag
+        """
+        if self.src is not None and self.dst is not None:
+            tag = self.src.tags[0] + " => " + self.dst.tags[0]
+            if tag not in self.tags:
+                self.add_tag(tag)
+
+    def connect_src(self, src):
+        """Connects the pre-synaptic neuron group to the synapse.
+        
+        Args:
+            src (NeuronGroup): The pre-synaptic neuron group.
+        """
+        self.src = src
         if self.src.BaseNeuronGroup == self.src:
             for tag in self.tags + ["All"]:
                 self.src.efferent_synapses[tag].append(self)
+        self.set_connection_tag()
+
+    def connect_dst(self, dst):
+        """Connects the post-synaptic neuron group to the synapse.
+        
+        Args:
+            dst (NeuronGroup): The post-synaptic neuron group.
+        """
+        self.dst = dst
+        if self.dst.BaseNeuronGroup == self.dst:
+            for tag in self.tags + ["All"]:
+                self.dst.afferent_synapses[tag].append(self)
+        self.set_connection_tag()
 
     def __repr__(self):
         result = "SynapseGroup" + str(self.tags)
