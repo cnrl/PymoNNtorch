@@ -98,7 +98,6 @@ net.initialize()
 
 # net.simulate_iterations(100)
 
-
 from visualizer.Visualize_OpenGL_IMGUI import GUI
 
 GUI(net).initializeOpenGL()
