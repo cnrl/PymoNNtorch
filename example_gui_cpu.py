@@ -39,7 +39,7 @@ class SpikeOnTrace(Behavior):
     def forward(self, sg):
         sg.dst.trace += torch.sum(sg.weights[sg.src.spikes], axis=0)
 
-net = Network(dtype=torch.float32,device='cuda')
+net = Network(dtype=torch.float32)
 
 pop1 = NeuronGroup(net=net, size=NeuronDimension(depth=1, height=100, width=100), behavior={
     1: Behavior1(), # behavior1(pop1)
@@ -92,6 +92,7 @@ syn3_4 = SynapseGroup(net=net, src=pop3, dst=pop4, behavior={
 })
 
 
+print("SSSSSSSS:",net.device)
 net.initialize()
 
 # net.simulate_iterations(100)

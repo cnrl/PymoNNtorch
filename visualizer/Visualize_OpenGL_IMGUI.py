@@ -215,15 +215,17 @@ class GUI(IMGUI):
             glBindTexture(GL_TEXTURE_2D, 0)
 
 
-            err, *_ = cu.cudaGLGetDevices(1, cu.cudaGLDeviceList.cudaGLDeviceListAll)
-            # !!! Register
-            err, cuda_image = cu.cudaGraphicsGLRegisterImage(
-                self.colors[n],
-                GL_TEXTURE_2D, 
-                cu.cudaGraphicsRegisterFlags.cudaGraphicsRegisterFlagsWriteDiscard,
-                )
-            
-            self.cuda_images.append(cuda_image)
+            if self.network.device == 'cpu':pass
+            else:
+                err, *_ = cu.cudaGLGetDevices(1, cu.cudaGLDeviceList.cudaGLDeviceListAll)
+                # !!! Register
+                err, cuda_image = cu.cudaGraphicsGLRegisterImage(
+                    self.colors[n],
+                    GL_TEXTURE_2D, 
+                    cu.cudaGraphicsRegisterFlags.cudaGraphicsRegisterFlagsWriteDiscard,
+                    )
+                
+                self.cuda_images.append(cuda_image)
 
             glBindVertexArray(self.vaos[n])
             glBindBuffer(GL_ARRAY_BUFFER, self.vbos[n])
@@ -445,10 +447,10 @@ class GUI(IMGUI):
                 imgui.dock_space(dockspace_id, imgui.ImVec2(0.0, 0.0), 8);
                 imgui.end()
             show_simple_window()
-            if show_demo_window:pass
-                # show_demo_window = imgui.show_demo_window(show_demo_window)
-            if show_demo_window2:pass
-                # show_demo_window2 = implot.show_demo_window(show_demo_window2)
+            if show_demo_window:
+                show_demo_window = imgui.show_demo_window(show_demo_window)
+            if show_demo_window2:
+                show_demo_window2 = implot.show_demo_window(show_demo_window2)
             self.renderGUI()
             imgui.render()
 
@@ -461,7 +463,9 @@ class GUI(IMGUI):
             if self.maxIterationInSecond !=0 and timeDiff >= 1.0 / self.maxIterationInSecond:
                 self.network.simulate_iteration()
                 self.iteration += 1
-                torch.cuda.synchronize()
+                if self.network.device == 'cpu':pass
+                else:
+                    torch.cuda.synchronize()
                 self.oneVertexTrace = np.roll(self.oneVertexTrace, -1)
                 self.oneVertexTrace[-1] = self.tensors[self.selectedGroup][self.selectedY][self.selectedX].item()
                 iterationPerSecond += 1
@@ -482,26 +486,44 @@ class GUI(IMGUI):
 
                 # X=((torch.reshape(tensor, (1,self.tensorHeights[n]*self.tensorWidths[n]))).squeeze(0)).reshape(self.tensorHeights[n]*self.tensorWidths[n],1)
                 X=((torch.reshape(self.tensors[n], (1,self.tensorHeights[n]*self.tensorWidths[n]))).squeeze(0)).reshape(self.tensorHeights[n]*self.tensorWidths[n],1)
-                tens2 = torch.zeros([self.tensorHeights[n]*self.tensorWidths[n],1], dtype=torch.float, device=torch.device('cuda:0'))
-                X2=torch.cat((X,tens2),1)
-                X3=torch.cat((tens2,X2),1)
-                tens3 = torch.ones([self.tensorHeights[n]*self.tensorWidths[n],1], dtype=torch.float, device=torch.device('cuda:0'))
-                X4=torch.cat((X3,tens3),1)
-                tensor2=X4
-                (err,) = cu.cudaGraphicsMapResources(1, self.cuda_images[n], cu.cudaStreamLegacy)
-                err, array = cu.cudaGraphicsSubResourceGetMappedArray(self.cuda_images[n], 0, 0)
-                (err,) = cu.cudaMemcpy2DToArrayAsync(
-                    array,
-                    0,
-                    0,
-                    tensor2.data_ptr(),
-                    4*4*self.tensorWidths[n],
-                    4*4*self.tensorWidths[n],
-                    self.tensorHeights[n],
-                    cu.cudaMemcpyKind.cudaMemcpyDeviceToDevice,
-                    cu.cudaStreamLegacy,
-                )
-                (err,) = cu.cudaGraphicsUnmapResources(1, self.cuda_images[n], cu.cudaStreamLegacy)
+
+                if self.network.device == 'cpu':
+                    tens2 = torch.zeros([self.tensorHeights[n]*self.tensorWidths[n],1], dtype=torch.float)
+                    X2=torch.cat((X,tens2),1)
+                    X3=torch.cat((tens2,X2),1)
+                    tens3 = torch.ones([self.tensorHeights[n]*self.tensorWidths[n],1], dtype=torch.float)
+                    X4=torch.cat((X3,tens3),1)
+                    tensor2=X4
+
+                    glBindTexture(GL_TEXTURE_2D, self.colors[n])
+                    # print("n:",n,"XXXXXXXXXXXXXX:",tensor2)
+
+                    # glTexImage2D(GL_TEXTURE_2D,0, GL_RGBA32F, tensorWidth, tensorHeight, 0, GL_RGBA, GL_FLOAT, None)
+                    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, self.tensorWidths[n], self.tensorHeights[n], 0, GL_RGBA, GL_FLOAT, tensor2.numpy())
+                    
+
+
+                else:
+                    tens2 = torch.zeros([self.tensorHeights[n]*self.tensorWidths[n],1], dtype=torch.float, device=torch.device('cuda:0'))
+                    X2=torch.cat((X,tens2),1)
+                    X3=torch.cat((tens2,X2),1)
+                    tens3 = torch.ones([self.tensorHeights[n]*self.tensorWidths[n],1], dtype=torch.float, device=torch.device('cuda:0'))
+                    X4=torch.cat((X3,tens3),1)
+                    tensor2=X4
+                    (err,) = cu.cudaGraphicsMapResources(1, self.cuda_images[n], cu.cudaStreamLegacy)
+                    err, array = cu.cudaGraphicsSubResourceGetMappedArray(self.cuda_images[n], 0, 0)
+                    (err,) = cu.cudaMemcpy2DToArrayAsync(
+                        array,
+                        0,
+                        0,
+                        tensor2.data_ptr(),
+                        4*4*self.tensorWidths[n],
+                        4*4*self.tensorWidths[n],
+                        self.tensorHeights[n],
+                        cu.cudaMemcpyKind.cudaMemcpyDeviceToDevice,
+                        cu.cudaStreamLegacy,
+                    )
+                    (err,) = cu.cudaGraphicsUnmapResources(1, self.cuda_images[n], cu.cudaStreamLegacy)
 
 
                 # glEnable(GL_BLEND)
@@ -577,26 +599,29 @@ class GUI(IMGUI):
                     glClearColor(0.62, 0.64, 0.70 , 1.0)
                 n = self.windowsTensors[w]
                 X=((torch.reshape(self.tensors[n], (1,self.tensorHeights[n]*self.tensorWidths[n]))).squeeze(0)).reshape(self.tensorHeights[n]*self.tensorWidths[n],1)
-                tens2 = torch.zeros([self.tensorHeights[n]*self.tensorWidths[n],1], dtype=torch.float, device=torch.device('cuda:0'))
-                X2=torch.cat((X,tens2),1)
-                X3=torch.cat((tens2,X2),1)
-                tens3 = torch.ones([self.tensorHeights[n]*self.tensorWidths[n],1], dtype=torch.float, device=torch.device('cuda:0'))
-                X4=torch.cat((X3,tens3),1)
-                tensor2=X4
-                (err,) = cu.cudaGraphicsMapResources(1, self.cuda_images[n], cu.cudaStreamLegacy)
-                err, array = cu.cudaGraphicsSubResourceGetMappedArray(self.cuda_images[n], 0, 0)
-                (err,) = cu.cudaMemcpy2DToArrayAsync(
-                    array,
-                    0,
-                    0,
-                    tensor2.data_ptr(),
-                    4*4*self.tensorWidths[n],
-                    4*4*self.tensorWidths[n],
-                    self.tensorHeights[n],
-                    cu.cudaMemcpyKind.cudaMemcpyDeviceToDevice,
-                    cu.cudaStreamLegacy,
-                )
-                (err,) = cu.cudaGraphicsUnmapResources(1, self.cuda_images[n], cu.cudaStreamLegacy)
+                if self.network.device == 'cpu':pass
+                  
+                else:
+                    tens2 = torch.zeros([self.tensorHeights[n]*self.tensorWidths[n],1], dtype=torch.float, device=torch.device('cuda:0'))
+                    X2=torch.cat((X,tens2),1)
+                    X3=torch.cat((tens2,X2),1)
+                    tens3 = torch.ones([self.tensorHeights[n]*self.tensorWidths[n],1], dtype=torch.float, device=torch.device('cuda:0'))
+                    X4=torch.cat((X3,tens3),1)
+                    tensor2=X4
+                    (err,) = cu.cudaGraphicsMapResources(1, self.cuda_images[n], cu.cudaStreamLegacy)
+                    err, array = cu.cudaGraphicsSubResourceGetMappedArray(self.cuda_images[n], 0, 0)
+                    (err,) = cu.cudaMemcpy2DToArrayAsync(
+                        array,
+                        0,
+                        0,
+                        tensor2.data_ptr(),
+                        4*4*self.tensorWidths[n],
+                        4*4*self.tensorWidths[n],
+                        self.tensorHeights[n],
+                        cu.cudaMemcpyKind.cudaMemcpyDeviceToDevice,
+                        cu.cudaStreamLegacy,
+                    )
+                    (err,) = cu.cudaGraphicsUnmapResources(1, self.cuda_images[n], cu.cudaStreamLegacy)
                 glBindVertexArray(0)
                 glBindBuffer(GL_ARRAY_BUFFER, self.vbos[n])
                 glEnableVertexAttribArray(0)

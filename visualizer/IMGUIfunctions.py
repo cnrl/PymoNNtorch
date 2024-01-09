@@ -109,6 +109,7 @@ class IMGUI:
 
 
         imgui.separator()
+        imgui.text("N:"+str(sum([len(ng.trace) for ng in self.network.NeuronGroups])))
         imgui.text("Group:")
         changed0, self.selectedGroup = imgui.input_int('  ', self.selectedGroup)
         if self.selectedGroup <= -1 : self.selectedGroup = len(self.network.NeuronGroups)- 1
