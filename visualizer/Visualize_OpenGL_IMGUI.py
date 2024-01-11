@@ -99,11 +99,11 @@ class GUI(IMGUI):
 
 
 
-        io = imgui.get_io()
-        io.config_flags |= imgui.ConfigFlags_.nav_enable_keyboard  # Enable Keyboard Controls
+        self.io = imgui.get_io()
+        self.io.config_flags |= imgui.ConfigFlags_.nav_enable_keyboard  # Enable Keyboard Controls
         # io.config_flags |= imgui.ConfigFlags_.nav_enable_gamepad # Enable Gamepad Controls
-        io.config_flags |= imgui.ConfigFlags_.docking_enable  # Enable docking
-        io.config_flags |= imgui.ConfigFlags_.viewports_enable # Enable Multi-Viewport / Platform Windows
+        self.io.config_flags |= imgui.ConfigFlags_.docking_enable  # Enable docking
+        self.io.config_flags |= imgui.ConfigFlags_.viewports_enable # Enable Multi-Viewport / Platform Windows
 
 
         # self.impl = GlfwRenderer(self.window)
@@ -261,11 +261,12 @@ class GUI(IMGUI):
         print("INITGL DONE")
         self.renderOpenGL()
     def renderOpenGL(self):
-        io = imgui.get_io()
-        io.config_flags |= imgui.ConfigFlags_.nav_enable_keyboard  # Enable Keyboard Controls
-        # io.config_flags |= imgui.ConfigFlags_.nav_enable_gamepad # Enable Gamepad Controls
-        io.config_flags |= imgui.ConfigFlags_.docking_enable  # Enable docking
-        io.config_flags |= imgui.ConfigFlags_.viewports_enable # Enable Multi-Viewport / Platform Windows
+        # io = imgui.get_io()
+        # io.config_flags |= imgui.ConfigFlags_.nav_enable_keyboard  # Enable Keyboard Controls
+        # # io.config_flags |= imgui.ConfigFlags_.nav_enable_gamepad # Enable Gamepad Controls
+        # io.config_flags |= imgui.ConfigFlags_.docking_enable  # Enable docking
+        # io.config_flags |= imgui.ConfigFlags_.viewports_enable # Enable Multi-Viewport / Platform Windows
+        
         # io.config_viewports_no_auto_merge = True
         # io.config_viewports_no_task_bar_icon = True
 
@@ -435,39 +436,30 @@ class GUI(IMGUI):
 
             glfw.make_context_current(self.window)
             cameraKeyboard()
-            if self.darkMod:
-                glClearColor(0.15, 0.16, 0.21, 1.0)
-            else:
-                glClearColor(0.62, 0.64, 0.70 , 1.0)
-            glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT)
-
-
-            # glUniform1f(self.uniform_location_loc_mac_x, -1+(self.selectedX+1)*2/(self.tensorWidth+1))
-            # glUniform1f(self.uniform_location_loc_mac_y, -1+(self.selectedY+1)*2/(self.tensorHeight+1))
-
-            glBindFramebuffer(GL_FRAMEBUFFER,self.sceneBuffer.fbo)
-            glViewport(0, 0, int(self.windowWidth), int(self.windowHeigh))
-
-            glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT)
-
-            if self.darkMod:
-                glClearColor(0.15, 0.16, 0.21, 1.0)
-            else:
-                glClearColor(0.62, 0.64, 0.70 , 1.0)
-            # self.impl.process_inputs()
             glfw.poll_events()
 
             imgui.backends.opengl3_new_frame()
             imgui.backends.glfw_new_frame()
-            imgui.new_frame()
 
+            if self.darkMod:
+                glClearColor(0.15, 0.16, 0.21, 1.0)
+            else:
+                glClearColor(0.62, 0.64, 0.70 , 1.0)
+            glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT)
+
+    
+            # glUniform1f(self.uniform_location_loc_mac_x, -1+(self.selectedX+1)*2/(self.tensorWidth+1))
+            # glUniform1f(self.uniform_location_loc_mac_y, -1+(self.selectedY+1)*2/(self.tensorHeight+1))
+
+            # self.impl.process_inputs()
+            
+            imgui.new_frame()
 
             show_simple_window()
             if show_demo_window:
                 show_demo_window = imgui.show_demo_window(show_demo_window)
             if show_demo_window2:
                 show_demo_window2 = implot.show_demo_window(show_demo_window2)
-
 
             # print("@@@@@@@2")
             currentTime = time.time()
@@ -492,8 +484,44 @@ class GUI(IMGUI):
                 frameNumber = 0
                 iterationPerSecond = 0
                 lastTime2 = currentTime
+            
+            self.renderGUI()
 
 
+            imgui.push_style_var(imgui.StyleVar_.window_padding, imgui.ImVec2(0,0))
+            imgui.begin("Scene")
+            
+            width_scene_imgui = imgui.get_content_region_avail().x
+            height_scene_imgui = imgui.get_content_region_avail().y
+            if  self.windowWidth != width_scene_imgui or self.windowHeigh != height_scene_imgui:
+                self.windowHeigh=height_scene_imgui
+                self.windowWidth=width_scene_imgui
+                # del (self.sceneBuffer)
+                self.sceneBuffer.rescaleFramebuffer(int(width_scene_imgui),int(height_scene_imgui))
+                glViewport(0, 0, int(self.windowWidth), int(self.windowHeigh))
+                # del(self.sceneBuffer)
+                # self.sceneBuffer = FrameBuffer(int(width_scene_imgui),int(height_scene_imgui))
+                print("ww: ",self.windowWidth,"hh: ",self.windowHeigh)
+                # glViewport(0, 0, int(self.windowWidth), int(self.windowHeigh))
+
+            imgui.image(
+                self.sceneBuffer.texture, 
+                # imgui.ImVec2(self.windowWidth,self.windowHeigh), 
+                imgui.get_content_region_avail(),
+                imgui.ImVec2(0, 1), 
+                imgui.ImVec2(1, 0)
+            )
+            # imgui.end_child()
+            imgui.end()
+            imgui.pop_style_var()
+            imgui.render()
+            # imgui.begin("SSS")
+            # imgui.button("NSSS")
+            # imgui.end()
+
+            glBindFramebuffer(GL_FRAMEBUFFER,self.sceneBuffer.fbo)
+            glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT)
+            
             for n in range(len(self.network.NeuronGroups)):
 
                 if not self.shows[n]:continue
@@ -584,44 +612,9 @@ class GUI(IMGUI):
                 addQuad(-1/2*n)
                 
             glBindFramebuffer(GL_FRAMEBUFFER, 0)
-            self.renderGUI()
-
-
-            imgui.push_style_var(imgui.StyleVar_.window_padding, imgui.ImVec2(0,0))
-            imgui.begin("Scene")
-            width_scene_imgui = imgui.get_content_region_avail().x
-            height_scene_imgui = imgui.get_content_region_avail().y
-            if  self.windowWidth != width_scene_imgui or self.windowHeigh != height_scene_imgui:
-                self.windowHeigh=height_scene_imgui
-                self.windowWidth=width_scene_imgui
-                # del (self.sceneBuffer)
-                
-                self.sceneBuffer.rescaleFramebuffer(int(width_scene_imgui),int(height_scene_imgui))
-                # del(self.sceneBuffer)
-                # self.sceneBuffer = FrameBuffer(int(width_scene_imgui),int(height_scene_imgui))
-                # print("ww: ",self.windowWidth,"hh: ",self.windowHeigh)
-                # glViewport(0, 0, int(self.windowWidth), int(self.windowHeigh))
-            
-            # *m_width = width
-            # *m_height = height
-            imgui.image(
-                self.sceneBuffer.texture, 
-                # imgui.ImVec2(self.windowWidth,self.windowHeigh), 
-                imgui.get_content_region_avail(),
-                imgui.ImVec2(0, 1), 
-                imgui.ImVec2(1, 0)
-            )
-            # imgui.end_child()
-            imgui.end()
-            imgui.pop_style_var()
-            imgui.render()
-            # imgui.begin("SSS")
-            # imgui.button("NSSS")
-            # imgui.end()
-
 
             imgui.backends.opengl3_render_draw_data(imgui.get_draw_data())
-            if io.config_flags & imgui.ConfigFlags_.viewports_enable > 0:
+            if self.io.config_flags & imgui.ConfigFlags_.viewports_enable > 0:
                 backup_current_context = glfw.get_current_context()
                 imgui.update_platform_windows()
                 imgui.render_platform_windows_default()
