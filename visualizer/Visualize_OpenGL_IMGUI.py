@@ -117,7 +117,7 @@ class GUI(IMGUI):
         imgui.backends.opengl3_init(glsl_version)
 
         ## Set the callback function for window resize
-        glfw.set_framebuffer_size_callback(self.window, framebuffer_size_callback)
+        # glfw.set_framebuffer_size_callback(self.window, framebuffer_size_callback)
 
 
 
@@ -339,8 +339,10 @@ class GUI(IMGUI):
             # view = glm.lookAt(Position, Position + Orientation, Up) 
             try:
                 self.projection = glm.perspective(glm.radians(self.Zoom), self.windowWidth/self.windowHeigh, 0.1, 100000.0)
+                # self.projection = glm.perspective(glm.radians(self.Zoom), 1000/600, 0.1, 100000.0)
             except:
-                self.projection = glm.perspective(glm.radians(self.Zoom), 1.5, 0.1, 100000.0)
+                pass
+                # self.projection = glm.perspective(glm.radians(self.Zoom), 1.5, 0.1, 100000.0)
 
             self.view = glm.lookAt(self.Position, self.Position + self.Orientation, self.Up) 
             # projection = glm.perspective(glm.radians(45.0), 1.0, 0.1, 100.0)
@@ -444,6 +446,8 @@ class GUI(IMGUI):
             # glUniform1f(self.uniform_location_loc_mac_y, -1+(self.selectedY+1)*2/(self.tensorHeight+1))
 
             glBindFramebuffer(GL_FRAMEBUFFER,self.sceneBuffer.fbo)
+            glViewport(0, 0, int(self.windowWidth), int(self.windowHeigh))
+
             glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT)
 
             if self.darkMod:
@@ -583,22 +587,33 @@ class GUI(IMGUI):
             self.renderGUI()
 
 
+            imgui.push_style_var(imgui.StyleVar_.window_padding, imgui.ImVec2(0,0))
             imgui.begin("Scene")
-            # imgui.begin_child("GameRender")
-            
             width_scene_imgui = imgui.get_content_region_avail().x
             height_scene_imgui = imgui.get_content_region_avail().y
+            if  self.windowWidth != width_scene_imgui or self.windowHeigh != height_scene_imgui:
+                self.windowHeigh=height_scene_imgui
+                self.windowWidth=width_scene_imgui
+                # del (self.sceneBuffer)
+                
+                self.sceneBuffer.rescaleFramebuffer(int(width_scene_imgui),int(height_scene_imgui))
+                # del(self.sceneBuffer)
+                # self.sceneBuffer = FrameBuffer(int(width_scene_imgui),int(height_scene_imgui))
+                # print("ww: ",self.windowWidth,"hh: ",self.windowHeigh)
+                # glViewport(0, 0, int(self.windowWidth), int(self.windowHeigh))
+            
             # *m_width = width
             # *m_height = height
             imgui.image(
                 self.sceneBuffer.texture, 
-                imgui.get_content_region_avail(), 
+                # imgui.ImVec2(self.windowWidth,self.windowHeigh), 
+                imgui.get_content_region_avail(),
                 imgui.ImVec2(0, 1), 
                 imgui.ImVec2(1, 0)
             )
             # imgui.end_child()
             imgui.end()
-
+            imgui.pop_style_var()
             imgui.render()
             # imgui.begin("SSS")
             # imgui.button("NSSS")
