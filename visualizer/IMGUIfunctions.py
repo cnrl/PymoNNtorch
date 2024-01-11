@@ -8,6 +8,7 @@ import numpy as np
 import glfw
 from PIL import Image
 
+from .FrameBuffer import FrameBuffer
 
 class IMGUI:
     def __init__(self,width=1000, heigh=600):
@@ -24,6 +25,7 @@ class IMGUI:
         self.ignoreBeforeOneVertexTrace = 100
         self.darkMod = True
         self.debugging = ""
+        self.frameBufferWindows = []
 
     def initIcon(self):
         def opentIcon(location):
@@ -161,40 +163,38 @@ class IMGUI:
             if self.shows[i]:
                 # if i>2:
 
-                if (imgui.image_button("a"*(i+1),self.eyetextureID[i],imgui.ImVec2(25,25))):
+                if (imgui.image_button("hide"*(i+1),self.eyetextureID[i],imgui.ImVec2(25,25))):
                     self.shows[i]=0
                     pass
             else:
                 # if (imgui.button("<",25,25)):
-                if (imgui.image_button("b"*(i+1),self.closeEyetextureID[i],imgui.ImVec2(25,25))):
+                if (imgui.image_button("show"*(i+1),self.closeEyetextureID[i],imgui.ImVec2(25,25))):
                     # print(i)
                     self.shows[i]=1
                     pass
             imgui.same_line(spacing=1.0)
             # if (imgui.button("+",25,25)):
-            if (imgui.image_button("c"*(i+1),self.arrowtextureID[i],imgui.ImVec2(25,25))):
-                # newWindow = glfw.create_window(800, 600, "Window "+str(len(self.windows)), None, self.window)
+            if (imgui.image_button("new_window"*(i+1),self.arrowtextureID[i],imgui.ImVec2(25,25))):
                 print("!!",i)
-                newWindow = glfw.create_window(800, 600, "NeuronGroup "+str(i), None, self.window)
-                # print(newWindow)
-                if not newWindow:
-                    glfw.terminate()
-                    raise Exception("New window creation failed")
-                glfw.make_context_current(newWindow)
-                def framebuffer_size_callback(window, width, height):
-                    glViewport(0, 0, width, height)
-                    # self.windowWidth = width
-                    # self.windowHeigh = height
-                    # glUniform1f(self.uniform_location_size_data, self.windowWidth/8.5)
-                glfw.set_framebuffer_size_callback(newWindow, framebuffer_size_callback)
-                glfw.swap_interval(0)
-                self.windows.append(newWindow)
+
+                newWindow = FrameBuffer(800, 600)
+                self.frameBufferWindows.append(newWindow)
+
+                #pervious method (multi glfw window)
+                # newWindow = glfw.create_window(800, 600, "NeuronGroup "+str(i), None, self.window)
+                # if not newWindow:
+                #     glfw.terminate()
+                #     raise Exception("New window creation failed")
+                # glfw.make_context_current(newWindow)
+                # def framebuffer_size_callback(window, width, height):
+                #     glViewport(0, 0, width, height)
+                # glfw.set_framebuffer_size_callback(newWindow, framebuffer_size_callback)
+                # glfw.swap_interval(0)
+                # self.windows.append(newWindow)
                 self.windowsTensors.append(i)
-                glfw.make_context_current(self.window)
-                # glfw.make_context_current(window2)
-                # glfw.set_framebuffer_size_callback(window2, framebuffer_size_callback)
+                # glfw.make_context_current(self.window)
             imgui.same_line(spacing=1.0)
-            if (imgui.image_button("d"*(i+1),self.settingtextureID[i],imgui.ImVec2(25,25))):
+            if (imgui.image_button("info"*(i+1),self.settingtextureID[i],imgui.ImVec2(25,25))):
                 pass
             # if (imgui.button("x",25,25)):
             #     pass
@@ -235,7 +235,7 @@ class IMGUI:
         imgui.begin("Trace")
         xxxx = np.arange(0, 101, 1.0)
         if implot.begin_plot("Plot"):
-            implot.setup_axes("iteration", "trace");
+            implot.setup_axes("iteration", "trace G:%s, R:%s, C:%s"%(self.selectedGroup,self.selectedX,self.selectedY));
             # print("x:",x)
             # print("y:",self.oneVertexTrace)
             # implot.setup_axes_limits(0, 100, 0, 500);

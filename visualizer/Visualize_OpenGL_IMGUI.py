@@ -514,6 +514,47 @@ class GUI(IMGUI):
             # imgui.end_child()
             imgui.end()
             imgui.pop_style_var()
+
+
+
+
+
+            for w in range(len(self.frameBufferWindows)): 
+                imgui.push_style_var(imgui.StyleVar_.window_padding, imgui.ImVec2(0,0))
+                isOpen = imgui.begin("Scene %s N:%s"%(str(w),self.windowsTensors[w]),p_open=True)
+                # print(111111111111)
+                
+                width_scene_imgui = imgui.get_content_region_avail().x
+                height_scene_imgui = imgui.get_content_region_avail().y
+                # if  self.windowWidth != width_scene_imgui or self.windowHeigh != height_scene_imgui:
+                #     self.windowHeigh=height_scene_imgui
+                #     self.windowWidth=width_scene_imgui
+                #     # del (self.sceneBuffer)
+                #     self.sceneBuffer.rescaleFramebuffer(int(width_scene_imgui),int(height_scene_imgui))
+                #     glViewport(0, 0, int(self.windowWidth), int(self.windowHeigh))
+                #     # del(self.sceneBuffer)
+                #     # self.sceneBuffer = FrameBuffer(int(width_scene_imgui),int(height_scene_imgui))
+                #     print("ww: ",self.windowWidth,"hh: ",self.windowHeigh)
+                #     # glViewport(0, 0, int(self.windowWidth), int(self.windowHeigh))
+
+                imgui.image(
+                    self.frameBufferWindows[w].texture, 
+                    # imgui.ImVec2(self.windowWidth,self.windowHeigh), 
+                    imgui.get_content_region_avail(),
+                    imgui.ImVec2(0, 1), 
+                    imgui.ImVec2(1, 0)
+                )
+                # imgui.end_child()
+                imgui.end()
+                imgui.pop_style_var()
+                if not isOpen[1]:
+                    self.frameBufferWindows.pop(w)
+                    self.windowsTensors.pop(w)
+                    break
+
+
+
+
             imgui.render()
             # imgui.begin("SSS")
             # imgui.button("NSSS")
@@ -613,36 +654,20 @@ class GUI(IMGUI):
                 
             glBindFramebuffer(GL_FRAMEBUFFER, 0)
 
-            imgui.backends.opengl3_render_draw_data(imgui.get_draw_data())
-            if self.io.config_flags & imgui.ConfigFlags_.viewports_enable > 0:
-                backup_current_context = glfw.get_current_context()
-                imgui.update_platform_windows()
-                imgui.render_platform_windows_default()
-                glfw.make_context_current(backup_current_context)
+            # imgui.backends.opengl3_render_draw_data(imgui.get_draw_data())
+            # if self.io.config_flags & imgui.ConfigFlags_.viewports_enable > 0:
+            #     backup_current_context = glfw.get_current_context()
+            #     imgui.update_platform_windows()
+            #     imgui.render_platform_windows_default()
+            #     glfw.make_context_current(backup_current_context)
+            # glfw.swap_buffers(self.window)
 
             # self.impl.render(imgui.get_draw_data())
-            glfw.swap_buffers(self.window)
 
             # imgui.end_frame()
-
-
-            for w in range(len(self.windows)):
-                glfw.make_context_current(self.windows[w])
+            for w in range(len(self.frameBufferWindows)):
+                glBindFramebuffer(GL_FRAMEBUFFER,self.frameBufferWindows[w].fbo)
                 glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT)
-                glEnable(GL_PROGRAM_POINT_SIZE)
-                # glEnable(GL_DEPTH_TEST)
-                # glEnable(GL_BLEND)
-                # glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
-
-
-
-                glUseProgram(self.shader_program)
-                glUniform1f(self.uniform_location_size, 5.0)
-                glUniform1f(self.uniform_location_isNewWindow,1.0)
-                if self.darkMod:
-                    glClearColor(0.15, 0.16, 0.21, 1.0)
-                else:
-                    glClearColor(0.62, 0.64, 0.70 , 1.0)
                 n = self.windowsTensors[w]
                 X=((torch.reshape(self.tensors[n], (1,self.tensorHeights[n]*self.tensorWidths[n]))).squeeze(0)).reshape(self.tensorHeights[n]*self.tensorWidths[n],1)
                 if self.network.device == 'cpu':pass
@@ -695,11 +720,99 @@ class GUI(IMGUI):
                 else: 
                     glUniform1f(self.uniform_location_isdata, 0.0)
                     glDrawArrays(GL_POINTS, 0, self.tensorHeights[n]*self.tensorWidths[n])
+            
 
+                glBindFramebuffer(GL_FRAMEBUFFER, 0)
 
-                glfw.swap_buffers(self.windows[w])
             glUniform1f(self.uniform_location_size, 5.0)
             glUniform1f(self.uniform_location_isNewWindow,0.0)
+
+
+            imgui.backends.opengl3_render_draw_data(imgui.get_draw_data())
+            if self.io.config_flags & imgui.ConfigFlags_.viewports_enable > 0:
+                backup_current_context = glfw.get_current_context()
+                imgui.update_platform_windows()
+                imgui.render_platform_windows_default()
+                glfw.make_context_current(backup_current_context)
+            glfw.swap_buffers(self.window)
+            
+            # pervious method (multi glfw window)
+            # for w in range(len(self.windows)):
+            #     glfw.make_context_current(self.windows[w])
+            #     glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT)
+            #     glEnable(GL_PROGRAM_POINT_SIZE)
+            #     # glEnable(GL_DEPTH_TEST)
+            #     # glEnable(GL_BLEND)
+            #     # glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
+
+
+
+            #     glUseProgram(self.shader_program)
+            #     glUniform1f(self.uniform_location_size, 5.0)
+            #     glUniform1f(self.uniform_location_isNewWindow,1.0)
+            #     if self.darkMod:
+            #         glClearColor(0.15, 0.16, 0.21, 1.0)
+            #     else:
+            #         glClearColor(0.62, 0.64, 0.70 , 1.0)
+            #     n = self.windowsTensors[w]
+            #     X=((torch.reshape(self.tensors[n], (1,self.tensorHeights[n]*self.tensorWidths[n]))).squeeze(0)).reshape(self.tensorHeights[n]*self.tensorWidths[n],1)
+            #     if self.network.device == 'cpu':pass
+                  
+            #     else:
+            #         tens2 = torch.zeros([self.tensorHeights[n]*self.tensorWidths[n],1], dtype=torch.float, device=torch.device('cuda:0'))
+            #         X2=torch.cat((X,tens2),1)
+            #         X3=torch.cat((tens2,X2),1)
+            #         tens3 = torch.ones([self.tensorHeights[n]*self.tensorWidths[n],1], dtype=torch.float, device=torch.device('cuda:0'))
+            #         X4=torch.cat((X3,tens3),1)
+            #         tensor2=X4
+            #         (err,) = cu.cudaGraphicsMapResources(1, self.cuda_images[n], cu.cudaStreamLegacy)
+            #         err, array = cu.cudaGraphicsSubResourceGetMappedArray(self.cuda_images[n], 0, 0)
+            #         (err,) = cu.cudaMemcpy2DToArrayAsync(
+            #             array,
+            #             0,
+            #             0,
+            #             tensor2.data_ptr(),
+            #             4*4*self.tensorWidths[n],
+            #             4*4*self.tensorWidths[n],
+            #             self.tensorHeights[n],
+            #             cu.cudaMemcpyKind.cudaMemcpyDeviceToDevice,
+            #             cu.cudaStreamLegacy,
+            #         )
+            #         (err,) = cu.cudaGraphicsUnmapResources(1, self.cuda_images[n], cu.cudaStreamLegacy)
+            #     glBindVertexArray(0)
+            #     glBindBuffer(GL_ARRAY_BUFFER, self.vbos[n])
+            #     glEnableVertexAttribArray(0)
+            #     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5*4, ctypes.c_void_p(0))
+            #     glEnableVertexAttribArray(1)
+            #     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5*4, ctypes.c_void_p(0+3*4))
+            #     glBindTexture(GL_TEXTURE_2D, self.colors[n])
+            #     #!
+            #     glUniform1f(self.uniform_location_z,0.0) 
+            #     # glBegin(GL_LINE_STRIP) 
+            #     if self.selectedX != -1 and self.selectedY != -1: 
+            #         # glDrawArrays(GL_POINTS, 0, tensorHeight*tensorWidth+1)
+            #         ## for big number like million if points will be like square specify more details 
+            #         ## last vertex show value of seleceted index and show that in circle shape
+            #         # if self.set_enable_smooth:
+            #         #     glEnable(GL_POINT_SMOOTH)
+            #         # else:
+            #         #     glDisable(GL_POINT_SMOOTH)
+            #         glUniform1f(self.uniform_location_isdata, 0.0)
+            #         glEnable(GL_POINT_SMOOTH)
+            #         glDrawArrays(GL_POINTS, 0, self.tensorHeights[n]*self.tensorWidths[n])
+            #         glEnable(GL_POINT_SMOOTH)
+            #         # glUniform1f(self.uniform_location_isdata, 1.0)
+            #         # glDrawArrays(GL_POINTS, self.tensorHeights[n]*self.tensorWidths[n],1) 
+            #     else: 
+            #         glUniform1f(self.uniform_location_isdata, 0.0)
+            #         glDrawArrays(GL_POINTS, 0, self.tensorHeights[n]*self.tensorWidths[n])
+
+
+            #     glfw.swap_buffers(self.windows[w])
+
+            
+            # glUniform1f(self.uniform_location_size, 5.0)
+            # glUniform1f(self.uniform_location_isNewWindow,0.0)
 
 
             
