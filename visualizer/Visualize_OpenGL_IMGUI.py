@@ -14,6 +14,7 @@ import glm
 
 
 from .IMGUIfunctions import IMGUI
+from .FrameBuffer import FrameBuffer
 
 class GUI(IMGUI):
     
@@ -382,6 +383,30 @@ class GUI(IMGUI):
             glUniform1f(self.uniform_location_isplan,0.0)
             # glDisable(GL_BLEND)
             glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
+
+        def show_simple_window():
+
+            viewport = imgui.get_main_viewport();
+            imgui.set_next_window_pos(viewport.work_pos);
+            imgui.set_next_window_size(viewport.work_size);
+            imgui.set_next_window_viewport(viewport.id_);
+            imgui.push_style_var(imgui.StyleVar_.window_rounding, 0.0);
+            imgui.push_style_var(imgui.StyleVar_.window_border_size, 0.0);
+            imgui.push_style_var(imgui.StyleVar_.window_padding, imgui.ImVec2(0.0,0.0));
+            window_flags = imgui.WindowFlags_.menu_bar | imgui.WindowFlags_.no_docking
+            window_flags |= imgui.WindowFlags_.no_title_bar | imgui.WindowFlags_.no_collapse | imgui.WindowFlags_.no_resize | imgui.WindowFlags_.no_move;
+            window_flags |= imgui.WindowFlags_.no_bring_to_front_on_focus | imgui.WindowFlags_.no_nav_focus;
+            # print("4444:",window_flags)
+            
+            window_flags |= imgui.WindowFlags_.no_background
+            # print(window_flags)
+            imgui.begin("DockSpace Demo", True, window_flags);
+            imgui.pop_style_var();
+            imgui.pop_style_var(2);
+            dockspace_id = imgui.get_id("MyDockSpace");
+            # print("cccc:",dockspace_id)
+            imgui.dock_space(dockspace_id, imgui.ImVec2(0.0, 0.0), 8);
+            imgui.end()
         glEnable(GL_DEPTH_TEST)
         glEnable(GL_BLEND)
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
@@ -402,16 +427,25 @@ class GUI(IMGUI):
         show_demo_window = True
         show_demo_window2 = True
 
+        self.sceneBuffer = FrameBuffer(self.windowWidth, self.windowHeigh)
+
         while not glfw.window_should_close(self.window):
+
             glfw.make_context_current(self.window)
             cameraKeyboard()
-
+            if self.darkMod:
+                glClearColor(0.15, 0.16, 0.21, 1.0)
+            else:
+                glClearColor(0.62, 0.64, 0.70 , 1.0)
+            glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT)
 
 
             # glUniform1f(self.uniform_location_loc_mac_x, -1+(self.selectedX+1)*2/(self.tensorWidth+1))
             # glUniform1f(self.uniform_location_loc_mac_y, -1+(self.selectedY+1)*2/(self.tensorHeight+1))
 
+            glBindFramebuffer(GL_FRAMEBUFFER,self.sceneBuffer.fbo)
             glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT)
+
             if self.darkMod:
                 glClearColor(0.15, 0.16, 0.21, 1.0)
             else:
@@ -423,36 +457,13 @@ class GUI(IMGUI):
             imgui.backends.glfw_new_frame()
             imgui.new_frame()
 
-            def show_simple_window():
 
-                viewport = imgui.get_main_viewport();
-                imgui.set_next_window_pos(viewport.work_pos);
-                imgui.set_next_window_size(viewport.work_size);
-                imgui.set_next_window_viewport(viewport.id_);
-                imgui.push_style_var(imgui.StyleVar_.window_rounding, 0.0);
-                imgui.push_style_var(imgui.StyleVar_.window_border_size, 0.0);
-                imgui.push_style_var(imgui.StyleVar_.window_padding, imgui.ImVec2(0.0,0.0));
-                window_flags = imgui.WindowFlags_.menu_bar | imgui.WindowFlags_.no_docking
-                window_flags |= imgui.WindowFlags_.no_title_bar | imgui.WindowFlags_.no_collapse | imgui.WindowFlags_.no_resize | imgui.WindowFlags_.no_move;
-                window_flags |= imgui.WindowFlags_.no_bring_to_front_on_focus | imgui.WindowFlags_.no_nav_focus;
-                # print("4444:",window_flags)
-                
-                window_flags |= imgui.WindowFlags_.no_background
-                # print(window_flags)
-                imgui.begin("DockSpace Demo", True, window_flags);
-                imgui.pop_style_var();
-                imgui.pop_style_var(2);
-                dockspace_id = imgui.get_id("MyDockSpace");
-                # print("cccc:",dockspace_id)
-                imgui.dock_space(dockspace_id, imgui.ImVec2(0.0, 0.0), 8);
-                imgui.end()
             show_simple_window()
             if show_demo_window:
                 show_demo_window = imgui.show_demo_window(show_demo_window)
             if show_demo_window2:
                 show_demo_window2 = implot.show_demo_window(show_demo_window2)
-            self.renderGUI()
-            imgui.render()
+
 
             # print("@@@@@@@2")
             currentTime = time.time()
@@ -567,6 +578,32 @@ class GUI(IMGUI):
 
                 #!
                 addQuad(-1/2*n)
+                
+            glBindFramebuffer(GL_FRAMEBUFFER, 0)
+            self.renderGUI()
+
+
+            imgui.begin("Scene")
+            # imgui.begin_child("GameRender")
+            
+            width_scene_imgui = imgui.get_content_region_avail().x
+            height_scene_imgui = imgui.get_content_region_avail().y
+            # *m_width = width
+            # *m_height = height
+            imgui.image(
+                self.sceneBuffer.texture, 
+                imgui.get_content_region_avail(), 
+                imgui.ImVec2(0, 1), 
+                imgui.ImVec2(1, 0)
+            )
+            # imgui.end_child()
+            imgui.end()
+
+            imgui.render()
+            # imgui.begin("SSS")
+            # imgui.button("NSSS")
+            # imgui.end()
+
 
             imgui.backends.opengl3_render_draw_data(imgui.get_draw_data())
             if io.config_flags & imgui.ConfigFlags_.viewports_enable > 0:
@@ -579,7 +616,8 @@ class GUI(IMGUI):
             glfw.swap_buffers(self.window)
 
             # imgui.end_frame()
-            
+
+
             for w in range(len(self.windows)):
                 glfw.make_context_current(self.windows[w])
                 glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT)
