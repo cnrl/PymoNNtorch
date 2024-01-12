@@ -26,7 +26,8 @@ class IMGUI:
         self.darkMod = True
         self.debugging = ""
         self.frameBufferWindows = []
-
+        self.width_windows = []
+        self.heigh_windows = []
     def initIcon(self):
         def opentIcon(location):
             img = Image.open(location)
@@ -178,6 +179,8 @@ class IMGUI:
                 print("!!",i)
 
                 newWindow = FrameBuffer(800, 600)
+                self.width_windows.append(800)
+                self.heigh_windows.append(600)
                 self.frameBufferWindows.append(newWindow)
 
                 #pervious method (multi glfw window)

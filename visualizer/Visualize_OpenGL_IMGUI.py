@@ -502,7 +502,6 @@ class GUI(IMGUI):
                 # del(self.sceneBuffer)
                 # self.sceneBuffer = FrameBuffer(int(width_scene_imgui),int(height_scene_imgui))
                 print("ww: ",self.windowWidth,"hh: ",self.windowHeigh)
-                # glViewport(0, 0, int(self.windowWidth), int(self.windowHeigh))
 
             imgui.image(
                 self.sceneBuffer.texture, 
@@ -524,19 +523,14 @@ class GUI(IMGUI):
                 isOpen = imgui.begin("Scene %s N:%s"%(str(w),self.windowsTensors[w]),p_open=True)
                 # print(111111111111)
                 
-                width_scene_imgui = imgui.get_content_region_avail().x
-                height_scene_imgui = imgui.get_content_region_avail().y
-                # if  self.windowWidth != width_scene_imgui or self.windowHeigh != height_scene_imgui:
-                #     self.windowHeigh=height_scene_imgui
-                #     self.windowWidth=width_scene_imgui
-                #     # del (self.sceneBuffer)
-                #     self.sceneBuffer.rescaleFramebuffer(int(width_scene_imgui),int(height_scene_imgui))
-                #     glViewport(0, 0, int(self.windowWidth), int(self.windowHeigh))
-                #     # del(self.sceneBuffer)
-                #     # self.sceneBuffer = FrameBuffer(int(width_scene_imgui),int(height_scene_imgui))
-                #     print("ww: ",self.windowWidth,"hh: ",self.windowHeigh)
-                #     # glViewport(0, 0, int(self.windowWidth), int(self.windowHeigh))
+                width_window_imgui = imgui.get_content_region_avail().x
+                height_window_imgui = imgui.get_content_region_avail().y
 
+                if  self.width_windows[w] != width_window_imgui or self.heigh_windows[w] != height_window_imgui:
+                    self.width_windows[w] =width_window_imgui
+                    self.heigh_windows[w] = height_window_imgui
+                    self.frameBufferWindows[w].rescaleFramebuffer(int(width_window_imgui),int(height_window_imgui))
+                               
                 imgui.image(
                     self.frameBufferWindows[w].texture, 
                     # imgui.ImVec2(self.windowWidth,self.windowHeigh), 
@@ -565,6 +559,7 @@ class GUI(IMGUI):
             
             for n in range(len(self.network.NeuronGroups)):
 
+                glViewport(0, 0, int(self.windowWidth), int(self.windowHeigh))
                 if not self.shows[n]:continue
 
 
@@ -666,12 +661,26 @@ class GUI(IMGUI):
 
             # imgui.end_frame()
             for w in range(len(self.frameBufferWindows)):
+                glViewport(0, 0, int(self.width_windows[w]), int(self.heigh_windows[w]))
                 glBindFramebuffer(GL_FRAMEBUFFER,self.frameBufferWindows[w].fbo)
                 glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT)
                 n = self.windowsTensors[w]
                 X=((torch.reshape(self.tensors[n], (1,self.tensorHeights[n]*self.tensorWidths[n]))).squeeze(0)).reshape(self.tensorHeights[n]*self.tensorWidths[n],1)
-                if self.network.device == 'cpu':pass
-                  
+                if self.network.device == 'cpu':
+                    tens2 = torch.zeros([self.tensorHeights[n]*self.tensorWidths[n],1], dtype=torch.float)
+                    X2=torch.cat((X,tens2),1)
+                    X3=torch.cat((tens2,X2),1)
+                    tens3 = torch.ones([self.tensorHeights[n]*self.tensorWidths[n],1], dtype=torch.float)
+                    X4=torch.cat((X3,tens3),1)
+                    tensor2=X4
+
+                    glBindTexture(GL_TEXTURE_2D, self.colors[n])
+                    # print("n:",n,"XXXXXXXXXXXXXX:",tensor2)
+
+                    # glTexImage2D(GL_TEXTURE_2D,0, GL_RGBA32F, tensorWidth, tensorHeight, 0, GL_RGBA, GL_FLOAT, None)
+                    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, self.tensorWidths[n], self.tensorHeights[n], 0, GL_RGBA, GL_FLOAT, tensor2.numpy())
+                    
+
                 else:
                     tens2 = torch.zeros([self.tensorHeights[n]*self.tensorWidths[n],1], dtype=torch.float, device=torch.device('cuda:0'))
                     X2=torch.cat((X,tens2),1)
