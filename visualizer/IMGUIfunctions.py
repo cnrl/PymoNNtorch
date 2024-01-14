@@ -9,6 +9,7 @@ import glfw
 from PIL import Image
 
 from .FrameBuffer import FrameBuffer
+from .Camera import Camera
 
 class IMGUI:
     def __init__(self,width=1000, heigh=600):
@@ -28,6 +29,7 @@ class IMGUI:
         self.frameBufferWindows = []
         self.width_windows = []
         self.heigh_windows = []
+        self.camera_windows = []
     def initIcon(self):
         def opentIcon(location):
             img = Image.open(location)
@@ -182,7 +184,7 @@ class IMGUI:
                 self.width_windows.append(800)
                 self.heigh_windows.append(600)
                 self.frameBufferWindows.append(newWindow)
-
+                self.camera_windows.append(Camera(self.uniform_location_projection,self.uniform_location_view,self.uniform_location_model))
                 #pervious method (multi glfw window)
                 # newWindow = glfw.create_window(800, 600, "NeuronGroup "+str(i), None, self.window)
                 # if not newWindow:
