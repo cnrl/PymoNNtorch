@@ -16,11 +16,12 @@ import glm
 from .IMGUIfunctions import IMGUI
 from .FrameBuffer import FrameBuffer
 from .Camera import Camera
+from .MainWindow import MainWindow
 
 class GUI(IMGUI):
     
-    def __init__(self,network, width=1000, heigh=600):
-        
+    def __init__(self,network, width=1000, height=600):
+        self.width,self.height = width,height
         self.network = network
         self.network.simulate_iteration()
         self.network.clear_recorder()
@@ -32,14 +33,10 @@ class GUI(IMGUI):
         #     self.tensorSize = self.tensor.shape[0]
         #     self.tensor=torch.reshape(self.tensor,find_numbers_close_to_sqrt(self.tensorSize))
         #     self.tensorHeight,self.tensorWidth = self.tensor.shape
-        for sn in network.SynapseGroups:
-            print(sn)
-
-        # self.shows = []
-        # for i in range(len(self.network.NeuronGroups)):
-        #     self.shows.append(1)
-        # self.windows = []
-        IMGUI.__init__(self,width, heigh)
+        # for sn in network.SynapseGroups:
+        #     print(sn)
+        
+        IMGUI.__init__(self,width, height)
         ## Vertex shader source code
 
 
@@ -63,16 +60,14 @@ class GUI(IMGUI):
                 b = c // a
             return b, a
         self.shows = []
-        self.windows = []
-        self.windowsTensors = []
         
 
         ##  Callback function for window resize
-        def framebuffer_size_callback(window, width, height):
-            glViewport(0, 0, width, height)
-            self.windowWidth = width
-            self.windowHeigh = height
-            glUniform1f(self.uniform_location_size_data, self.windowWidth/8.5)
+        # def framebuffer_size_callback(window, width, height):
+        #     glViewport(0, 0, width, height)
+        #     self.windowWidth = width
+        #     self.windowHeigh = height
+        #     glUniform1f(self.uniform_location_size_data, self.windowWidth/8.5)
         
 
         
@@ -83,7 +78,7 @@ class GUI(IMGUI):
             raise Exception("GLFW initialization failed")
 
         ## Create a GLFW window
-        self.window = glfw.create_window(self.windowWidth, self.windowHeigh, "OpenGL Window", None, None)
+        self.window = glfw.create_window(self.width, self.height, "OpenGL Window", None, None)
         if not self.window:
             glfw.terminate()
             raise Exception("GLFW window creation failed")
@@ -259,7 +254,9 @@ class GUI(IMGUI):
         # glUniform1f(self.uniform_location_size_data, self.windowWidth/8.5)
 
 
+        self.MainWindow = MainWindow(self.width, self.height, self)
         print("INITGL DONE")
+
         self.renderOpenGL()
     def renderOpenGL(self):
         # io = imgui.get_io()
@@ -273,147 +270,29 @@ class GUI(IMGUI):
 
         # Setup Dear ImGui style
         imgui.style_colors_dark()
-        def cameraKeyboard():
-            if (glfw.get_key(self.window, glfw.KEY_W) == glfw.PRESS):
-                self.Position += self.speed * self.Orientation
-                # print(Position)
 
-            if (glfw.get_key(self.window, glfw.KEY_A) == glfw.PRESS):
-                self.Position += self.speed * -glm.normalize(glm.cross(self.Orientation, self.Up))
-            
-            if (glfw.get_key(self.window, glfw.KEY_S) == glfw.PRESS):
-            
-                self.Position += self.speed * -self.Orientation
-            
-            if (glfw.get_key(self.window, glfw.KEY_D) == glfw.PRESS):
-            
-                self.Position += self.speed * glm.normalize(glm.cross(self.Orientation, self.Up))
-            
-            if (glfw.get_key(self.window, glfw.KEY_E) == glfw.PRESS):
-            
-                self.Position += self.speed * self.Up
-            
-            if (glfw.get_key(self.window, glfw.KEY_Q) == glfw.PRESS):
-            
-                self.Position += self.speed * -self.Up
-
-            if (glfw.get_key(self.window, glfw.KEY_LEFT_CONTROL) == glfw.PRESS) or (glfw.get_key(self.window, glfw.KEY_RIGHT_CONTROL) == glfw.PRESS):
-                self.speed = 0.0005*8
-            if (glfw.get_key(self.window, glfw.KEY_LEFT_SHIFT) == glfw.PRESS) or (glfw.get_key(self.window, glfw.KEY_RIGHT_SHIFT) == glfw.PRESS):
-                self.speed = 0.0005*4
-            elif (glfw.get_key(self.window, glfw.KEY_LEFT_SHIFT) == glfw.RELEASE) and (glfw.get_key(self.window, glfw.KEY_LEFT_CONTROL) == glfw.RELEASE) and (glfw.get_key(self.window, glfw.KEY_RIGHT_SHIFT) == glfw.RELEASE) and (glfw.get_key(self.window, glfw.KEY_RIGHT_CONTROL) == glfw.RELEASE):
-                self.speed = 0.0005
-
-            if (glfw.get_key(self.window, glfw.KEY_P) == glfw.PRESS):
-                self.model = glm.scale(self.model,glm.vec3(glm.vec2(1.00001),1.0))
-                # model = glm.scale(model,glm.vec3(glm.vec2(1.05001),1.0))
-                self.Zoom -= 0.1
-            if (glfw.get_key(self.window, glfw.KEY_O) == glfw.PRESS):
-                self.model = glm.scale(self.model,glm.vec3(glm.vec2(0.999900009999),1.0))
-                # model = glm.scale(model,glm.vec3(glm.vec2(0.89999),1.0))
-                self.Zoom += 0.1
-                # model = glm.scale(model,glm.vec3(glm.vec2(0.999),1.0))
-
-            if (glfw.get_key(self.window, glfw.KEY_UP) == glfw.PRESS):
-                # model = glm.rotate(model,-speed,glm.vec3(1,0,0))
-                self.model = glm.rotate(self.model,-self.speed,glm.normalize(glm.cross(self.Orientation, self.Up)))
-            if (glfw.get_key(self.window, glfw.KEY_DOWN) == glfw.PRESS):
-                # model = glm.rotate(model,speed,glm.vec3(1,0,0))
-                self.model = glm.rotate(self.model,self.speed,glm.normalize(glm.cross(self.Orientation, self.Up)))
-            if (glfw.get_key(self.window, glfw.KEY_RIGHT) == glfw.PRESS):
-                self.model = glm.rotate(self.model,self.speed,glm.normalize(self.Up))
-            if (glfw.get_key(self.window, glfw.KEY_LEFT) == glfw.PRESS):
-                self.model = glm.rotate(self.model,-self.speed,glm.normalize(self.Up)) 
-
-            if ((glfw.get_key(self.window, glfw.KEY_LEFT_CONTROL) == glfw.PRESS) or (glfw.get_key(self.window, glfw.KEY_RIGHT_CONTROL) == glfw.PRESS)) and (glfw.get_key(self.window, glfw.KEY_R) == glfw.PRESS):
-                self.model = glm.mat4(1.0)
-                self.model = glm.translate(self.model, glm.vec3(0.0, 0.0, 0.0))
-                self.Position  = glm.vec3(0.0, 0.0, 1.5)
-                self.Orientation = glm.vec3(0.0, 0.0, -1.0)
-                self.Up = glm.vec3(0.0, 1.0, 0.0)
-                self.speed = 0.005
-                self.Zoom = 95.0
-            # glfw.get_cursor_pos
-            # Orientation = glm.vec3(0.0, 0.0, -1.0)
-
-
-            # projection = glm.ortho(-1,1, -1,1, -1000.0, 1000.0)
-            # view = glm.lookAt(Position, Position + Orientation, Up) 
-            try:
-                self.projection = glm.perspective(glm.radians(self.Zoom), self.windowWidth/self.windowHeigh, 0.1, 100000.0)
-                # self.projection = glm.perspective(glm.radians(self.Zoom), 1000/600, 0.1, 100000.0)
-            except:
-                pass
-                # self.projection = glm.perspective(glm.radians(self.Zoom), 1.5, 0.1, 100000.0)
-
-            self.view = glm.lookAt(self.Position, self.Position + self.Orientation, self.Up) 
-            # projection = glm.perspective(glm.radians(45.0), 1.0, 0.1, 100.0)
-            # view = glm.lookAt(Position, Position + Orientation, Up)
-
-            # imgui.set_next_window_size(500, 500)
-            # with imgui.begin("Camera:"):
-            #     imgui.text("position:")
-            #     imgui.text(str(Position))
-            #     imgui.text("projection:")
-            #     imgui.text(str(projection))
-            #     imgui.text("view:")
-            #     imgui.text(str(view))
-            #     imgui.text("model:")
-            #     imgui.text(str(model))
-
-            glUniformMatrix4fv (self.uniform_location_projection, 1, GL_FALSE, glm.value_ptr(self.projection))
-            glUniformMatrix4fv (self.uniform_location_view, 1, GL_FALSE, glm.value_ptr(self.view))
-            glUniformMatrix4fv (self.uniform_location_model, 1, GL_FALSE, glm.value_ptr(self.model))
-
-        def addQuad(z):
-            glUniform1f(self.uniform_location_z, z)
-            glUniform1f(self.uniform_location_isdata, 0.0)
-            # glUseProgram(0)
-            glUniform1f(self.uniform_location_isplan,1.0)
-            glLineWidth(2.0)
-            glPolygonMode(GL_FRONT_AND_BACK, GL_LINE)
-            # glEnable(GL_CULL_FACE)
-            # glCullFace(GL_BACK)
-            # glFrontFace(GL_CW)  
-            # glColor3f(1, 1, 0)
-            glBegin(GL_QUADS)
-            glVertex3f(-0.99, -0.99,0)
-            glVertex3f(-0.99, 0.99,0)
-            glVertex3f(0.99, 0.99,0)
-            glVertex3f(0.99, -0.99,0)
-            glEnd()
-            # glFrontFace(GL_CCW )
-            # glUseProgram(self.shader_program)
-            glUniform1f(self.uniform_location_isplan,0.0)
-            # glDisable(GL_BLEND)
-            glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
-
-        def show_simple_window():
-
-            viewport = imgui.get_main_viewport();
-            imgui.set_next_window_pos(viewport.work_pos);
-            imgui.set_next_window_size(viewport.work_size);
-            imgui.set_next_window_viewport(viewport.id_);
-            imgui.push_style_var(imgui.StyleVar_.window_rounding, 0.0);
-            imgui.push_style_var(imgui.StyleVar_.window_border_size, 0.0);
-            imgui.push_style_var(imgui.StyleVar_.window_padding, imgui.ImVec2(0.0,0.0));
+        def EnableDoking():
+            viewport = imgui.get_main_viewport()
+            imgui.set_next_window_pos(viewport.work_pos)
+            imgui.set_next_window_size(viewport.work_size)
+            imgui.set_next_window_viewport(viewport.id_)
+            imgui.push_style_var(imgui.StyleVar_.window_rounding, 0.0)
+            imgui.push_style_var(imgui.StyleVar_.window_border_size, 0.0)
+            imgui.push_style_var(imgui.StyleVar_.window_padding, imgui.ImVec2(0.0,0.0))
             window_flags = imgui.WindowFlags_.menu_bar | imgui.WindowFlags_.no_docking
-            window_flags |= imgui.WindowFlags_.no_title_bar | imgui.WindowFlags_.no_collapse | imgui.WindowFlags_.no_resize | imgui.WindowFlags_.no_move;
-            window_flags |= imgui.WindowFlags_.no_bring_to_front_on_focus | imgui.WindowFlags_.no_nav_focus;
-            # print("4444:",window_flags)
-            
+            window_flags |= imgui.WindowFlags_.no_title_bar | imgui.WindowFlags_.no_collapse | imgui.WindowFlags_.no_resize | imgui.WindowFlags_.no_move
+            window_flags |= imgui.WindowFlags_.no_bring_to_front_on_focus | imgui.WindowFlags_.no_nav_focus
             window_flags |= imgui.WindowFlags_.no_background
-            # print(window_flags)
-            imgui.begin("DockSpace Demo", True, window_flags);
-            imgui.pop_style_var();
-            imgui.pop_style_var(2);
-            dockspace_id = imgui.get_id("MyDockSpace");
-            # print("cccc:",dockspace_id)
-            imgui.dock_space(dockspace_id, imgui.ImVec2(0.0, 0.0), 8);
+            imgui.begin("DockSpace Demo", True, window_flags)
+            imgui.pop_style_var()
+            imgui.pop_style_var(2)
+            dockspace_id = imgui.get_id("MyDockSpace")
+            imgui.dock_space(dockspace_id, imgui.ImVec2(0.0, 0.0), 8)
             imgui.end()
         glEnable(GL_DEPTH_TEST)
         glEnable(GL_BLEND)
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
+        glEnable(GL_POINT_SMOOTH)
         ## Render loop
         lastTime = time.time()
         lastTime2 = lastTime
@@ -426,14 +305,12 @@ class GUI(IMGUI):
         self.Up = glm.vec3(0.0, 1.0, 0.0)
         self.speed = 0.005
         self.Zoom = 95.0
-        self.camera = Camera(self.uniform_location_projection,self.uniform_location_view,self.uniform_location_model)
+        self.camera = Camera(self)
         # glfw.swap_interval(1)
         self.initIcon()
         show_demo_window = True
         show_demo_window2 = True
-
-        self.sceneBuffer = FrameBuffer(self.windowWidth, self.windowHeigh)
-
+        
         while not glfw.window_should_close(self.window):
 
             glfw.make_context_current(self.window)
@@ -450,21 +327,16 @@ class GUI(IMGUI):
                 glClearColor(0.62, 0.64, 0.70 , 1.0)
             glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT)
 
-    
-            # glUniform1f(self.uniform_location_loc_mac_x, -1+(self.selectedX+1)*2/(self.tensorWidth+1))
-            # glUniform1f(self.uniform_location_loc_mac_y, -1+(self.selectedY+1)*2/(self.tensorHeight+1))
 
-            # self.impl.process_inputs()
             
             imgui.new_frame()
 
-            show_simple_window()
+            EnableDoking()
             if show_demo_window:
                 show_demo_window = imgui.show_demo_window(show_demo_window)
             if show_demo_window2:
                 show_demo_window2 = implot.show_demo_window(show_demo_window2)
 
-            # print("@@@@@@@2")
             currentTime = time.time()
             timeDiff = currentTime - lastTime
             timeDiff2 = currentTime - lastTime2
@@ -492,268 +364,57 @@ class GUI(IMGUI):
 
 
             imgui.push_style_var(imgui.StyleVar_.window_padding, imgui.ImVec2(0,0))
-            showScene,_ =imgui.begin("Scene")
+            self.MainWindow.show,_ = imgui.begin("Scene")
             if imgui.is_window_focused():
-                self.camera.cameraInput(self.windowWidth,self.windowHeigh)
-            # else:
-                # self.camera.OnUpdateCamera(self.windowWidth,self.windowHeigh)
-
-            width_scene_imgui = imgui.get_content_region_avail().x
-            height_scene_imgui = imgui.get_content_region_avail().y
-            if  self.windowWidth != width_scene_imgui or self.windowHeigh != height_scene_imgui:
-                self.windowHeigh=height_scene_imgui
-                self.windowWidth=width_scene_imgui
-                # del (self.sceneBuffer)
-                self.sceneBuffer.rescaleFramebuffer(int(width_scene_imgui),int(height_scene_imgui))
-                glViewport(0, 0, int(self.windowWidth), int(self.windowHeigh))
-                # del(self.sceneBuffer)
-                # self.sceneBuffer = FrameBuffer(int(width_scene_imgui),int(height_scene_imgui))
-                print("ww: ",self.windowWidth,"hh: ",self.windowHeigh)
-
+                self.MainWindow.cameraInput()
+            width_window_imgui,height_window_imgui = imgui.get_content_region_avail()
+            if  self.MainWindow.width != width_window_imgui or self.MainWindow.height != height_window_imgui:
+                self.MainWindow.width, self.MainWindow.height = width_window_imgui, height_window_imgui
+                self.MainWindow.frameBuffer.rescaleFramebuffer(int(width_window_imgui),int(height_window_imgui))
             imgui.image(
-                self.sceneBuffer.texture, 
-                # imgui.ImVec2(self.windowWidth,self.windowHeigh), 
-                imgui.get_content_region_avail(),
+                self.MainWindow.frameBuffer.texture, 
+                imgui.ImVec2(width_window_imgui,height_window_imgui),
                 imgui.ImVec2(0, 1), 
                 imgui.ImVec2(1, 0)
             )
-
-            # imgui.end_child()
             imgui.end()
             imgui.pop_style_var()
 
 
 
 
-
-            for w in range(len(self.frameBufferWindows)): 
+            for w in range(len(self.NeuronWindows)): 
                 imgui.push_style_var(imgui.StyleVar_.window_padding, imgui.ImVec2(0,0))
-                isOpen = imgui.begin("Scene %s N:%s"%(str(w),self.windowsTensors[w]),p_open=True)
-                # print(111111111111)
-                
-                width_window_imgui = imgui.get_content_region_avail().x
-                height_window_imgui = imgui.get_content_region_avail().y
+                self.NeuronWindows[w].show,isClose = imgui.begin("Scene %s N:%s"%(str(w),self.NeuronWindows[w].NeuronIndex),p_open=True)
+                width_window_imgui,height_window_imgui = imgui.get_content_region_avail()
 
-                if  self.width_windows[w] != width_window_imgui or self.heigh_windows[w] != height_window_imgui:
-                    self.width_windows[w] =width_window_imgui
-                    self.heigh_windows[w] = height_window_imgui
-                    self.frameBufferWindows[w].rescaleFramebuffer(int(width_window_imgui),int(height_window_imgui))
+                if  self.NeuronWindows[w].width != width_window_imgui or self.NeuronWindows[w].height != height_window_imgui:
+                    self.NeuronWindows[w].width, self.NeuronWindows[w].height = width_window_imgui, height_window_imgui
+                    self.NeuronWindows[w].frameBuffer.rescaleFramebuffer(int(width_window_imgui),int(height_window_imgui))
+                    
                 if imgui.is_window_focused():
-                    self.camera_windows[w].cameraInput(self.width_windows[w],self.heigh_windows[w])
-
-                # else:
-                #     self.camera_windows[w].OnUpdateCamera(self.width_windows[w],self.heigh_windows[w])
-                    # self.camera.OnUpdateCamera(self.windowWidth,self.windowHeigh)      
+                    self.NeuronWindows[w].cameraInput()
                 imgui.image(
-                    self.frameBufferWindows[w].texture, 
-                    # imgui.ImVec2(self.windowWidth,self.windowHeigh), 
-                    imgui.get_content_region_avail(),
+                    self.NeuronWindows[w].frameBuffer.texture, 
+                    imgui.ImVec2(width_window_imgui,height_window_imgui),
                     imgui.ImVec2(0, 1), 
                     imgui.ImVec2(1, 0)
                 )
-                # imgui.end_child()
                 imgui.end()
                 imgui.pop_style_var()
-                if not isOpen[1]:
-                    self.frameBufferWindows.pop(w)
-                    self.windowsTensors.pop(w)
-                    self.width_windows.pop(w)
-                    self.heigh_windows.pop(w)
-                    self.camera_windows.pop(w)
+                if not isClose:
+                    self.NeuronWindows.pop(w)
                     break
 
 
 
 
             imgui.render()
-            # imgui.begin("SSS")
-            # imgui.button("NSSS")
-            # imgui.end()
 
-            glBindFramebuffer(GL_FRAMEBUFFER,self.sceneBuffer.fbo)
-            if showScene:
-                glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT)
-                self.camera.OnUpdateCamera(self.windowWidth,self.windowHeigh)
-                for n in range(len(self.network.NeuronGroups)):
+            self.MainWindow.OnUpdate()
 
-                    glViewport(0, 0, int(self.windowWidth), int(self.windowHeigh))
-                    if not self.shows[n]:continue
-
-
-                    # X=((torch.reshape(tensor, (1,self.tensorHeights[n]*self.tensorWidths[n]))).squeeze(0)).reshape(self.tensorHeights[n]*self.tensorWidths[n],1)
-                    X=((torch.reshape(self.tensors[n], (1,self.tensorHeights[n]*self.tensorWidths[n]))).squeeze(0)).reshape(self.tensorHeights[n]*self.tensorWidths[n],1)
-
-                    if self.network.device == 'cpu':
-                        tens2 = torch.zeros([self.tensorHeights[n]*self.tensorWidths[n],1], dtype=torch.float)
-                        X2=torch.cat((X,tens2),1)
-                        X3=torch.cat((tens2,X2),1)
-                        tens3 = torch.ones([self.tensorHeights[n]*self.tensorWidths[n],1], dtype=torch.float)
-                        X4=torch.cat((X3,tens3),1)
-                        tensor2=X4
-
-                        glBindTexture(GL_TEXTURE_2D, self.colors[n])
-                        # print("n:",n,"XXXXXXXXXXXXXX:",tensor2)
-
-                        # glTexImage2D(GL_TEXTURE_2D,0, GL_RGBA32F, tensorWidth, tensorHeight, 0, GL_RGBA, GL_FLOAT, None)
-                        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, self.tensorWidths[n], self.tensorHeights[n], 0, GL_RGBA, GL_FLOAT, tensor2.numpy())
-                        
-
-
-                    else:
-                        tens2 = torch.zeros([self.tensorHeights[n]*self.tensorWidths[n],1], dtype=torch.float, device=torch.device('cuda:0'))
-                        X2=torch.cat((X,tens2),1)
-                        X3=torch.cat((tens2,X2),1)
-                        tens3 = torch.ones([self.tensorHeights[n]*self.tensorWidths[n],1], dtype=torch.float, device=torch.device('cuda:0'))
-                        X4=torch.cat((X3,tens3),1)
-                        tensor2=X4
-                        (err,) = cu.cudaGraphicsMapResources(1, self.cuda_images[n], cu.cudaStreamLegacy)
-                        err, array = cu.cudaGraphicsSubResourceGetMappedArray(self.cuda_images[n], 0, 0)
-                        (err,) = cu.cudaMemcpy2DToArrayAsync(
-                            array,
-                            0,
-                            0,
-                            tensor2.data_ptr(),
-                            4*4*self.tensorWidths[n],
-                            4*4*self.tensorWidths[n],
-                            self.tensorHeights[n],
-                            cu.cudaMemcpyKind.cudaMemcpyDeviceToDevice,
-                            cu.cudaStreamLegacy,
-                        )
-                        (err,) = cu.cudaGraphicsUnmapResources(1, self.cuda_images[n], cu.cudaStreamLegacy)
-
-
-                    # glEnable(GL_BLEND)
-                    # glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
-                    # glBlendEquation(GL_FUNC_ADD)
-                    # glBlendColor(1.000, 0.012, 0.012, 1.000)
-                    # glDisable(GL_POINT_SMOOTH)
-                    # glDisable(GL_PROGRAM_POINT_SIZE)
-                    
-                    glBindVertexArray(self.vaos[n])
-                    glBindBuffer(GL_ARRAY_BUFFER, self.vbos[n])
-                    glEnableVertexAttribArray(0)
-                    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5*4, ctypes.c_void_p(0))
-                    glEnableVertexAttribArray(1)
-                    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5*4, ctypes.c_void_p(0+3*4))
-
-
-                    glBindTexture(GL_TEXTURE_2D, self.colors[n])
-                    #!
-                    glUniform1f(self.uniform_location_z, -1/2*n) 
-                    # glBegin(GL_LINE_STRIP) 
-                    if self.selectedX != -1 and self.selectedY != -1: 
-                        # glDrawArrays(GL_POINTS, 0, tensorHeight*tensorWidth+1)
-                        ## for big number like million if points will be like square specify more details 
-                        ## last vertex show value of seleceted index and show that in circle shape
-                        # if self.set_enable_smooth:
-                        #     glEnable(GL_POINT_SMOOTH)
-                        # else:
-                        #     glDisable(GL_POINT_SMOOTH)
-                        glUniform1f(self.uniform_location_isdata, 0.0)
-                        glEnable(GL_POINT_SMOOTH)
-                        glDrawArrays(GL_POINTS, 0, self.tensorHeights[n]*self.tensorWidths[n])
-                        glEnable(GL_POINT_SMOOTH)
-                        # glUniform1f(self.uniform_location_isdata, 1.0)
-                        # glDrawArrays(GL_POINTS, self.tensorHeights[n]*self.tensorWidths[n],1)    
-                        # print("@@@@@@@@@@@")
-                    else: 
-                        glUniform1f(self.uniform_location_isdata, 0.0)
-                        glDrawArrays(GL_POINTS, 0, self.tensorHeights[n]*self.tensorWidths[n])
-
-
-                    #!
-                    addQuad(-1/2*n)
-                
-            glBindFramebuffer(GL_FRAMEBUFFER, 0)
-
-            # imgui.backends.opengl3_render_draw_data(imgui.get_draw_data())
-            # if self.io.config_flags & imgui.ConfigFlags_.viewports_enable > 0:
-            #     backup_current_context = glfw.get_current_context()
-            #     imgui.update_platform_windows()
-            #     imgui.render_platform_windows_default()
-            #     glfw.make_context_current(backup_current_context)
-            # glfw.swap_buffers(self.window)
-
-            # self.impl.render(imgui.get_draw_data())
-
-            # imgui.end_frame()
-            # glUniform1f(self.uniform_location_isNewWindow,1.0)
-            for w in range(len(self.frameBufferWindows)):
-                glViewport(0, 0, int(self.width_windows[w]), int(self.heigh_windows[w]))
-                glBindFramebuffer(GL_FRAMEBUFFER,self.frameBufferWindows[w].fbo)
-                glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT)
-                self.camera_windows[w].OnUpdateCamera(self.width_windows[w],self.heigh_windows[w])
-                n = self.windowsTensors[w]
-                X=((torch.reshape(self.tensors[n], (1,self.tensorHeights[n]*self.tensorWidths[n]))).squeeze(0)).reshape(self.tensorHeights[n]*self.tensorWidths[n],1)
-                if self.network.device == 'cpu':
-                    tens2 = torch.zeros([self.tensorHeights[n]*self.tensorWidths[n],1], dtype=torch.float)
-                    X2=torch.cat((X,tens2),1)
-                    X3=torch.cat((tens2,X2),1)
-                    tens3 = torch.ones([self.tensorHeights[n]*self.tensorWidths[n],1], dtype=torch.float)
-                    X4=torch.cat((X3,tens3),1)
-                    tensor2=X4
-
-                    glBindTexture(GL_TEXTURE_2D, self.colors[n])
-                    # print("n:",n,"XXXXXXXXXXXXXX:",tensor2)
-
-                    # glTexImage2D(GL_TEXTURE_2D,0, GL_RGBA32F, tensorWidth, tensorHeight, 0, GL_RGBA, GL_FLOAT, None)
-                    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, self.tensorWidths[n], self.tensorHeights[n], 0, GL_RGBA, GL_FLOAT, tensor2.numpy())
-                    
-
-                else:
-                    tens2 = torch.zeros([self.tensorHeights[n]*self.tensorWidths[n],1], dtype=torch.float, device=torch.device('cuda:0'))
-                    X2=torch.cat((X,tens2),1)
-                    X3=torch.cat((tens2,X2),1)
-                    tens3 = torch.ones([self.tensorHeights[n]*self.tensorWidths[n],1], dtype=torch.float, device=torch.device('cuda:0'))
-                    X4=torch.cat((X3,tens3),1)
-                    tensor2=X4
-                    (err,) = cu.cudaGraphicsMapResources(1, self.cuda_images[n], cu.cudaStreamLegacy)
-                    err, array = cu.cudaGraphicsSubResourceGetMappedArray(self.cuda_images[n], 0, 0)
-                    (err,) = cu.cudaMemcpy2DToArrayAsync(
-                        array,
-                        0,
-                        0,
-                        tensor2.data_ptr(),
-                        4*4*self.tensorWidths[n],
-                        4*4*self.tensorWidths[n],
-                        self.tensorHeights[n],
-                        cu.cudaMemcpyKind.cudaMemcpyDeviceToDevice,
-                        cu.cudaStreamLegacy,
-                    )
-                    (err,) = cu.cudaGraphicsUnmapResources(1, self.cuda_images[n], cu.cudaStreamLegacy)
-                glBindVertexArray(0)
-                glBindBuffer(GL_ARRAY_BUFFER, self.vbos[n])
-                glEnableVertexAttribArray(0)
-                glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5*4, ctypes.c_void_p(0))
-                glEnableVertexAttribArray(1)
-                glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5*4, ctypes.c_void_p(0+3*4))
-                glBindTexture(GL_TEXTURE_2D, self.colors[n])
-                #!
-                glUniform1f(self.uniform_location_z,0.0) 
-                # glBegin(GL_LINE_STRIP) 
-                if self.selectedX != -1 and self.selectedY != -1: 
-                    # glDrawArrays(GL_POINTS, 0, tensorHeight*tensorWidth+1)
-                    ## for big number like million if points will be like square specify more details 
-                    ## last vertex show value of seleceted index and show that in circle shape
-                    # if self.set_enable_smooth:
-                    #     glEnable(GL_POINT_SMOOTH)
-                    # else:
-                    #     glDisable(GL_POINT_SMOOTH)
-                    glUniform1f(self.uniform_location_isdata, 0.0)
-                    glEnable(GL_POINT_SMOOTH)
-                    glDrawArrays(GL_POINTS, 0, self.tensorHeights[n]*self.tensorWidths[n])
-                    glEnable(GL_POINT_SMOOTH)
-                    # glUniform1f(self.uniform_location_isdata, 1.0)
-                    # glDrawArrays(GL_POINTS, self.tensorHeights[n]*self.tensorWidths[n],1) 
-                else: 
-                    glUniform1f(self.uniform_location_isdata, 0.0)
-                    glDrawArrays(GL_POINTS, 0, self.tensorHeights[n]*self.tensorWidths[n])
-            
-
-                glBindFramebuffer(GL_FRAMEBUFFER, 0)
-
-            glUniform1f(self.uniform_location_size, 5.0)
-            # glUniform1f(self.uniform_location_isNewWindow,0.0)
+            for w in range(len(self.NeuronWindows)):
+                self.NeuronWindows[w].OnUpdate()
 
 
             imgui.backends.opengl3_render_draw_data(imgui.get_draw_data())
@@ -764,92 +425,11 @@ class GUI(IMGUI):
                 glfw.make_context_current(backup_current_context)
             glfw.swap_buffers(self.window)
             
-            # pervious method (multi glfw window)
-            # for w in range(len(self.windows)):
-            #     glfw.make_context_current(self.windows[w])
-            #     glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT)
-            #     glEnable(GL_PROGRAM_POINT_SIZE)
-            #     # glEnable(GL_DEPTH_TEST)
-            #     # glEnable(GL_BLEND)
-            #     # glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
-
-
-
-            #     glUseProgram(self.shader_program)
-            #     glUniform1f(self.uniform_location_size, 5.0)
-            #     glUniform1f(self.uniform_location_isNewWindow,1.0)
-            #     if self.darkMod:
-            #         glClearColor(0.15, 0.16, 0.21, 1.0)
-            #     else:
-            #         glClearColor(0.62, 0.64, 0.70 , 1.0)
-            #     n = self.windowsTensors[w]
-            #     X=((torch.reshape(self.tensors[n], (1,self.tensorHeights[n]*self.tensorWidths[n]))).squeeze(0)).reshape(self.tensorHeights[n]*self.tensorWidths[n],1)
-            #     if self.network.device == 'cpu':pass
-                  
-            #     else:
-            #         tens2 = torch.zeros([self.tensorHeights[n]*self.tensorWidths[n],1], dtype=torch.float, device=torch.device('cuda:0'))
-            #         X2=torch.cat((X,tens2),1)
-            #         X3=torch.cat((tens2,X2),1)
-            #         tens3 = torch.ones([self.tensorHeights[n]*self.tensorWidths[n],1], dtype=torch.float, device=torch.device('cuda:0'))
-            #         X4=torch.cat((X3,tens3),1)
-            #         tensor2=X4
-            #         (err,) = cu.cudaGraphicsMapResources(1, self.cuda_images[n], cu.cudaStreamLegacy)
-            #         err, array = cu.cudaGraphicsSubResourceGetMappedArray(self.cuda_images[n], 0, 0)
-            #         (err,) = cu.cudaMemcpy2DToArrayAsync(
-            #             array,
-            #             0,
-            #             0,
-            #             tensor2.data_ptr(),
-            #             4*4*self.tensorWidths[n],
-            #             4*4*self.tensorWidths[n],
-            #             self.tensorHeights[n],
-            #             cu.cudaMemcpyKind.cudaMemcpyDeviceToDevice,
-            #             cu.cudaStreamLegacy,
-            #         )
-            #         (err,) = cu.cudaGraphicsUnmapResources(1, self.cuda_images[n], cu.cudaStreamLegacy)
-            #     glBindVertexArray(0)
-            #     glBindBuffer(GL_ARRAY_BUFFER, self.vbos[n])
-            #     glEnableVertexAttribArray(0)
-            #     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5*4, ctypes.c_void_p(0))
-            #     glEnableVertexAttribArray(1)
-            #     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5*4, ctypes.c_void_p(0+3*4))
-            #     glBindTexture(GL_TEXTURE_2D, self.colors[n])
-            #     #!
-            #     glUniform1f(self.uniform_location_z,0.0) 
-            #     # glBegin(GL_LINE_STRIP) 
-            #     if self.selectedX != -1 and self.selectedY != -1: 
-            #         # glDrawArrays(GL_POINTS, 0, tensorHeight*tensorWidth+1)
-            #         ## for big number like million if points will be like square specify more details 
-            #         ## last vertex show value of seleceted index and show that in circle shape
-            #         # if self.set_enable_smooth:
-            #         #     glEnable(GL_POINT_SMOOTH)
-            #         # else:
-            #         #     glDisable(GL_POINT_SMOOTH)
-            #         glUniform1f(self.uniform_location_isdata, 0.0)
-            #         glEnable(GL_POINT_SMOOTH)
-            #         glDrawArrays(GL_POINTS, 0, self.tensorHeights[n]*self.tensorWidths[n])
-            #         glEnable(GL_POINT_SMOOTH)
-            #         # glUniform1f(self.uniform_location_isdata, 1.0)
-            #         # glDrawArrays(GL_POINTS, self.tensorHeights[n]*self.tensorWidths[n],1) 
-            #     else: 
-            #         glUniform1f(self.uniform_location_isdata, 0.0)
-            #         glDrawArrays(GL_POINTS, 0, self.tensorHeights[n]*self.tensorWidths[n])
-
-
-            #     glfw.swap_buffers(self.windows[w])
-
-            
-            # glUniform1f(self.uniform_location_size, 5.0)
-            # glUniform1f(self.uniform_location_isNewWindow,0.0)
-
-
-            
 
         ## Cleanup
         glDeleteProgram(self.shader_program)
         for n in range(len(self.network.NeuronGroups)):
             glDeleteBuffers(1, [self.vbos[n]])
-        # self.impl.shutdown()
         imgui.backends.opengl3_shutdown()
         imgui.backends.glfw_shutdown()
         imgui.destroy_context()

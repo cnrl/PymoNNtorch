@@ -10,11 +10,12 @@ from PIL import Image
 
 from .FrameBuffer import FrameBuffer
 from .Camera import Camera
+from .NeuronWindow import NeuronWindow
 
 class IMGUI:
     def __init__(self,width=1000, heigh=600):
-        self.windowWidth = width
-        self.windowHeigh = heigh
+        # self.windowWidth = width
+        # self.windowHeigh = heigh
         self.selectedGroup = 0
         self.selectedX = 0
         self.selectedY = 0
@@ -26,10 +27,7 @@ class IMGUI:
         self.ignoreBeforeOneVertexTrace = 100
         self.darkMod = True
         self.debugging = ""
-        self.frameBufferWindows = []
-        self.width_windows = []
-        self.heigh_windows = []
-        self.camera_windows = []
+        self.NeuronWindows = []
     def initIcon(self):
         def opentIcon(location):
             img = Image.open(location)
@@ -145,19 +143,18 @@ class IMGUI:
 
 
         # if imgui.begin_main_menu_bar():
-            # pass
-            # if main_menu_bar.opened:
-                # first menu dropdown
-                # with imgui.begin_menu('Setting', True) as setting_menu:
-                #     if setting_menu.opened:
-                #         with imgui.begin_menu('Style', True) as style_menu:
-                #             if style_menu.opened:
-                #                 if imgui.menu_item('Dark', None, False, True)[0]:
-                #                     self.darkMod = True
-                #                     imgui.style_colors_dark()
-                #                 if imgui.menu_item('Light', None, False, True)[0]:
-                #                     self.darkMod = False
-                #                     imgui.style_colors_light()
+        #     if imgui.begin_menu('Setting', True):
+        #         if imgui.begin_menu('Style', True):
+        #             if imgui.menu_item('Dark', None, False, True)[0]:
+        #                 self.darkMod = True
+        #                 imgui.style_colors_dark()
+        #             if imgui.menu_item('Light', None, False, True)[0]:
+        #                 self.darkMod = False
+        #                 imgui.style_colors_light()
+        #             imgui.end_menu()
+        #         imgui.end_menu()
+        # imgui.end_main_menu_bar()
+
 
         imgui.begin("NeuronGroups:")
         for i in range(len(self.network.NeuronGroups)):
@@ -178,46 +175,11 @@ class IMGUI:
             imgui.same_line(spacing=1.0)
             # if (imgui.button("+",25,25)):
             if (imgui.image_button("new_window"*(i+1),self.arrowtextureID[i],imgui.ImVec2(25,25))):
-                print("!!",i)
-
-                newWindow = FrameBuffer(800, 600)
-                self.width_windows.append(800)
-                self.heigh_windows.append(600)
-                self.frameBufferWindows.append(newWindow)
-                self.camera_windows.append(Camera(self.uniform_location_projection,self.uniform_location_view,self.uniform_location_model))
-                #pervious method (multi glfw window)
-                # newWindow = glfw.create_window(800, 600, "NeuronGroup "+str(i), None, self.window)
-                # if not newWindow:
-                #     glfw.terminate()
-                #     raise Exception("New window creation failed")
-                # glfw.make_context_current(newWindow)
-                # def framebuffer_size_callback(window, width, height):
-                #     glViewport(0, 0, width, height)
-                # glfw.set_framebuffer_size_callback(newWindow, framebuffer_size_callback)
-                # glfw.swap_interval(0)
-                # self.windows.append(newWindow)
-                self.windowsTensors.append(i)
-                # glfw.make_context_current(self.window)
+                newWindow = NeuronWindow(800,600,self,i)
+                self.NeuronWindows.append(newWindow)
             imgui.same_line(spacing=1.0)
             if (imgui.image_button("info"*(i+1),self.settingtextureID[i],imgui.ImVec2(25,25))):
                 pass
-            # if (imgui.button("x",25,25)):
-            #     pass
-                # glfw.destroy_window(self.window2)
-            # try:
-            #     if glfw.window_should_close(self.window2):
-            #         glfw.destroy_window(self.window2)
-            # except:
-            #     pass
-
-            for w in range(len(self.windows)):
-                try:
-                    if glfw.window_should_close(self.windows[w]):
-                            glfw.destroy_window(self.windows[w])
-                            self.windows.pop(w)
-                            self.windowsTensors.pop(w)
-                except:
-                    pass
         imgui.end()
 
 

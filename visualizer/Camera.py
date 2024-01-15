@@ -5,7 +5,8 @@ from imgui_bundle import imgui,implot
 
 
 class Camera:
-    def __init__(self,uni_loc_project,uni_loc_view,uni_loc_model):
+    def __init__(self,upper):
+        self.upper = upper
         self.model = glm.mat4(1.0)
         self.model = glm.translate(self.model, glm.vec3(0.0, 0.0, 0.0))
         self.Position  = glm.vec3(0.0, 0.0, 1.5)
@@ -13,18 +14,10 @@ class Camera:
         self.Up = glm.vec3(0.0, 1.0, 0.0)
         self.speed = 0.01
         self.Zoom = 95.0
-        self.uniform_location_projection = uni_loc_project
-        self.uniform_location_view = uni_loc_view
-        self.uniform_location_model = uni_loc_model
-    def OnUpdateCamera(self,width,height):
+    def OnUpdateCamera(self):
         # projection = glm.ortho(-1,1, -1,1, -1000.0, 1000.0)
         # view = glm.lookAt(Position, Position + Orientation, Up) 
-        try:
-            self.projection = glm.perspective(glm.radians(self.Zoom), width/height, 0.1, 100000.0)
-            # self.projection = glm.perspective(glm.radians(self.Zoom), 1000/600, 0.1, 100000.0)
-        except:
-            pass
-            # self.projection = glm.perspective(glm.radians(self.Zoom), 1.5, 0.1, 100000.0)
+        self.projection = glm.perspective(glm.radians(self.Zoom), self.width/self.height, 0.1, 100000.0)
 
         self.view = glm.lookAt(self.Position, self.Position + self.Orientation, self.Up) 
         # projection = glm.perspective(glm.radians(45.0), 1.0, 0.1, 100.0)
@@ -41,12 +34,12 @@ class Camera:
         #     imgui.text("model:")
         #     imgui.text(str(model))
 
-        glUniformMatrix4fv (self.uniform_location_projection, 1, GL_FALSE, glm.value_ptr(self.projection))
-        glUniformMatrix4fv (self.uniform_location_view, 1, GL_FALSE, glm.value_ptr(self.view))
-        glUniformMatrix4fv (self.uniform_location_model, 1, GL_FALSE, glm.value_ptr(self.model))
+        glUniformMatrix4fv (self.upper.uniform_location_projection, 1, GL_FALSE, glm.value_ptr(self.projection))
+        glUniformMatrix4fv (self.upper.uniform_location_view, 1, GL_FALSE, glm.value_ptr(self.view))
+        glUniformMatrix4fv (self.upper.uniform_location_model, 1, GL_FALSE, glm.value_ptr(self.model))
 
         
-    def cameraInput(self,width,height):
+    def cameraInput(self):
         if (imgui.is_key_down(imgui.Key.w) ):
             self.Position += self.speed * self.Orientation
         if (imgui.is_key_down(imgui.Key.a)):
@@ -93,4 +86,4 @@ class Camera:
             self.Up = glm.vec3(0.0, 1.0, 0.0)
             self.speed = 0.005
             self.Zoom = 95.0
-        self.OnUpdateCamera(width,height)
+        # self.OnUpdateCamera(width,height)
