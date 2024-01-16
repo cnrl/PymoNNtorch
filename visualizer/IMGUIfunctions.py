@@ -71,8 +71,35 @@ class IMGUI:
 
 
 
-        
-    def renderGUI(self):
+    def Begin(self):
+        glfw.poll_events()
+
+        imgui.backends.opengl3_new_frame()
+        imgui.backends.glfw_new_frame()
+
+        if self.darkMod:
+            glClearColor(0.15, 0.16, 0.21, 1.0)
+        else:
+            glClearColor(0.62, 0.64, 0.70 , 1.0)
+        glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT)
+        imgui.new_frame()
+
+        self.EnableDoking()
+        if self.show_demo_window:
+            self.show_demo_window = imgui.show_demo_window(self.show_demo_window)
+        if self.show_demo_window2:
+            self.show_demo_window2 = implot.show_demo_window(self.show_demo_window2)
+            
+    def End(self):
+        imgui.backends.opengl3_render_draw_data(imgui.get_draw_data())
+        if self.io.config_flags & imgui.ConfigFlags_.viewports_enable > 0:
+            backup_current_context = glfw.get_current_context()
+            imgui.update_platform_windows()
+            imgui.render_platform_windows_default()
+            glfw.make_context_current(backup_current_context)
+        glfw.swap_buffers(self.glfw_window)
+
+    def RenderGUI(self):
         # imgui.set_next_window_position(0, 18)
         # imgui.set_next_window_size(self.windowWidth/3, self.windowHeigh/2)
         imgui.begin("Debugging:")
@@ -202,7 +229,7 @@ class IMGUI:
         imgui.begin("Trace")
         xxxx = np.arange(0, 101, 1.0)
         if implot.begin_plot("Plot"):
-            implot.setup_axes("iteration", "trace G:%s, R:%s, C:%s"%(self.selectedGroup,self.selectedX,self.selectedY));
+            implot.setup_axes("iteration", "trace G:%s, R:%s, C:%s"%(self.selectedGroup,self.selectedY,self.selectedX));
             # print("x:",x)
             # print("y:",self.oneVertexTrace)
             # implot.setup_axes_limits(0, 100, 0, 500);
@@ -213,189 +240,49 @@ class IMGUI:
             # implot.plot_line("y2", x, y2)
             implot.end_plot()
         imgui.end()
-    def XX(self):
 
-            # glUniform1f(self.uniform_location_locx, 1/(self.tensorWidth+1)*(self.selectedX+1))
-            # glUniform1f(self.uniform_location_locy, 1/(self.tensorHeight+1)*(self.selectedY+1))
-            imgui.set_next_window_position(0, 18)
-            imgui.set_next_window_size(self.windowWidth/8, self.windowHeigh/3-18)
-            flags = imgui.WINDOW_NO_COLLAPSE | imgui.WINDOW_NO_RESIZE
-            with imgui.begin("Iteration:",flags=flags):
-                    # imgui.text("N:"+str(self.tensorWidth*self.tensorHeight))
-                    imgui.text("Iteration:"+str(self.iteration))
-
-
-                    
-                        # imgui.end_tooltip();
-
-                    imgui.text("Speed :")
-                    imgui.same_line()
-                    imgui.text_disabled("(?)");
-                    if imgui.is_item_hovered():
-                        with imgui.begin_tooltip():
-                            imgui.push_text_wrap_pos(imgui.get_font_size() * 35.0)
-                            imgui.text_unformatted("Maximum iteration per second")
-                            imgui.pop_text_wrap_pos()
-                    _, self.maxIterationInSecond = imgui.input_int(' ', self.maxIterationInSecond)
-
-
-                    imgui.separator()
-                    imgui.text("Group:")
-                    changed0, self.selectedGroup = imgui.input_int('  ', self.selectedGroup)
-                    if self.selectedGroup <= -1 : self.selectedGroup = len(self.network.NeuronGroups)- 1
-                    if self.selectedGroup >= len(self.network.NeuronGroups) : self.selectedGroup = 0
-                    imgui.text("ind:")
-                    changed1, self.selectedXY = imgui.input_int('   ', self.selectedY*self.tensorWidths[self.selectedGroup]+self.selectedX)
-                    if  changed1:
-                        self.selectedY = self.selectedXY // self.tensorWidths[self.selectedGroup]
-                        self.selectedX = self.selectedXY % self.tensorWidths[self.selectedGroup]
-                        # self.oneVertexTrace =np.zeros(100)
-                        # self.ignoreBeforeOneVertexTrace = 100
-                        # print("22")
-                    imgui.text("row:")
-                    changed2, self.selectedY = imgui.input_int('    ', self.selectedY)
-                    imgui.text("col:")
-                    changed3, self.selectedX = imgui.input_int('     ', self.selectedX)
-                    if changed0 or changed1 or changed2 or changed3:
-                        self.oneVertexTrace =np.zeros(100)
-                        self.ignoreBeforeOneVertexTrace = 100
-                    # if (imgui.button("  Trace\nindividualy",self.windowWidth/9,50)):pass
-
-                    if self.selectedY <= -1:self.selectedY = self.tensorHeights[self.selectedGroup]- 1
-                    if self.selectedY >= self.tensorHeights[self.selectedGroup] : self.selectedY = 0 
-                    if self.selectedX <= -1 : self.selectedX = self.tensorWidths[self.selectedGroup]-1 
-                    if self.selectedX >= self.tensorWidths[self.selectedGroup] : self.selectedX = 0 
-                    # if self.tensorWidth*self.tensorHeight<=20000:
-                    #     pass
-                    #     # for i in range(self.tensorHeight):
-                    #     #     for j in range(self.tensorWidth):
-                    #     #         if i == self.selectedY and j==self.selectedX:
-                    #     #             style.colors[imgui.COLOR_BUTTON] = (0.03, 0.07, 0.22, 1.0)
-                    #     #             style.colors[imgui.COLOR_TEXT] = (1.0, 0.0, 0.0, 1.0)
-                    #     #         else:
-                    #     #             style.colors[imgui.COLOR_BUTTON] = (0.13, 0.27, 0.42, 1.0)
-                    #     #             style.colors[imgui.COLOR_TEXT] = (1.0, 1.0, 1.0, 1.0)
-                    #     #         if (imgui.button("v_"+str(i*self.tensorHeight+j),100,25)):
-                    #     #             self.oneVertexTrace =np.zeros(100)
-                    #     #             self.ignoreBeforeOneVertexTrace = 100
-                    #     #             self.selectedX = j
-                    #     #             self.selectedY = i
-                    # else:
-                    #     pass
-                    #     # imgui.text("Generate over \n 20000 button \n in python take \n alot of time\n and drop fps")     
-
-
-                    imgui.new_line()
-            imgui.set_next_window_position(0, self.windowHeigh/3)
-            imgui.set_next_window_size(self.windowWidth/8, 2*self.windowHeigh/3)
-            flags = imgui.WINDOW_NO_COLLAPSE | imgui.WINDOW_NO_RESIZE
-            # style.colors[imgui.COLOR_BUTTON] = (0.13, 0.27, 0.42, 1.0)
-            # style.colors[imgui.COLOR_TEXT] = (1.0, 1.0, 1.0, 1.0)
-
-            imgui.set_next_window_position(self.windowWidth/8, 18)
-            imgui.set_next_window_size(self.windowWidth-2*self.windowWidth/8, self.windowHeigh)
-            imgui.push_style_var(imgui.STYLE_ALPHA, 0.01)
-            flags = imgui.WINDOW_NO_BRING_TO_FRONT_ON_FOCUS 
-            flags = imgui.WINDOW_NO_BRING_TO_FRONT_ON_FOCUS|imgui.WINDOW_NO_TITLE_BAR | imgui.WINDOW_NO_COLLAPSE | imgui.WINDOW_NO_RESIZE
-            with imgui.begin("output",flags=flags):
-                pass
-                # if imgui.core.is_window_focused() and imgui.core.is_window_hovered():
-                #     if imgui.is_mouse_down():
-                #         first_mouse_x, first_mouse_y = imgui.get_mouse_pos()
-                #         if (first_mouse_x >= self.windowWidth/8 and first_mouse_x <= 7*self.windowWidth/8) and (first_mouse_y >= 0 and first_mouse_y <= self.windowHeigh):
-                #             self.oneVertexTrace =np.zeros(100)
-                #             self.ignoreBeforeOneVertexTrace = 100
-                #             mouse_x = first_mouse_x
-                #             mouse_y = first_mouse_y
-                #             self.selectedX = math.ceil(math.floor((mouse_x - 1/8*self.windowWidth) / ((6/8)*self.windowWidth/(2*(self.tensorWidth+1)))) / 2)-1
-                #             if self.selectedX <= -1: self.selectedX = 0
-                #             if self.selectedX >= self.tensorWidth: self.selectedX = self.tensorWidth-1
-                #             self.selectedY =  self.tensorHeight - math.ceil(math.floor(mouse_y/(self.windowHeigh/(2*(self.tensorHeight+1)))) / 2)
-                #             if self.selectedY <= -1: self.selectedY = 0
-                #             if self.selectedY >= self.tensorHeight: self.selectedY = self.tensorHeight-1
-
-                # draw_list = imgui.get_window_draw_list()
-                # thicknes = 5
-                # if self.tensorHeight*self.tensorWidth<=100:
-                #     size = 30
-                # elif self.tensorHeight*self.tensorWidth<=200:
-                #     size = 25
-                # elif self.tensorHeight*self.tensorWidth<=10000:
-                #     thicknes = 2
-                #     size = 5
-                # else:
-                #     thicknes = 2
-                #     size = 4
-                # posCircleX = 1/8 * self.windowWidth + (6/8) * self.windowWidth / (self.tensorWidth+1) * (self.selectedX+1)
-                # posCircleY = self.windowHeigh/(self.tensorHeight+1) * (self.tensorHeight-self.selectedY)
-                # draw_list.add_circle(posCircleX, posCircleY, size, imgui.get_color_u32_rgba(1.0, 1.0, 1.0, 100.0),100, thicknes)
-                ## invisible button
-                # style.colors[imgui.COLOR_BUTTON] = (0.03, 0.07, 0.22, 0.0)
-                # style.colors[imgui.COLOR_BUTTON_ACTIVE] = (0.03, 0.07, 0.22, 0.0)
-                # style.colors[imgui.COLOR_BUTTON_HOVERED] = (0.03, 0.07, 0.22, 0.0)
-                # if (imgui.button("",width_window-2*width_window/8,(97/100)*self.windowHeigh)):
-            imgui.pop_style_var(1)
-
-            imgui.set_next_window_position(7*self.windowWidth/8, 2*self.windowHeigh/3)
-            imgui.set_next_window_size(self.windowWidth/8, self.windowHeigh/3)
-            flags = imgui.WINDOW_NO_COLLAPSE | imgui.WINDOW_NO_RESIZE
-            
-            imgui.set_next_window_size(self.windowWidth/4, self.windowHeigh/3)
-            # with imgui.begin("Trace"):#,flags=flags):
-            #     draw_list = imgui.get_window_draw_list()
-            #     thicknes = 1
-            #     size = 1
-            #     posCircleX ,posCircleY = imgui.get_window_position()
-            #     sizeX ,sizeY = imgui.get_window_size()
-            #     posCircleX ,posCircleY = posCircleX, posCircleY + sizeY/2 
-            #     distance_in_y = sizeY/25
-            #     text_position = (posCircleX ,posCircleY)
-            #     imgui.set_next_window_size(0, 0)
-
-            #     draw_list.add_text(posCircleX+5,posCircleY-10*distance_in_y,
-            #                 imgui.get_color_u32_rgba(*(imgui.get_style().colors[imgui.COLOR_TEXT][:3]),0.3), "+10")
-            #     draw_list.add_text(posCircleX+5,posCircleY-5*distance_in_y,
-            #                 imgui.get_color_u32_rgba(*(imgui.get_style().colors[imgui.COLOR_TEXT][:3]),0.3), "+5")
-            #     draw_list.add_text(posCircleX+5,posCircleY-0*distance_in_y,
-            #                 imgui.get_color_u32_rgba(*(imgui.get_style().colors[imgui.COLOR_TEXT][:3]),0.3), "0")
-            #     draw_list.add_text(posCircleX+5,posCircleY+5*distance_in_y,
-            #                 imgui.get_color_u32_rgba(*(imgui.get_style().colors[imgui.COLOR_TEXT][:3]),0.3), "-5")
-            #     draw_list.add_text(posCircleX+5,posCircleY+10*distance_in_y,
-            #                 imgui.get_color_u32_rgba(*(imgui.get_style().colors[imgui.COLOR_TEXT][:3]),0.3), "-10")
-
-            #     draw_list.add_line( posCircleX, posCircleY-10*distance_in_y,
-            #                         posCircleX+sizeX, posCircleY-10*distance_in_y, 
-            #                         imgui.get_color_u32_rgba(*(imgui.get_style().colors[imgui.COLOR_TEXT][:3]),0.1), thicknes)
-            
-            #     draw_list.add_line( posCircleX, posCircleY-5*distance_in_y,
-            #                         posCircleX+sizeX,posCircleY-5*distance_in_y, 
-            #                         imgui.get_color_u32_rgba(*(imgui.get_style().colors[imgui.COLOR_TEXT][:3]),0.1), thicknes)
-            #     draw_list.add_line( posCircleX, posCircleY-0*distance_in_y,
-            #                         posCircleX+sizeX,posCircleY-0*distance_in_y,
-            #                         imgui.get_color_u32_rgba(*(imgui.get_style().colors[imgui.COLOR_TEXT][:3]),0.1), thicknes)
-            #     draw_list.add_line( posCircleX, posCircleY+5*distance_in_y,
-            #                         posCircleX+sizeX,posCircleY+5*distance_in_y, 
-            #                         imgui.get_color_u32_rgba(*(imgui.get_style().colors[imgui.COLOR_TEXT][:3]),0.1), thicknes)
-            #     draw_list.add_line( posCircleX, posCircleY+10*distance_in_y,
-            #                         posCircleX+sizeX, posCircleY+10*distance_in_y,
-            #                         imgui.get_color_u32_rgba(*(imgui.get_style().colors[imgui.COLOR_TEXT][:3]),0.1), thicknes)
-                
-                
-            #     draw_list.add_circle_filled(posCircleX+(99)*sizeX/102, posCircleY-distance_in_y*self.tensor[self.selectedY][self.selectedX], 0.5, imgui.get_color_u32_rgba(*imgui.get_style().colors[imgui.COLOR_TEXT]))
-
-            #     ignore = 0
-            #     for i in range(1,len(self.oneVertexTrace)):
-            #         draw_list.add_text(posCircleX+i*sizeX/102-3,posCircleY, imgui.get_color_u32_rgba(*(imgui.get_style().colors[imgui.COLOR_TEXT][:3]),0.3),str("'"))
-            #         if self.ignoreBeforeOneVertexTrace <= ignore:
-                        
-            #             # print("No: ",self.ignoreBeforeOneVertexTrace )
-
-            #             # draw_list.add_circle(posCircleX+(i-1)*sizeX/102, posCircleY-distance_in_y*self.oneVertexTrace[i-1], size, imgui.get_color_u32_rgba(1.0, 1.0, 1.0, 1.0),100, thicknes)
-            #             # draw_list.add_circle(posCircleX+i*sizeX/102, posCircleY-distance_in_y*self.oneVertexTrace[i], size, imgui.get_color_u32_rgba(1.0, 1.0, 1.0, 1.0),100, thicknes)
-            #             # print(imgui.get_style().colors[imgui.COLOR_TEXT])
-            #             draw_list.add_line(posCircleX+(i-1)*sizeX/102, posCircleY-distance_in_y*self.oneVertexTrace[i-1],
-            #                             posCircleX+(i)*sizeX/102, posCircleY-distance_in_y*self.oneVertexTrace[i],
-            #                                 imgui.get_color_u32_rgba(*imgui.get_style().colors[imgui.COLOR_TEXT]), thicknes)
-                        
-            #         else:
-            #             ignore += 1
+        self.ImGuiAddWindow(self.MainWindow,"Scene",False)
+        for w in range(len(self.NeuronWindows)): 
+            isClose = self.ImGuiAddWindow(self.NeuronWindows[w],"Scene %s N:%s"%(str(w),self.NeuronWindows[w].NeuronIndex),True)
+            if not isClose:
+                self.NeuronWindows.pop(w)
+                break
+    def EnableDoking(self):
+            viewport = imgui.get_main_viewport()
+            imgui.set_next_window_pos(viewport.work_pos)
+            imgui.set_next_window_size(viewport.work_size)
+            imgui.set_next_window_viewport(viewport.id_)
+            imgui.push_style_var(imgui.StyleVar_.window_rounding, 0.0)
+            imgui.push_style_var(imgui.StyleVar_.window_border_size, 0.0)
+            imgui.push_style_var(imgui.StyleVar_.window_padding, imgui.ImVec2(0.0,0.0))
+            window_flags = imgui.WindowFlags_.menu_bar | imgui.WindowFlags_.no_docking
+            window_flags |= imgui.WindowFlags_.no_title_bar | imgui.WindowFlags_.no_collapse | imgui.WindowFlags_.no_resize | imgui.WindowFlags_.no_move
+            window_flags |= imgui.WindowFlags_.no_bring_to_front_on_focus | imgui.WindowFlags_.no_nav_focus
+            window_flags |= imgui.WindowFlags_.no_background
+            imgui.begin("DockSpace Demo", True, window_flags)
+            imgui.pop_style_var()
+            imgui.pop_style_var(2)
+            dockspace_id = imgui.get_id("MyDockSpace")
+            imgui.dock_space(dockspace_id, imgui.ImVec2(0.0, 0.0), 8)
+            imgui.end()
+    def ImGuiAddWindow(self,window,text,P_open = False):
+        imgui.push_style_var(imgui.StyleVar_.window_padding, imgui.ImVec2(0,0))
+        if P_open:
+            window.show,isClose = imgui.begin(text,p_open=True)
+        else:
+            window.show,isClose = imgui.begin(text)
+        if imgui.is_window_focused():
+            window.cameraInput()
+        width_window_imgui,height_window_imgui = imgui.get_content_region_avail()
+        if  window.width != width_window_imgui or window.height != height_window_imgui:
+            window.width, window.height = width_window_imgui, height_window_imgui
+            window.frameBuffer.rescaleFramebuffer(int(width_window_imgui),int(height_window_imgui))
+        imgui.image(
+            window.frameBuffer.texture, 
+            imgui.ImVec2(width_window_imgui,height_window_imgui),
+            imgui.ImVec2(0, 1), 
+            imgui.ImVec2(1, 0)
+        )
+        imgui.end()
+        imgui.pop_style_var()
+        return isClose

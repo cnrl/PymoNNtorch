@@ -2,7 +2,6 @@ import torch
 import glfw
 from OpenGL.GL import *
 import numpy as np
-from cuda import cudart as cu
 import time
 
 
@@ -78,13 +77,13 @@ class GUI(IMGUI):
             raise Exception("GLFW initialization failed")
 
         ## Create a GLFW window
-        self.window = glfw.create_window(self.width, self.height, "OpenGL Window", None, None)
-        if not self.window:
+        self.glfw_window = glfw.create_window(self.width, self.height, "OpenGL Window", None, None)
+        if not self.glfw_window:
             glfw.terminate()
             raise Exception("GLFW window creation failed")
 
         ## Make the window's context current
-        glfw.make_context_current(self.window)
+        glfw.make_context_current(self.glfw_window)
 
         ## disable vsync
         glfw.swap_interval(0)
@@ -97,23 +96,22 @@ class GUI(IMGUI):
 
         self.io = imgui.get_io()
         self.io.config_flags |= imgui.ConfigFlags_.nav_enable_keyboard  # Enable Keyboard Controls
-        # io.config_flags |= imgui.ConfigFlags_.nav_enable_gamepad # Enable Gamepad Controls
         self.io.config_flags |= imgui.ConfigFlags_.docking_enable  # Enable docking
         self.io.config_flags |= imgui.ConfigFlags_.viewports_enable # Enable Multi-Viewport / Platform Windows
 
 
-        # self.impl = GlfwRenderer(self.window)
+        # self.impl = GlfwRenderer(self.glfw_window)
         import ctypes
 
         # You need to transfer the window address to imgui.backends.glfw_init_for_opengl
         # proceed as shown below to get it.
-        window_address = ctypes.cast(self.window, ctypes.c_void_p).value
+        window_address = ctypes.cast(self.glfw_window, ctypes.c_void_p).value
         imgui.backends.glfw_init_for_opengl(window_address, True)
         glsl_version = "#version 330"
         imgui.backends.opengl3_init(glsl_version)
 
         ## Set the callback function for window resize
-        # glfw.set_framebuffer_size_callback(self.window, framebuffer_size_callback)
+        # glfw.set_framebuffer_size_callback(self.glfw_window, framebuffer_size_callback)
 
 
 
@@ -214,6 +212,7 @@ class GUI(IMGUI):
 
             if self.network.device == 'cpu':pass
             else:
+                from cuda import cudart as cu
                 err, *_ = cu.cudaGLGetDevices(1, cu.cudaGLDeviceList.cudaGLDeviceListAll)
                 # !!! Register
                 err, cuda_image = cu.cudaGraphicsGLRegisterImage(
@@ -234,7 +233,7 @@ class GUI(IMGUI):
 
 
         ## maximize at start
-        # glfw.maximize_window(window)
+        # glfw.maximize_window(glfw_window)
         ## points shape change from square to circle
         glEnable(GL_PROGRAM_POINT_SIZE)
         self.set_enable_smooth = True
@@ -271,24 +270,7 @@ class GUI(IMGUI):
         # Setup Dear ImGui style
         imgui.style_colors_dark()
 
-        def EnableDoking():
-            viewport = imgui.get_main_viewport()
-            imgui.set_next_window_pos(viewport.work_pos)
-            imgui.set_next_window_size(viewport.work_size)
-            imgui.set_next_window_viewport(viewport.id_)
-            imgui.push_style_var(imgui.StyleVar_.window_rounding, 0.0)
-            imgui.push_style_var(imgui.StyleVar_.window_border_size, 0.0)
-            imgui.push_style_var(imgui.StyleVar_.window_padding, imgui.ImVec2(0.0,0.0))
-            window_flags = imgui.WindowFlags_.menu_bar | imgui.WindowFlags_.no_docking
-            window_flags |= imgui.WindowFlags_.no_title_bar | imgui.WindowFlags_.no_collapse | imgui.WindowFlags_.no_resize | imgui.WindowFlags_.no_move
-            window_flags |= imgui.WindowFlags_.no_bring_to_front_on_focus | imgui.WindowFlags_.no_nav_focus
-            window_flags |= imgui.WindowFlags_.no_background
-            imgui.begin("DockSpace Demo", True, window_flags)
-            imgui.pop_style_var()
-            imgui.pop_style_var(2)
-            dockspace_id = imgui.get_id("MyDockSpace")
-            imgui.dock_space(dockspace_id, imgui.ImVec2(0.0, 0.0), 8)
-            imgui.end()
+        
         glEnable(GL_DEPTH_TEST)
         glEnable(GL_BLEND)
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
@@ -308,46 +290,23 @@ class GUI(IMGUI):
         self.camera = Camera(self)
         # glfw.swap_interval(1)
         self.initIcon()
-        show_demo_window = True
-        show_demo_window2 = True
-        
-        while not glfw.window_should_close(self.window):
+        self.show_demo_window = True
+        self.show_demo_window2 = True
 
-            glfw.make_context_current(self.window)
-            # cameraKeyboard()
-            # self.camera.cameraInput(self.window)
-            glfw.poll_events()
-
-            imgui.backends.opengl3_new_frame()
-            imgui.backends.glfw_new_frame()
-
-            if self.darkMod:
-                glClearColor(0.15, 0.16, 0.21, 1.0)
-            else:
-                glClearColor(0.62, 0.64, 0.70 , 1.0)
-            glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT)
-
-
-            
-            imgui.new_frame()
-
-            EnableDoking()
-            if show_demo_window:
-                show_demo_window = imgui.show_demo_window(show_demo_window)
-            if show_demo_window2:
-                show_demo_window2 = implot.show_demo_window(show_demo_window2)
+        while not glfw.window_should_close(self.glfw_window):
+            self.Begin()
 
             currentTime = time.time()
             timeDiff = currentTime - lastTime
             timeDiff2 = currentTime - lastTime2
             frameNumber += 1
             # tensor += 0.0001
+
             if self.maxIterationInSecond !=0 and timeDiff >= 1.0 / self.maxIterationInSecond:
                 self.network.simulate_iteration()
                 self.iteration += 1
                 if self.network.device == 'cpu':pass
-                else:
-                    torch.cuda.synchronize()
+                else:torch.cuda.synchronize()
                 self.oneVertexTrace = np.roll(self.oneVertexTrace, -1)
                 self.oneVertexTrace[-1] = self.tensors[self.selectedGroup][self.selectedY][self.selectedX].item()
                 iterationPerSecond += 1
@@ -355,58 +314,12 @@ class GUI(IMGUI):
                 lastTime = currentTime
 
             if timeDiff2 >= 1.0 / 1:
-                glfw.set_window_title(self.window, "IterationsPerSecond: "+str(iterationPerSecond)+" FPS: "+str(int((1.0 / timeDiff2) * frameNumber)))
+                glfw.set_window_title(self.glfw_window, "IterationsPerSecond: "+str(iterationPerSecond)+" FPS: "+str(int((1.0 / timeDiff2) * frameNumber)))
                 frameNumber = 0
                 iterationPerSecond = 0
                 lastTime2 = currentTime
             
-            self.renderGUI()
-
-
-            imgui.push_style_var(imgui.StyleVar_.window_padding, imgui.ImVec2(0,0))
-            self.MainWindow.show,_ = imgui.begin("Scene")
-            if imgui.is_window_focused():
-                self.MainWindow.cameraInput()
-            width_window_imgui,height_window_imgui = imgui.get_content_region_avail()
-            if  self.MainWindow.width != width_window_imgui or self.MainWindow.height != height_window_imgui:
-                self.MainWindow.width, self.MainWindow.height = width_window_imgui, height_window_imgui
-                self.MainWindow.frameBuffer.rescaleFramebuffer(int(width_window_imgui),int(height_window_imgui))
-            imgui.image(
-                self.MainWindow.frameBuffer.texture, 
-                imgui.ImVec2(width_window_imgui,height_window_imgui),
-                imgui.ImVec2(0, 1), 
-                imgui.ImVec2(1, 0)
-            )
-            imgui.end()
-            imgui.pop_style_var()
-
-
-
-
-            for w in range(len(self.NeuronWindows)): 
-                imgui.push_style_var(imgui.StyleVar_.window_padding, imgui.ImVec2(0,0))
-                self.NeuronWindows[w].show,isClose = imgui.begin("Scene %s N:%s"%(str(w),self.NeuronWindows[w].NeuronIndex),p_open=True)
-                width_window_imgui,height_window_imgui = imgui.get_content_region_avail()
-
-                if  self.NeuronWindows[w].width != width_window_imgui or self.NeuronWindows[w].height != height_window_imgui:
-                    self.NeuronWindows[w].width, self.NeuronWindows[w].height = width_window_imgui, height_window_imgui
-                    self.NeuronWindows[w].frameBuffer.rescaleFramebuffer(int(width_window_imgui),int(height_window_imgui))
-                    
-                if imgui.is_window_focused():
-                    self.NeuronWindows[w].cameraInput()
-                imgui.image(
-                    self.NeuronWindows[w].frameBuffer.texture, 
-                    imgui.ImVec2(width_window_imgui,height_window_imgui),
-                    imgui.ImVec2(0, 1), 
-                    imgui.ImVec2(1, 0)
-                )
-                imgui.end()
-                imgui.pop_style_var()
-                if not isClose:
-                    self.NeuronWindows.pop(w)
-                    break
-
-
+            self.RenderGUI()
 
 
             imgui.render()
@@ -416,14 +329,7 @@ class GUI(IMGUI):
             for w in range(len(self.NeuronWindows)):
                 self.NeuronWindows[w].OnUpdate()
 
-
-            imgui.backends.opengl3_render_draw_data(imgui.get_draw_data())
-            if self.io.config_flags & imgui.ConfigFlags_.viewports_enable > 0:
-                backup_current_context = glfw.get_current_context()
-                imgui.update_platform_windows()
-                imgui.render_platform_windows_default()
-                glfw.make_context_current(backup_current_context)
-            glfw.swap_buffers(self.window)
+            self.End()
             
 
         ## Cleanup
