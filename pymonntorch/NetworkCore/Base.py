@@ -14,15 +14,19 @@ class NetworkObject(TaggableObject):
         analysis_modules (list): List of analysis modules.
     """
 
-    def __init__(self, tag, network, behavior, device="cpu"):
+    def __init__(self, network, tag=None, behavior=None, device=None):
         """Initialize the object.
 
         Args:
             tag (str): Tag to add to the object. It can also be a comma-separated string of multiple tags.
             network (Network): The parent network object.
             behavior (list or dict): List or dictionary of behaviors. If a dictionary is used, the keys must be integers.
-            device (str): Device on which the object is located. The default is "cpu".
+            device (str): Device on which the object is located. If not provided object reside on network device.
         """
+        if device is None:
+            device = network.device
+        if tag is None:
+            tag = self.__class__.__name__ + "_" + str(len(network.Structures)+1)
         super().__init__(tag, device)
 
         self.network = network
@@ -57,8 +61,19 @@ class NetworkObject(TaggableObject):
         Args:
             new_structure (NetworkObject): the new structure to add.
         """
-        self.sub_structures.append(new_structure)
-        new_structure.parent_structure = self
+        if new_structure.network == self.network:
+            self.sub_structures.append(new_structure)
+            new_structure.parent_structure = self
+        else:
+            print(f"ERROR: {new_structure.tags[0]} can not be a sub structure of {self.tags[0]} because of not mutual network.")
+
+    def all_sub_structure(self):
+        """Returns a list of all sub_structures.
+        """
+        result = []
+        for sub_struc in self.sub_structures:
+            result.extend(sub_struc.all_sub_structure())
+        return result
 
     def add_behavior(self, key, behavior, initialize=True):
         """Add a single behavior to the network object.

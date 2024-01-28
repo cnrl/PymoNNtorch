@@ -63,8 +63,14 @@ class Network(NetworkObject):
             []
         )  # stores (key, beh_parent, behavior) triplets
 
-        super().__init__(tag, self, behavior, device=self.device)
+        super().__init__(self, tag, behavior, device=self.device)
 
+    def fill_substructures(self):
+        self.sub_structures = []
+        for struc in self.Structures:
+            if struc.parent_structure == self:
+                self.sub_structures.append(struc)
+    
     def set_behaviors(self, tag, enabled):
         """Set behaviors of specific tag to be enabled or disabled.
 
@@ -116,7 +122,7 @@ class Network(NetworkObject):
     def __repr__(self):
         neuron_count = torch.sum(torch.tensor([ng.size for ng in self.NeuronGroups]))
         synapse_count = torch.sum(
-            torch.tensor([sg.src.size * sg.dst.size for sg in self.SynapseGroups])
+            torch.tensor([sg.src.size * sg.dst.size for sg in self.SynapseGroups if (sg.src is not None and sg.dst is not None)])
         )
 
         basic_info = (
@@ -145,6 +151,10 @@ class Network(NetworkObject):
             if tags not in used_tags:
                 result += str(sg) + "\r\n"
             used_tags.append(tags)
+
+        for struc in self.Structures:
+            if struc not in self.NeuronGroups and struc not in self.SynapseGroups:
+                result += str(struc) + "\r\n"
 
         return result[:-2]
 
@@ -183,6 +193,7 @@ class Network(NetworkObject):
 
         self.initialize_behaviors()
         self.check_unique_tags(warnings)
+        self.fill_substructures()
 
     def initialize_behaviors(self):
         for key, parent, behavior in self.sorted_behavior_execution_list:

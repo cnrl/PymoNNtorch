@@ -22,7 +22,7 @@ class NeuronGroup(NetworkObject):
         id (torch.Tensor): The integer id of the population.
     """
 
-    def __init__(self, size, behavior, net, tag=None):
+    def __init__(self, size, net, behavior=None, tag=None):
         """Initialize the neuronal population.
 
         Args:
@@ -47,7 +47,7 @@ class NeuronGroup(NetworkObject):
 
         self.size = size
 
-        super().__init__(tag, net, behavior, net.device)
+        super().__init__(net, tag, behavior, net.device)
         self.add_tag("ng")
 
         self.BaseNeuronGroup = self  # used for subgroup reconstruction
