@@ -2,7 +2,7 @@
 
 __author__ = """Computational Neuroscience Research Laboratory"""
 __email__ = "ashenatena@gmail.com"
-__version__ = "0.1.1"
+__version__ = "0.1.4"
 
 from pymonntorch.NetworkCore.Network import *
 from pymonntorch.NetworkCore.Behavior import *
