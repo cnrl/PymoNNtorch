@@ -253,6 +253,7 @@ class Network(NetworkObject):
                         + new_tag
                         + '". Multiple Tags can be separated with a "," (NeuronGroup(..., tag="tag1,tag2,..."))'
                     )
+                ng.tags.append(ng.tags[0])
                 ng.tags[0] = new_tag
 
             else:
