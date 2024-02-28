@@ -93,7 +93,7 @@ Similarly, you can write your own ``Behavior`` Modules with the same logic as ``
                         9: Recorder(['voltage']),
                         10: EventRecorder(['spike'])
                     })
-    SynapseGroup(ng, ng, net, tag='GLUTAMATE')
+    SynapseGroup(src=ng, dst=ng, net=net, tag='GLUTAMATE')
     net.initialize()
     net.simulate_iterations(1000)
 
