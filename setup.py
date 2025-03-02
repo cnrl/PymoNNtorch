@@ -34,11 +34,6 @@ setup(
         "Programming Language :: Python :: 3.10",
     ],
     description="PymoNNtorch is a Pytorch version of PymoNNto",
-    entry_points={
-        "console_scripts": [
-            "pymonntorch=pymonntorch.cli:main",
-        ],
-    },
     install_requires=requirements,
     license="MIT license",
     long_description=readme + "\n\n" + history,
