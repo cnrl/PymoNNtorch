@@ -16,7 +16,7 @@ class SynapseGroup(NetworkObject):
         group_weighting (float): The weighting of the synapse group.
     """
 
-    def __init__(self, net, src=None, dst=None, tag=None, behavior=None):
+    def __init__(self, net, src=None, dst=None, tag=None, behavior=None, initialize_on=True):
         """This is the constructor of the SynapseGroup class.
 
         Args:
@@ -35,7 +35,7 @@ class SynapseGroup(NetworkObject):
         if tag is None and net is not None:
             tag = "SynapseGroup_" + str(len(net.SynapseGroups) + 1)
 
-        super().__init__(net, tag, behavior, net.device)
+        super().__init__(net, tag, behavior, net.device, initialize_on=initialize_on)
         self.add_tag("syn")
 
         if net is not None:

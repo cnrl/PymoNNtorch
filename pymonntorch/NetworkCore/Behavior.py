@@ -11,6 +11,7 @@ class Behavior(TaggableObject):
         tag (str): Tag of the behavior.
         device (str): Device of the behavior. This is overwritten by object's device upon calling `initialize`.
         behavior_enabled (bool): Whether the behavior is enabled. The default is True.
+        initialize_on (bool): Whether automatic initialization is enabled, independently of forward execution. Defaults to True.
         init_kwargs (dict): Dictionary of the keyword arguments passed to the constructor.
         used_attr_keys (list): List of the name of the attributes that have been used in the `initialize` method.
     """
@@ -28,6 +29,8 @@ class Behavior(TaggableObject):
         for i, arg in enumerate(args):
             self.init_kwargs["arg_" + str(i)] = arg
         self.used_attr_keys = []
+        self._initialized = False
+        self.initialize_on = self.parameter("initialize_on", True, None)
         self.behavior_enabled = self.parameter("behavior_enabled", True, None)
         super().__init__(
             tag=self.parameter("tag", None, None),

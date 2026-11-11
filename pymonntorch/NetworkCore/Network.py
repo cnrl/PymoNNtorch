@@ -31,6 +31,7 @@ class Network(NetworkObject):
         device="cpu",
         synapse_mode="SxD",
         index=True,
+        initialize_on=True,
     ):
         """Initialize the network.
 
@@ -63,7 +64,7 @@ class Network(NetworkObject):
             []
         )  # stores (key, beh_parent, behavior) triplets
 
-        super().__init__(self, tag, behavior, device=self.device)
+        super().__init__(self, tag, behavior, device=self.device, initialize_on=initialize_on)
 
     def fill_substructures(self):
         self.sub_structures = []
@@ -197,13 +198,15 @@ class Network(NetworkObject):
 
     def initialize_behaviors(self):
         for key, parent, behavior in self.sorted_behavior_execution_list:
-            if not behavior.initialize_on_init and not behavior.initialize_last:
+            if parent.initialize_on and behavior.initialize_on and not behavior.initialize_on_init and not behavior.initialize_last:
                 behavior.initialize(parent)
+                behavior._initialized = True
                 behavior.check_unused_attrs()
 
         for key, parent, behavior in self.sorted_behavior_execution_list:
-            if behavior.initialize_last:
+            if parent.initialize_on and behavior.initialize_on and behavior.initialize_last:
                 behavior.initialize(parent)
+                behavior._initialized = True
                 behavior.check_unused_attrs()
 
     def _add_behavior_to_sorted_execution_list(self, key, beh_parent, behavior):

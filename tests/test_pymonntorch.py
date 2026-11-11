@@ -3,6 +3,7 @@
 """Tests for `pymonntorch` package."""
 
 import pytest
+import torch
 
 # from click.testing import CliRunner
 
@@ -58,7 +59,7 @@ def test_network_cpu_annotated():
             10: EventRecorder(["n.spike"]),
         },
     )
-    SynapseGroup(ng, ng, net, tag="GLUTAMATE")
+    SynapseGroup(net=net, src=ng, dst=ng, tag="GLUTAMATE")
     net.initialize()
     net.simulate_iterations(1000)
 
@@ -69,6 +70,7 @@ def test_network_cpu_annotated():
         assert b.device == "cpu"
 
 
+@pytest.mark.skipif(not torch.cuda.is_available(), reason="CUDA is unavailable")
 def test_network_cuda_annotated():
     from pymonntorch import (
         Network,
@@ -117,7 +119,7 @@ def test_network_cuda_annotated():
             10: EventRecorder(["n.spike"]),
         },
     )
-    SynapseGroup(ng, ng, net, tag="GLUTAMATE")
+    SynapseGroup(net=net, src=ng, dst=ng, tag="GLUTAMATE")
     net.initialize()
     net.simulate_iterations(1000)
 

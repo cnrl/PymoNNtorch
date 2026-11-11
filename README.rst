@@ -114,3 +114,19 @@ It changes the codebase of `PymoNNto <https://github.com/trieschlab/PymoNNto>`_ 
 
 .. _Cookiecutter: https://github.com/audreyr/cookiecutter
 .. _`audreyr/cookiecutter-pypackage`: https://github.com/audreyr/cookiecutter-pypackage
+
+Initialization control
+----------------------
+
+Network, NetworkObject, NeuronGroup and SynapseGroup accept
+``initialize_on=False``. Behaviors also accept this option. It suppresses
+constructor-time, network-time (including initialize-last), and add_behavior
+automatic initialization. It does not disable forward execution. Both object
+and behavior must enable initialization for it to run. The default is True.
+
+This permits checkpoint-restored objects to coexist with newly constructed
+components: ``network.initialize()`` initializes the new components without
+resetting restored weights, traces or recordings. The checkpoint loader must
+restore all required state before disabling initialization. A NeuronDimension
+used as a constructor size must initialize; use a concrete size if initialization
+is disabled, or restore objects without invoking their constructors.
