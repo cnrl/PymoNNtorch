@@ -119,7 +119,7 @@ Initialization control
 ----------------------
 
 Network, NetworkObject, NeuronGroup and SynapseGroup accept
-``initialize_on=False``. Behaviors also accept this option. It suppresses
+``allow_initialize=False``. Behaviors also accept this option. It suppresses
 constructor-time, network-time (including initialize-last), and add_behavior
 automatic initialization. It does not disable forward execution. Both object
 and behavior must enable initialization for it to run. The default is True.
