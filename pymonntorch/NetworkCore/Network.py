@@ -59,9 +59,7 @@ class Network(NetworkObject):
 
         self._iteration = 0
 
-        self.sorted_behavior_execution_list = (
-            []
-        )  # stores (key, beh_parent, behavior) triplets
+        self.sorted_behavior_execution_list = []  # stores (key, beh_parent, behavior) triplets
 
         super().__init__(self, tag, behavior, device=self.device)
 
@@ -70,7 +68,7 @@ class Network(NetworkObject):
         for struc in self.Structures:
             if struc.parent_structure == self:
                 self.sub_structures.append(struc)
-    
+
     def set_behaviors(self, tag, enabled):
         """Set behaviors of specific tag to be enabled or disabled.
 
@@ -122,7 +120,13 @@ class Network(NetworkObject):
     def __repr__(self):
         neuron_count = torch.sum(torch.tensor([ng.size for ng in self.NeuronGroups]))
         synapse_count = torch.sum(
-            torch.tensor([sg.src.size * sg.dst.size for sg in self.SynapseGroups if (sg.src is not None and sg.dst is not None)])
+            torch.tensor(
+                [
+                    sg.src.size * sg.dst.size
+                    for sg in self.SynapseGroups
+                    if (sg.src is not None and sg.dst is not None)
+                ]
+            )
         )
 
         basic_info = (
@@ -197,12 +201,16 @@ class Network(NetworkObject):
 
     def initialize_behaviors(self):
         for key, parent, behavior in self.sorted_behavior_execution_list:
-            if not behavior.initialize_on_init and not behavior.initialize_last:
+            if (
+                behavior.allow_initialize
+                and not behavior.initialize_on_init
+                and not behavior.initialize_last
+            ):
                 behavior.initialize(parent)
                 behavior.check_unused_attrs()
 
         for key, parent, behavior in self.sorted_behavior_execution_list:
-            if behavior.initialize_last:
+            if behavior.allow_initialize and behavior.initialize_last:
                 behavior.initialize(parent)
                 behavior.check_unused_attrs()
 

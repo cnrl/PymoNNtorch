@@ -26,7 +26,7 @@ class NetworkObject(TaggableObject):
         if device is None:
             device = network.device
         if tag is None:
-            tag = self.__class__.__name__ + "_" + str(len(network.Structures)+1)
+            tag = self.__class__.__name__ + "_" + str(len(network.Structures) + 1)
         super().__init__(tag, device)
 
         self.network = network
@@ -43,7 +43,10 @@ class NetworkObject(TaggableObject):
             self.network._add_behavior_to_sorted_execution_list(k, self, b)
 
         for k in sorted(list(self.behavior.keys())):
-            if self.behavior[k].initialize_on_init:
+            if (
+                self.behavior[k].allow_initialize
+                and self.behavior[k].initialize_on_init
+            ):
                 self.behavior[k].initialize(self)
 
         self.analysis_modules = []
@@ -65,11 +68,12 @@ class NetworkObject(TaggableObject):
             self.sub_structures.append(new_structure)
             new_structure.parent_structure = self
         else:
-            print(f"ERROR: {new_structure.tags[0]} can not be a sub structure of {self.tags[0]} because of not mutual network.")
+            print(
+                f"ERROR: {new_structure.tags[0]} can not be a sub structure of {self.tags[0]} because of not mutual network."
+            )
 
     def all_sub_structure(self):
-        """Returns a list of all sub_structures.
-        """
+        """Returns a list of all sub_structures."""
         result = []
         for sub_struc in self.sub_structures:
             result.extend(sub_struc.all_sub_structure())
@@ -92,7 +96,7 @@ class NetworkObject(TaggableObject):
                 key, self, self.behavior[key]
             )
             self.network.clear_tag_cache()
-            if initialize:
+            if initialize and behavior.allow_initialize:
                 behavior.initialize(self)
                 behavior.check_unused_attrs()
             return behavior
