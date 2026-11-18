@@ -22,7 +22,7 @@ class NeuronGroup(NetworkObject):
         id (torch.Tensor): The integer id of the population.
     """
 
-    def __init__(self, size, net, behavior=None, tag=None, allow_initialize=True):
+    def __init__(self, size, net, behavior=None, tag=None):
         """Initialize the neuronal population.
 
         Args:
@@ -35,10 +35,6 @@ class NeuronGroup(NetworkObject):
             tag = "NeuronGroup_" + str(len(net.NeuronGroups) + 1)
 
         if isinstance(size, Behavior):
-            if not allow_initialize or not size.allow_initialize:
-                raise ValueError("A size behavior must initialize; use an integer size when allow_initialize=False.")
-            if behavior is None:
-                behavior = {}
             if type(behavior) is dict:
                 if 0 in behavior:
                     print(
@@ -51,7 +47,7 @@ class NeuronGroup(NetworkObject):
 
         self.size = size
 
-        super().__init__(net, tag, behavior, net.device, allow_initialize=allow_initialize)
+        super().__init__(net, tag, behavior, net.device)
         self.add_tag("ng")
 
         self.BaseNeuronGroup = self  # used for subgroup reconstruction

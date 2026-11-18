@@ -29,7 +29,6 @@ class Behavior(TaggableObject):
         for i, arg in enumerate(args):
             self.init_kwargs["arg_" + str(i)] = arg
         self.used_attr_keys = []
-        self._initialized = False
         self.allow_initialize = self.parameter("allow_initialize", True, None)
         self.behavior_enabled = self.parameter("behavior_enabled", True, None)
         super().__init__(

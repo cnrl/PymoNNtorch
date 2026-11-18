@@ -14,7 +14,7 @@ class NetworkObject(TaggableObject):
         analysis_modules (list): List of analysis modules.
     """
 
-    def __init__(self, network, tag=None, behavior=None, device=None, allow_initialize=True):
+    def __init__(self, network, tag=None, behavior=None, device=None):
         """Initialize the object.
 
         Args:
@@ -22,7 +22,6 @@ class NetworkObject(TaggableObject):
             network (Network): The parent network object.
             behavior (list or dict): List or dictionary of behaviors. If a dictionary is used, the keys must be integers.
             device (str): Device on which the object is located. If not provided object reside on network device.
-            allow_initialize (bool): If False, skip all automatic behavior initialization on this object. Forward execution is unaffected.
         """
         if device is None:
             device = network.device
@@ -30,7 +29,6 @@ class NetworkObject(TaggableObject):
             tag = self.__class__.__name__ + "_" + str(len(network.Structures)+1)
         super().__init__(tag, device)
 
-        self.allow_initialize = allow_initialize
         self.network = network
         self.behavior = behavior if behavior is not None else {}
         if type(behavior) == list:
@@ -45,9 +43,8 @@ class NetworkObject(TaggableObject):
             self.network._add_behavior_to_sorted_execution_list(k, self, b)
 
         for k in sorted(list(self.behavior.keys())):
-            if self.allow_initialize and self.behavior[k].allow_initialize and self.behavior[k].initialize_on_init:
+            if self.behavior[k].allow_initialize and self.behavior[k].initialize_on_init:
                 self.behavior[k].initialize(self)
-                self.behavior[k]._initialized = True
 
         self.analysis_modules = []
 
@@ -95,9 +92,8 @@ class NetworkObject(TaggableObject):
                 key, self, self.behavior[key]
             )
             self.network.clear_tag_cache()
-            if initialize and self.allow_initialize and behavior.allow_initialize:
+            if initialize and behavior.allow_initialize:
                 behavior.initialize(self)
-                behavior._initialized = True
                 behavior.check_unused_attrs()
             return behavior
         else:

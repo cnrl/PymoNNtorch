@@ -118,15 +118,12 @@ It changes the codebase of `PymoNNto <https://github.com/trieschlab/PymoNNto>`_ 
 Initialization control
 ----------------------
 
-Network, NetworkObject, NeuronGroup and SynapseGroup accept
-``allow_initialize=False``. Behaviors also accept this option. It suppresses
-constructor-time, network-time (including initialize-last), and add_behavior
-automatic initialization. It does not disable forward execution. Both object
-and behavior must enable initialization for it to run. The default is True.
+Behaviors accept ``allow_initialize=False`` to suppress automatic initialization
+at construction, during network.initialize() (including initialize-last), and
+when added with add_behavior(). The default is True. Forward execution and the
+existing initialize_on_init scheduling flag are unaffected.
 
-This permits checkpoint-restored objects to coexist with newly constructed
-components: ``network.initialize()`` initializes the new components without
-resetting restored weights, traces or recordings. The checkpoint loader must
-restore all required state before disabling initialization. A NeuronDimension
-used as a constructor size must initialize; use a concrete size if initialization
-is disabled, or restore objects without invoking their constructors.
+A checkpoint loader can restore a behavior's state and disable its initialization.
+New behaviors on the same object still initialize normally. The loader is
+responsible for restoring all required state. Behaviors that need to track their
+own initialization status can manage that state themselves.
