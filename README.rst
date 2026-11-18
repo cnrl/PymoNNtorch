@@ -114,16 +114,3 @@ It changes the codebase of `PymoNNto <https://github.com/trieschlab/PymoNNto>`_ 
 
 .. _Cookiecutter: https://github.com/audreyr/cookiecutter
 .. _`audreyr/cookiecutter-pypackage`: https://github.com/audreyr/cookiecutter-pypackage
-
-Initialization control
-----------------------
-
-Behaviors accept ``allow_initialize=False`` to suppress automatic initialization
-at construction, during network.initialize() (including initialize-last), and
-when added with add_behavior(). The default is True. Forward execution and the
-existing initialize_on_init scheduling flag are unaffected.
-
-A checkpoint loader can restore a behavior's state and disable its initialization.
-New behaviors on the same object still initialize normally. The loader is
-responsible for restoring all required state. Behaviors that need to track their
-own initialization status can manage that state themselves.
