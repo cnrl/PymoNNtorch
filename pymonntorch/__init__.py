@@ -4,6 +4,8 @@ __author__ = """Computational Neuroscience Research Laboratory"""
 __email__ = "ashenatena@gmail.com"
 __version__ = "0.1.5"
 
+__lazy_modules__ = ["torch", "sympy", "numpy"]
+
 from pymonntorch.NetworkCore.Network import *
 from pymonntorch.NetworkCore.Behavior import *
 from pymonntorch.NetworkCore.NeuronGroup import *
